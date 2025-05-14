@@ -1,0 +1,11 @@
+{
+    "python.defaultInterpreterPath": "./backend/arkham-analysis/bin/python",
+    // "python.analysis.extraPaths": [
+    //     "./backend",
+    //     "./backend/dist/packages/jose"
+    // ],
+    "python.terminal.activateEnvironment": true,
+    "editor.hover.enabled": true,
+    "python.analysis.typeCheckingMode": "basic",
+    "editor.inlayHints.enabled": "on"
+}

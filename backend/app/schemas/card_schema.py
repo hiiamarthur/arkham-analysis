@@ -5,6 +5,11 @@ from app.models.arkham_model import CardModel
 from scoring_model.Card.taboo_version import TabooVersion
 
 
+class BondedCard(BaseSchema):
+    code: str
+    count: int
+
+
 class Card(BaseSchema):
     __tablename__ = "cards"
     code: str
@@ -61,6 +66,17 @@ class Card(BaseSchema):
     # images = relationship("CardImage", back_populates="card", uselist=False)
     variants: dict | None = None
 
+    encounter_code: str | None = None
+    encounter_name: str | None = None
+    encounter_position: int | None = None
+    shroud: int | None = None
+    clues: int | None = None
+    victory: int | None = None
+    spoilers: bool | None = None
+
+    linked_card: Card | None = None
+    bonded_cards: List[BondedCard] = []
+
     def apply_taboo(self, taboo_version: TabooVersion) -> "Card":
         if taboo_version.cost:
             self.cost = (self.cost or 0) + taboo_version.cost
@@ -87,8 +103,47 @@ class Card(BaseSchema):
         }
 
     @classmethod
-    def from_model(cls, card_model: CardModel) -> "Card":
+    def _get_linked_card(
+        cls, card_model: CardModel, _processed_codes: set[str]
+    ) -> Optional["Card"]:
+        """Safely get linked card without triggering lazy loading"""
+        try:
+            # Check if there's a linked_to_code
+            if not card_model.linked_to_code:
+                return None
+
+            # Try to access linked_card - it should be loaded if included in the query
+            linked_card = card_model.linked_card
+            if linked_card is not None:
+                return cls.from_model(linked_card, _processed_codes)
+
+            return None
+        except Exception:
+            # If accessing linked_card triggers lazy loading or any other error, return None
+            return None
+
+    @classmethod
+    def from_model(
+        cls, card_model: CardModel, _processed_codes: set[str] | None = None
+    ) -> "Card":
         """Convert a database CardModel to a Card schema"""
+        if _processed_codes is None:
+            _processed_codes = set()
+
+        # Avoid infinite recursion
+        if card_model.code in _processed_codes:
+            # Return a basic version without linked_card to break recursion
+            return cls(
+                code=card_model.code,
+                name=card_model.name,
+                type_name=card_model.type_name,
+                faction_name=card_model.faction_name,
+                health_per_investigator=bool(card_model.health_per_investigator),
+                traits=[],
+            )
+
+        _processed_codes.add(card_model.code)
+
         return cls(
             code=card_model.code,
             name=card_model.name,
@@ -135,6 +190,11 @@ class Card(BaseSchema):
             octgn_id=card_model.octgn_id,
             traits=[Trait(name=trait.name) for trait in (card_model.traits or [])],
             variants=card_model.variants,
+            linked_card=cls._get_linked_card(card_model, _processed_codes),
+            bonded_cards=[
+                BondedCard(code=bonded.bonded_card_code, count=bonded.count)
+                for bonded in (card_model.bonded_cards or [])
+            ],
         )
 
 

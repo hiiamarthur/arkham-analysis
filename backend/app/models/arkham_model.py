@@ -42,6 +42,27 @@ card_taboos = Table(
 )
 
 
+class BondedCardModel(BaseModel):
+    __tablename__ = "bonded_cards"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    card_code: Mapped[str] = mapped_column(
+        String(50), ForeignKey("cards.code", ondelete="CASCADE"), nullable=False
+    )
+    bonded_card_code: Mapped[str] = mapped_column(
+        String(50), ForeignKey("cards.code", ondelete="CASCADE"), nullable=False
+    )
+    count: Mapped[int] = mapped_column(Integer, nullable=False, default=1)
+
+    # Relationships
+    card: Mapped["CardModel"] = relationship(
+        "CardModel", foreign_keys=[card_code], back_populates="bonded_cards"
+    )
+    bonded_card: Mapped["CardModel"] = relationship(
+        "CardModel", foreign_keys=[bonded_card_code]
+    )
+
+
 class TabooModel(BaseModel):
     __tablename__ = "taboos"
 
@@ -91,8 +112,8 @@ class CardModel(BaseModel):
     real_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
     subname: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
     cost: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    text: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
-    real_text: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
+    text: Mapped[Optional[str]] = mapped_column(String(3000), nullable=True)
+    real_text: Mapped[Optional[str]] = mapped_column(String(3000), nullable=True)
     type_code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     type_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
     faction_code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
@@ -109,10 +130,10 @@ class CardModel(BaseModel):
     permanent: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
     double_sided: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
     url: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
-    octgn_id: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
-    flavor: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
-    back_flavor: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
-    back_text: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
+    octgn_id: Mapped[Optional[str]] = mapped_column(String(1000), nullable=True)
+    flavor: Mapped[Optional[str]] = mapped_column(String(2000), nullable=True)
+    back_flavor: Mapped[Optional[str]] = mapped_column(String(2000), nullable=True)
+    back_text: Mapped[Optional[str]] = mapped_column(String(2000), nullable=True)
     deck_limit: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     health: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, default=0)
     health_per_investigator: Mapped[Optional[int]] = mapped_column(
@@ -140,20 +161,57 @@ class CardModel(BaseModel):
     deck_requirements: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON)
     deck_options: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON)
     customization_text: Mapped[Optional[str]] = mapped_column(
-        String(1000), nullable=True
+        String(3000), nullable=True
     )
     customization_changes: Mapped[Optional[str]] = mapped_column(
-        String(1000), nullable=True
+        String(3000), nullable=True
     )
     customization_options: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON)
     imagesrc: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
     backimagesrc: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
     traits: Mapped[List[TraitModel]] = relationship(
-        secondary=card_traits, back_populates="cards"
+        secondary=card_traits, back_populates="cards", lazy="selectin"
     )
     variants: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON)
     duplicated_by: Mapped[Optional[List[str]]] = mapped_column(JSON, nullable=True)
     alternated_by: Mapped[Optional[List[str]]] = mapped_column(JSON, nullable=True)
     taboo_versions: Mapped[List[TabooModel]] = relationship(
         secondary=card_taboos, back_populates="cards"
+    )
+    encounter_code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    encounter_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    encounter_position: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    shroud: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    clues: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    victory: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    spoilers: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+
+    # Foreign key for linked card relationship
+    linked_to_code: Mapped[Optional[str]] = mapped_column(
+        String(50), ForeignKey("cards.code", ondelete="SET NULL"), nullable=True
+    )
+
+    # Fixed relationship - this card links TO another card
+    linked_card: Mapped[Optional["CardModel"]] = relationship(
+        "CardModel",
+        foreign_keys=[linked_to_code],
+        back_populates="linked_cards",
+        remote_side=[code],  # This card is the "parent"
+        lazy="noload",  # Prevent lazy loading, must be explicitly loaded
+    )
+
+    # Cards that link TO this card
+    linked_cards: Mapped[List["CardModel"]] = relationship(
+        "CardModel",
+        foreign_keys=[linked_to_code],
+        back_populates="linked_card",
+        lazy="noload",  # Use explicit loading to avoid lazy loading issues
+    )
+
+    # Bonded cards relationship
+    bonded_cards: Mapped[List["BondedCardModel"]] = relationship(
+        "BondedCardModel",
+        foreign_keys="BondedCardModel.card_code",
+        back_populates="card",
+        lazy="noload",  # Use explicit loading to avoid lazy loading issues
     )

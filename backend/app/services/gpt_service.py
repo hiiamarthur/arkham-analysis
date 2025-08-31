@@ -1,4 +1,5 @@
 import logging
+import re
 from fastapi import HTTPException
 from openai import AsyncOpenAI, OpenAI, RateLimitError
 from app.schemas.gpt_schema import OpenAIHeaders, OpenAIRequest, OpenAIResponse
@@ -31,20 +32,26 @@ class GPTService:
                 + "One card is worth ~1–2 resources, depending on draw engine. Each turn gives 3 actions, 1 card, 1 resource. "
                 + "Clues are worth ~2.5 resources each (for seekers). Damage dealt or avoided is worth ~2–2.5 resources (for fighters). Some effects only trigger if the right situation appears. "
                 + "Fast and reaction abilities depend on timing but don't cost actions. Exceptional cards have stronger effects but cost more XP. "
-                + "Here are edge case: - When evaluating special effects described in card text (like increased test success, extra draws, extra actions, encounter avoidance, chaos bag control, token manipulation, healing boosts, etc.), "
-                + "estimate their approximate resource-equivalent value and include it as a separate entry under key 20 ('special_effect').  - Report 'actions' only if the card directly gives or removes actions. "
+                + "Here are edge case: - Only evaluate on special effects if the card have extra effect(like increased test success, encounter avoidance, chaos bag control, token manipulation, healing boosts, etc.) that do not applicable to existing value (actions,damage... etc), "
+                + "estimate their approximate resource-equivalent value and include it as a separate entry under key 17 ('special_effect').  - Report 'actions' only if the card directly gives or removes actions. "
                 + "Do NOT report 'fast actions' unless the card has the Fast keyword. Only report 'player card draws' when the investigator draws from their own player deck. Only report 'encounter card draw' when drawing from the encounter deck. "
                 + "For 'trigger condition', explain the board condition required to play or resolve the card (e.g., 'requires x'). For 'pass condition', explain only if the card includes a skill test or chaos bag check. "
                 + "Best-case means the best possible encounter or outcome, but it still counts all card actions (even encounter draws), just with ideal effects. Typical-case means the normal outcome most investigators would get. Worst-case means the outcome if everything goes badly, including harsh encounter effects. "
-                + "Step 1. Identify and summarize its **base effects** postive value means gain, negative value means loss 1.actions, 2.player card draws, 3.damage, 4.clues, 5.skill_icon, 6.horror, 7.health, 8.uses (charges, ammo, secrets), 9.movement, 10.doom, 11.fast actions, 12.reactions, 13.exhaust costs, 14.blessed tokens, 15.cursed tokens, 16.sealing tokens, 17.encounter card draw, 18.enemy, 19.XP. 20 special effect. "
+                + "Step 1. Identify and summarize its **base effects** postive value means gain, negative value means loss 1.actions, 2.player_card_draws, 3.damage, 4.clues, 5.skill_icon, 6.horror, 7.health, 8.uses (charges, ammo, secrets), 9.movement, 10.doom, 11.fast_actions, 12.reactions, 13.exhaust_costs, 14.encounter_card_draw, 15.enemy, 16.XP. 17. special effect. "
                 + "Step 2. Describe its **best-case scenario**: maximum value assuming the most favorable conditions. "
                 + "Step 3. Describe its **typical-case scenario**: average expected value across normal game states. "
-                + "Step 4. Describe its **worse-case scenario**: worst value across game states. Only show value that are not euqal to zero. "
-                + "return the result in format as: {'name': '...','best_case_quantities': { 'clues': x, 'encounter': y, ...,'context': 'str' },'typical_case_quantities': { ... },'worse_case_quantities': {...},'notes': '...','have_trigger_prob': 'bool','trigger_condition': 'str','have_pass_prob': 'bool','pass_condition': 'str'}"
+                + "Step 4. Describe its **worse-case scenario**: worst value across game states. Only show value that are not equal to zero. "
+                + "return the result in JSON format as: {'name': '...','best_case_quantities': { 'clues': x, 'encounter': y, ...,'context': 'str' },'typical_case_quantities': { ... },'worse_case_quantities': {...},'notes': '...','have_trigger_prob': 'bool','trigger_condition': 'str','have_pass_prob': 'bool','pass_condition': 'str'}"
             ),
         }
 
-    async def async_request(self, request: OpenAIRequest, db):
+    def clean_gpt_json(self, output: str):
+        cleaned = re.sub(r"^json\\n", "", output.strip())  # remove leading json\n
+        cleaned = re.sub(r"^```json\s*", "", cleaned)  # remove ```json
+        cleaned = re.sub(r"```$", "", cleaned)  # remove closing ```
+        return cleaned.strip()
+
+    async def async_request(self, request: OpenAIRequest):
         try:
             print("async_request")
             # await self.check_gpt_avalibility()
@@ -87,7 +94,9 @@ class GPTService:
                         "index": choice.index,
                         "logprobs": choice.logprobs,
                         "message": {
-                            "content": choice.message.content,
+                            "content": self.clean_gpt_json(
+                                choice.message.content or ""
+                            ),
                             "role": choice.message.role,
                             "refusal": choice.message.refusal,
                             "function_call": choice.message.function_call,

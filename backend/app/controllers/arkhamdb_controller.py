@@ -10,9 +10,11 @@ ARKHAMDB_TABOOS_URL = settings.ARKHAMDB_URL + "/public/taboos/"
 
 
 class ArkhamDBController:
-    async def fetch_all_card_data(self) -> List[Dict[str, Any]]:
+    async def fetch_all_card_data(
+        self, params: Dict[str, Any] = {}
+    ) -> List[Dict[str, Any]]:
         async with httpx.AsyncClient() as client:
-            response = await client.get(f"{ARKHAMDB_CARDS_URL}")
+            response = await client.get(f"{ARKHAMDB_CARDS_URL}", params=params)
             response.raise_for_status()
             return response.json()
 

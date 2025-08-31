@@ -1,4 +1,7 @@
+from asyncio.log import logger
+from contextlib import asynccontextmanager
 import logging
+from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
 from sqlalchemy.orm import sessionmaker
 import os
@@ -24,6 +27,7 @@ engine = create_async_engine(
     DATABASE_URL,
     echo=True,  # Set to False in production
     pool_pre_ping=True,  # Enable connection health checks
+    future=True,
 )
 
 AsyncSessionLocal = async_sessionmaker(
@@ -39,6 +43,29 @@ logging.getLogger("sqlalchemy.orm").setLevel(logging.WARNING)
 
 
 # Dependency to get DB session
-async def get_async_db():
-    async with AsyncSessionLocal() as session:
+# async def get_async_db():
+#     async with AsyncSessionLocal() as session:
+#         yield session
+@asynccontextmanager
+async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
+    """Provide a transactional scope around a series of operations."""
+    session = AsyncSessionLocal()
+    try:
+        yield session
+        await session.commit()  # Commit if no exceptions
+    except Exception as e:
+        logger.error(f"Session error: {e.__class__.__name__}: {str(e)}")
+        await session.rollback()
+        # Don't wrap the error in ResponseSchema here
+        raise
+    finally:
+        try:
+            await session.close()
+        except Exception as e:
+            logger.error(f"Error closing session: {e.__class__.__name__}: {str(e)}")
+
+
+async def get_async_db() -> AsyncGenerator[AsyncSession, None]:
+    """FastAPI dependency for database sessions"""
+    async with get_db_session() as session:
         yield session

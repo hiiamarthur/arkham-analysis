@@ -122,21 +122,23 @@ class AppController:
             logger.error(f"Stacktrace: {traceback.format_exc()}")
             raise
 
-    async def _process_bonded_cards(self, raw_cards: List[Dict[str, Any]], db_session) -> None:
+    async def _process_bonded_cards(
+        self, raw_cards: List[Dict[str, Any]], db_session
+    ) -> None:
         """Second pass: Process bonded card relationships after all cards exist"""
         try:
             from app.models.arkham_model import BondedCardModel
-            
+
             for card_data in raw_cards:
                 bonded_cards_data = card_data.get("bonded_cards", [])
                 if bonded_cards_data:
                     card_code = card_data.get("code")
-                    
+
                     # Get the card from database
                     card = await db_session.scalar(
                         select(CardModel).where(CardModel.code == card_code)
                     )
-                    
+
                     if card:
                         for bonded_data in bonded_cards_data:
                             if isinstance(bonded_data, dict) and "code" in bonded_data:
@@ -145,7 +147,9 @@ class AppController:
 
                                 # Check if the bonded card exists
                                 bonded_card_exists = await db_session.scalar(
-                                    select(CardModel).where(CardModel.code == bonded_card_code)
+                                    select(CardModel).where(
+                                        CardModel.code == bonded_card_code
+                                    )
                                 )
 
                                 if bonded_card_exists:
@@ -153,10 +157,11 @@ class AppController:
                                     existing_relationship = await db_session.scalar(
                                         select(BondedCardModel).where(
                                             BondedCardModel.card_code == card_code,
-                                            BondedCardModel.bonded_card_code == bonded_card_code
+                                            BondedCardModel.bonded_card_code
+                                            == bonded_card_code,
                                         )
                                     )
-                                    
+
                                     if not existing_relationship:
                                         bonded_relationship = BondedCardModel(
                                             card_code=card_code,
@@ -164,10 +169,10 @@ class AppController:
                                             count=count,
                                         )
                                         db_session.add(bonded_relationship)
-            
+
             await db_session.commit()
             logger.info("Bonded card relationships processed successfully")
-            
+
         except Exception as e:
             logger.error(f"Error processing bonded cards: {e}")
             logger.error(f"Stacktrace: {traceback.format_exc()}")
@@ -389,7 +394,7 @@ class AppController:
             # Try to get from database first
             cardData = await self.card_repo.get_first(
                 filters={"filter_by[code][equals]": card_id},
-                include=["traits", "linked_card", "bonded_cards"],
+                include=["traits", "linked_card", "bonded_cards.bonded_card"],
                 # filters={"code": cardCode}
             )
             if not cardData:

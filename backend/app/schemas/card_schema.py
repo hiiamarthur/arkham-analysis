@@ -8,6 +8,7 @@ from scoring_model.Card.taboo_version import TabooVersion
 class BondedCard(BaseSchema):
     code: str
     count: int
+    card: Card | None = None
 
 
 class Card(BaseSchema):
@@ -192,7 +193,11 @@ class Card(BaseSchema):
             variants=card_model.variants,
             linked_card=cls._get_linked_card(card_model, _processed_codes),
             bonded_cards=[
-                BondedCard(code=bonded.bonded_card_code, count=bonded.count)
+                BondedCard(
+                    code=bonded.bonded_card_code,
+                    count=bonded.count,
+                    card=cls.from_model(bonded.bonded_card, _processed_codes),
+                )
                 for bonded in (card_model.bonded_cards or [])
             ],
         )

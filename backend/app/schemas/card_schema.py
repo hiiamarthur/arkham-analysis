@@ -1,6 +1,7 @@
 from __future__ import annotations
-from typing import Any, List
+from typing import Any, List, Optional
 from app.schemas.base import BaseSchema
+from app.models.arkham_model import CardModel
 from scoring_model.Card.taboo_version import TabooVersion
 
 
@@ -85,7 +86,91 @@ class Card(BaseSchema):
             "sanity": self.sanity,
         }
 
+    @classmethod
+    def from_model(cls, card_model: CardModel) -> "Card":
+        """Convert a database CardModel to a Card schema"""
+        return cls(
+            code=card_model.code,
+            name=card_model.name,
+            real_name=card_model.real_name,
+            subname=card_model.subname,
+            cost=card_model.cost,
+            text=card_model.text,
+            real_text=card_model.real_text,
+            type_code=card_model.type_code,
+            type_name=card_model.type_name,
+            faction_code=card_model.faction_code,
+            faction_name=card_model.faction_name,
+            alternate_of_code=card_model.alternate_of_code,
+            alternate_of_name=card_model.alternate_of_name,
+            pack_code=card_model.pack_code,
+            pack_name=card_model.pack_name,
+            position=card_model.position,
+            quantity=card_model.quantity,
+            is_unique=card_model.is_unique,
+            exceptional=card_model.exceptional,
+            myriad=card_model.myriad,
+            permanent=card_model.permanent,
+            double_sided=card_model.double_sided,
+            url=card_model.url,
+            flavor=card_model.flavor,
+            back_flavor=card_model.back_flavor,
+            back_text=card_model.back_text,
+            deck_limit=card_model.deck_limit,
+            health=card_model.health,
+            health_per_investigator=bool(card_model.health_per_investigator),
+            sanity=card_model.sanity,
+            skill_willpower=card_model.skill_willpower,
+            skill_intellect=card_model.skill_intellect,
+            skill_combat=card_model.skill_combat,
+            skill_agility=card_model.skill_agility,
+            skill_wild=card_model.skill_wild,
+            real_slot=card_model.real_slot,
+            illustrator=card_model.illustrator,
+            restrictions=card_model.restrictions,
+            deck_requirements=card_model.deck_requirements,
+            deck_options=card_model.deck_options,
+            imagesrc=card_model.imagesrc,
+            backimagesrc=card_model.backimagesrc,
+            octgn_id=card_model.octgn_id,
+            traits=[Trait(name=trait.name) for trait in (card_model.traits or [])],
+            variants=card_model.variants,
+        )
+
 
 class Trait(BaseSchema):
     name: str
-    cards: List[Card]
+    cards: List[Card] = []
+
+
+class EffectQuantities(BaseSchema):
+    actions: Optional[float] = 0
+    player_card_draws: Optional[float] = 0
+    damage: Optional[float] = 0
+    clues: Optional[float] = 0
+    skill_icon: Optional[float] = 0
+    horror: Optional[float] = 0
+    health: Optional[float] = 0
+    uses: Optional[int] = 0
+    movement: Optional[float] = 0
+    doom: Optional[float] = 0
+    fast_actions: Optional[float] = 0
+    reactions: Optional[float] = 0
+    exhaust_costs: Optional[float] = 0
+    encounter_card_draw: Optional[int] = 0
+    enemy: Optional[float] = 0
+    XP: Optional[float] = 0
+    special_effect: Optional[float] = 0  # generic boost value
+    context: Optional[str] = None
+
+
+class CardGPTResponse(BaseSchema):
+    name: str
+    best_case_quantities: EffectQuantities
+    typical_case_quantities: EffectQuantities
+    worse_case_quantities: EffectQuantities
+    notes: str
+    have_trigger_prob: bool
+    trigger_condition: str
+    have_pass_prob: bool
+    pass_condition: str

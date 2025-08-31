@@ -1,8 +1,9 @@
 from abc import abstractmethod
-from typing import List, Optional
-from scoring_model.Card import ActivationType, CardType
+from typing import Dict, List, Optional
+from scoring_model.Card import ActivationType, CardCostFactor, CardEffect, CardType
 from scoring_model.Card.base_card import BaseCard
 from scoring_model.evaluators.base_evalutor import BaseEvaluator
+import re
 
 
 class PlayerCard(BaseCard):
@@ -25,6 +26,12 @@ class PlayerCard(BaseCard):
         is_permanent: bool = False,
         is_exceptional: bool = False,
         activation_type: ActivationType = ActivationType.ACTION,
+        cost_factors: Dict[CardCostFactor, float] = {
+            CardCostFactor.ACTION: 1,
+            CardCostFactor.RESOURCE: 1,
+            CardCostFactor.ICON: 1,
+            CardCostFactor.XP: 1,
+        },
     ):
         super().__init__(
             code,
@@ -44,6 +51,7 @@ class PlayerCard(BaseCard):
         self.level = level
         self.activation_type = activation_type
         self.skill_wild = skill_wild
+        self.cost_factors = cost_factors
         if is_exceptional:
             self.level *= 2
 
@@ -51,9 +59,20 @@ class PlayerCard(BaseCard):
     def calculate_cost(self) -> float:
         """Calculate the cost of the card"""
         return (
-            self.play_action_cost * BaseEvaluator.WEIGHTS["action"]
-            + self.cost
-            + self.level * BaseEvaluator.WEIGHTS["xp"]
+            self.play_action_cost
+            * self.cost_factors[CardCostFactor.ACTION]
+            * BaseEvaluator.WEIGHTS[CardEffect.ACTION]  # action cost
+            + self.cost * self.cost_factors[CardCostFactor.RESOURCE]  # resource cost
+            # + self.level * BaseEvaluator.WEIGHTS["xp"]
+            + (
+                self.skill_agility
+                + self.skill_combat
+                + self.skill_intellect
+                + self.skill_willpower
+                + self.skill_wild
+            )
+            * self.cost_factors[CardCostFactor.ICON]
+            * BaseEvaluator.WEIGHTS[CardEffect.ICON]  # opportunity cost
         )
 
     @abstractmethod
@@ -65,7 +84,7 @@ class PlayerCard(BaseCard):
             + self.skill_intellect
             + self.skill_willpower
             + self.skill_wild
-        ) * BaseEvaluator.WEIGHTS["icon"]
+        ) * BaseEvaluator.WEIGHTS[CardEffect.ICON]
 
     def apply_taboo(self) -> "BaseCard":
         base_card = super().apply_taboo()
@@ -76,3 +95,58 @@ class PlayerCard(BaseCard):
             if self.taboo.xp is not None:
                 self.level += self.taboo.xp
         return self
+
+    def analyze_effect_text(self, text: str) -> Dict:
+        text = text.lower()
+
+        result = {
+            "requires_test": False,
+            "requires_pass": False,
+            "fail_to_win": False,
+            "test_type": None,  # e.g., "combat", "willpower"
+            "parser_pass_condition": "",
+            "parser_trigger_condition": "",
+        }
+
+        # Identify skill test requirement
+        if any(
+            keyword in text for keyword in ["fight.", "evade.", "investigate.", "test "]
+        ):
+            result["requires_test"] = True
+
+        # Identify if effect is conditional on success
+        if re.search(
+            r"\bif you succeed\b|\bif successful\b|\bwhen you succeed\b", text
+        ):
+            result["requires_pass"] = True
+            result["parser_pass_condition"] = "must pass skill test"
+
+        # Fail-to-win detection
+        if re.search(r"\bif you fail\b|\bafter you fail\b", text):
+            result["requires_test"] = True
+            result["requires_pass"] = True  # but we treat as 1 - P(pass)
+            result["fail_to_win"] = True
+            result["parser_pass_condition"] = "must fail skill test"
+
+        # Detect test type
+        if "fight." in text or "test [combat]" in text:
+            result["test_type"] = "combat"
+        elif "evade." in text or "test [agility]" in text:
+            result["test_type"] = "agility"
+        elif "investigate." in text or "test [intellect]" in text:
+            result["test_type"] = "intellect"
+        elif "use [willpower]" in text or "test [willpower]" in text:
+            result["test_type"] = "willpower"
+
+        # Trigger window hints (optional extension)
+        if "[reaction]" in text:
+            result["parser_trigger_condition"] = "reaction window"
+        elif "fast." in text:
+            result["parser_trigger_condition"] = "fast action"
+        elif "after you" in text or "when you" in text or "play when":
+            result["parser_trigger_condition"] = "timing trigger"
+        elif "forced" in text:
+            result["parser_trigger_condition"] = "forced"
+        elif "bonded." in text:
+            result["parser_trigger_condition"] = "bonded"
+        return result

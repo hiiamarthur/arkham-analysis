@@ -1,6 +1,6 @@
 from typing import List, Optional
 
-from scoring_model.Card import ActivationType, CardType
+from scoring_model.Card import ActivationType, CardCostFactor, CardType
 from scoring_model.Card.player_card import PlayerCard
 
 
@@ -33,4 +33,10 @@ class SkillCard(PlayerCard):
             skill_wild,
             play_action_cost=0,
             activation_type=ActivationType.FAST,
+            cost_factors={
+                CardCostFactor.ACTION: 0,
+                CardCostFactor.RESOURCE: 0,
+                CardCostFactor.ICON: 0,
+                CardCostFactor.XP: 1,
+            },
         )

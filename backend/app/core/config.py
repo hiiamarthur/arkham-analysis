@@ -53,6 +53,18 @@ class Settings(BaseSettings):
     ORGANIZATION_ID: str | None = None
     PROJECT_ID: str | None = None
 
+    # Redis Settings
+    REDIS_HOST: str = "localhost"
+    REDIS_PORT: int = 6379
+    REDIS_DB: int = 0
+    REDIS_PASSWORD: Optional[str] = None
+    REDIS_URL: Optional[str] = None
+
+    # Cache Settings
+    CACHE_TTL_DEFAULT: int = 3600  # 1 hour
+    CACHE_TTL_CARDS: int = 1800    # 30 minutes
+    CACHE_TTL_TRAITS: int = 7200   # 2 hours
+
     # New fields
     database_url: str = ""
     ARKHAMDB_CARDS_URL: str = "https://arkhamdb.com/api/public/cards"

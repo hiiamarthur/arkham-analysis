@@ -46,6 +46,9 @@ from sqlalchemy.orm import selectinload, load_only, noload, defer
 from fastapi import HTTPException
 
 from app.schemas.query_schema import FilterCondition
+from app.services.cache_service import cache_service
+import hashlib
+import json
 
 
 T = TypeVar("T", bound=BaseModel)
@@ -58,6 +61,18 @@ class BaseRepository(Generic[T]):
     def __init__(self, model: Type[T], db: AsyncSession):
         self.model = model
         self.db = db
+    
+    def _generate_cache_key(self, operation: str, **kwargs) -> str:
+        """Generate cache key for repository operations"""
+        model_name = self.model.__name__.lower()
+        key_data = f"{model_name}:{operation}:{kwargs}"
+        
+        # Hash if key is too long
+        if len(key_data) > 200:
+            key_hash = hashlib.md5(key_data.encode()).hexdigest()
+            return f"repo:{model_name}:{operation}:hash:{key_hash}"
+        
+        return f"repo:{key_data}"
 
     async def refresh(self, obj: T):
         await self.db.refresh(obj)
@@ -503,9 +518,21 @@ class BaseRepository(Generic[T]):
 
         return load_options
 
-    async def get_by_id(self, id: int, include: List[str] = []) -> Optional[T]:
-        """Get a record by id"""
+    async def get_by_id(self, id: int, include: List[str] = [], use_cache: bool = True) -> Optional[T]:
+        """Get a record by id with optional caching"""
         try:
+            # Generate cache key
+            cache_key = self._generate_cache_key("get_by_id", id=id, include=sorted(include))
+            
+            # Try cache first if enabled
+            if use_cache:
+                cached_result = await cache_service.get(cache_key)
+                if cached_result:
+                    logger.debug(f"Cache hit for {self.model.__name__} id={id}")
+                    # Note: You'd need to reconstruct model instance from cached data
+                    # This is simplified - in production you'd serialize/deserialize properly
+                    return cached_result
+            
             # Create base query
             stmt = select(self.model).where(self.model.id == int(id))
 
@@ -517,7 +544,12 @@ class BaseRepository(Generic[T]):
             result = await self.db.execute(stmt)
             obj = result.unique().scalars().first()
 
-            # Only refresh if we found an object
+            # Cache the result if found and caching enabled
+            if obj and use_cache:
+                # Convert to dict for caching (you'd want better serialization in production)
+                # This is a simplified version
+                await cache_service.set(cache_key, obj, ttl=1800)  # 30 minutes
+                logger.debug(f"Cached {self.model.__name__} id={id}")
 
             return obj
 

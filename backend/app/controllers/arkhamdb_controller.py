@@ -4,22 +4,21 @@ from app.core.config import settings
 
 from app.models.arkham_model import CardModel
 from app.schemas.card_schema import Card
+from app.services.arkhamdb_service import ArkhamDBService
 
 ARKHAMDB_CARDS_URL = settings.ARKHAMDB_URL + "/public/cards/"
 ARKHAMDB_TABOOS_URL = settings.ARKHAMDB_URL + "/public/taboos/"
 
 
 class ArkhamDBController:
+
+    def __init__(self):
+        self.arkhamdb_service = ArkhamDBService()
+
     async def fetch_all_card_data(
         self, params: Dict[str, Any] = {}
     ) -> List[Dict[str, Any]]:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(f"{ARKHAMDB_CARDS_URL}", params=params)
-            response.raise_for_status()
-            return response.json()
+        return await self.arkhamdb_service.fetch_all_card_data(params)
 
     async def fetch_all_taboo_data(self) -> List[Dict[str, Any]]:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(f"{ARKHAMDB_TABOOS_URL}")
-            response.raise_for_status()
-            return response.json()
+        return await self.arkhamdb_service.fetch_all_taboo_data()

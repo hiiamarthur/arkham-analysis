@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routes import router
 from app.core.config import settings
 from app.core.redis_client import redis_client
+from app.adapters import initialize_card_adapters
 import uvicorn
 import logging
 
@@ -17,6 +18,10 @@ async def lifespan(app: FastAPI):
     """Application lifespan context manager"""
     # Startup
     try:
+        # Initialize card adapters (registers adapters with domain registry)
+        initialize_card_adapters()
+        logger.info("Card adapters initialized")
+        
         await redis_client.connect()
         if redis_client.is_connected:
 
@@ -59,7 +64,7 @@ app.add_middleware(
 )
 
 # Include API router
-app.include_router(router, prefix="/api/v1")
+app.include_router(router)
 
 
 @app.get("/")

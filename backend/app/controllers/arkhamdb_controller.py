@@ -3,7 +3,7 @@ import httpx
 from app.core.config import settings
 
 from app.models.arkham_model import CardModel
-from app.schemas.card_schema import Card
+from app.schemas.card_schema import CardSchema
 from app.services.arkhamdb_service import ArkhamDBService
 
 ARKHAMDB_CARDS_URL = settings.ARKHAMDB_URL + "/public/cards/"

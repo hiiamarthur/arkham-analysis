@@ -6,8 +6,8 @@ from app.services.cache_service import cache_service
 
 logger = logging.getLogger(__name__)
 
-ARKHAMDB_CARDS_URL = settings.ARKHAMDB_URL + "/cards/"
-ARKHAMDB_TABOOS_URL = settings.ARKHAMDB_URL + "/taboos/"
+ARKHAMDB_CARDS_URL = settings.ARKHAMDB_URL + "/public/cards/"
+ARKHAMDB_TABOOS_URL = settings.ARKHAMDB_URL + "/public/taboos/"
 
 
 class ArkhamDBService:
@@ -53,7 +53,9 @@ class ArkhamDBService:
                 return data
 
         except httpx.HTTPError as e:
-            logger.error(f"HTTP error fetching cards from ArkhamDB: {e}")
+            logger.error(
+                f"HTTP error fetching cards from ArkhamDB: {e.with_traceback(None)}"
+            )
             raise
         except Exception as e:
             logger.error(f"Unexpected error fetching cards: {e}")

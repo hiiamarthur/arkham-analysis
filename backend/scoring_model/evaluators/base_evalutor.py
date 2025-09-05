@@ -2,7 +2,7 @@ from typing import Dict
 
 from typing import Tuple
 
-from scoring_model.Card import CardEffect
+from domain.card import CardEffect
 
 
 class BaseEvaluator:

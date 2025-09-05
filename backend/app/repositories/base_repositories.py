@@ -61,17 +61,17 @@ class BaseRepository(Generic[T]):
     def __init__(self, model: Type[T], db: AsyncSession):
         self.model = model
         self.db = db
-    
+
     def _generate_cache_key(self, operation: str, **kwargs) -> str:
         """Generate cache key for repository operations"""
         model_name = self.model.__name__.lower()
         key_data = f"{model_name}:{operation}:{kwargs}"
-        
+
         # Hash if key is too long
         if len(key_data) > 200:
             key_hash = hashlib.md5(key_data.encode()).hexdigest()
             return f"repo:{model_name}:{operation}:hash:{key_hash}"
-        
+
         return f"repo:{key_data}"
 
     async def refresh(self, obj: T):
@@ -518,12 +518,16 @@ class BaseRepository(Generic[T]):
 
         return load_options
 
-    async def get_by_id(self, id: int, include: List[str] = [], use_cache: bool = True) -> Optional[T]:
+    async def get_by_id(
+        self, id: int, include: List[str] = [], use_cache: bool = True
+    ) -> Optional[T]:
         """Get a record by id with optional caching"""
         try:
             # Generate cache key
-            cache_key = self._generate_cache_key("get_by_id", id=id, include=sorted(include))
-            
+            cache_key = self._generate_cache_key(
+                "get_by_id", id=id, include=sorted(include)
+            )
+
             # Try cache first if enabled
             if use_cache:
                 cached_result = await cache_service.get(cache_key)
@@ -532,7 +536,7 @@ class BaseRepository(Generic[T]):
                     # Note: You'd need to reconstruct model instance from cached data
                     # This is simplified - in production you'd serialize/deserialize properly
                     return cached_result
-            
+
             # Create base query
             stmt = select(self.model).where(self.model.id == int(id))
 
@@ -648,7 +652,7 @@ class BaseRepository(Generic[T]):
         order_type: str = "asc",
         filter_by: Union[Dict, FilterCondition, None] = None,
         search_by: Dict = {},
-        select_list: List[str] = [],
+        include: List[str] = [],
         group_by: List[str] = [],
     ) -> List[T]:
         stmt = select(self.model)
@@ -661,7 +665,7 @@ class BaseRepository(Generic[T]):
 
         # Apply joins
 
-        stmt = self._apply_select(stmt, select_list)
+        stmt = self._apply_select(stmt, include)
 
         stmt = self._apply_sorting(stmt, order_by, order_type)
         stmt = self._apply_pagination(stmt, page, items_per_page)

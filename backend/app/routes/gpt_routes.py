@@ -3,7 +3,7 @@ from app.controllers.gpt_controller import GPTController
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_async_db
-from app.schemas.card_schema import Card
+from app.schemas.card_schema import CardSchema
 
 router = APIRouter(prefix="/gpt", tags=["gpt"])
 

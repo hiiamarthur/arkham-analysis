@@ -2,16 +2,17 @@ from __future__ import annotations
 from typing import Any, List, Optional
 from app.schemas.base import BaseSchema
 from app.models.arkham_model import CardModel
-from scoring_model.Card.taboo_version import TabooVersion
+from domain.Token.token import ChaosToken
+from domain.card.taboo_version import TabooVersion
 
 
-class BondedCard(BaseSchema):
+class BondedCardSchema(BaseSchema):
     code: str
     count: int
-    card: Card | None = None
+    card: CardSchema | None = None
 
 
-class Card(BaseSchema):
+class CardSchema(BaseSchema):
     __tablename__ = "cards"
     code: str
     name: str | None = None
@@ -63,7 +64,7 @@ class Card(BaseSchema):
     backimagesrc: str | None = None
     octgn_id: str | None = None
     # deck_options = relationship("DeckOption", back_populates="card")
-    traits: List[Trait]
+    traits: List[TraitSchema]
     # images = relationship("CardImage", back_populates="card", uselist=False)
     variants: dict | None = None
 
@@ -75,10 +76,15 @@ class Card(BaseSchema):
     victory: int | None = None
     spoilers: bool | None = None
 
-    linked_card: Card | None = None
-    bonded_cards: List[BondedCard] = []
+    enemy_damage: int | None = None
+    enemy_evade: int | None = None
+    enemy_fight: int | None = None
+    enemy_horror: int | None = None
 
-    def apply_taboo(self, taboo_version: TabooVersion) -> "Card":
+    linked_card: CardSchema | None = None
+    bonded_cards: List[BondedCardSchema] = []
+
+    def apply_taboo(self, taboo_version: TabooVersion) -> "CardSchema":
         if taboo_version.cost:
             self.cost = (self.cost or 0) + taboo_version.cost
 
@@ -106,7 +112,7 @@ class Card(BaseSchema):
     @classmethod
     def _get_linked_card(
         cls, card_model: CardModel, _processed_codes: set[str]
-    ) -> Optional["Card"]:
+    ) -> Optional["CardSchema"]:
         """Safely get linked card without triggering lazy loading"""
         try:
             # Check if there's a linked_to_code
@@ -126,7 +132,7 @@ class Card(BaseSchema):
     @classmethod
     def from_model(
         cls, card_model: CardModel, _processed_codes: set[str] | None = None
-    ) -> "Card":
+    ) -> "CardSchema":
         """Convert a database CardModel to a Card schema"""
         if _processed_codes is None:
             _processed_codes = set()
@@ -189,11 +195,13 @@ class Card(BaseSchema):
             imagesrc=card_model.imagesrc,
             backimagesrc=card_model.backimagesrc,
             octgn_id=card_model.octgn_id,
-            traits=[Trait(name=trait.name) for trait in (card_model.traits or [])],
+            traits=[
+                TraitSchema(name=trait.name) for trait in (card_model.traits or [])
+            ],
             variants=card_model.variants,
             linked_card=cls._get_linked_card(card_model, _processed_codes),
             bonded_cards=[
-                BondedCard(
+                BondedCardSchema(
                     code=bonded.bonded_card_code,
                     count=bonded.count,
                     card=cls.from_model(bonded.bonded_card, _processed_codes),
@@ -203,9 +211,9 @@ class Card(BaseSchema):
         )
 
 
-class Trait(BaseSchema):
+class TraitSchema(BaseSchema):
     name: str
-    cards: List[Card] = []
+    cards: List[CardSchema] = []
 
 
 class EffectQuantities(BaseSchema):
@@ -227,6 +235,46 @@ class EffectQuantities(BaseSchema):
     XP: Optional[float] = 0
     special_effect: Optional[float] = 0  # generic boost value
     context: Optional[str] = None
+
+
+class ScenarioContext(BaseSchema):
+    scenario_code: str
+    scenario_name: str
+    campaign: str
+    pack: str
+    difficulty: str
+    avg_enemy_health: float
+    avg_enemy_fight: float
+    avg_enemy_evade: float
+    elite_enemy_count: int
+    enemy_damage_range: List[int]
+    enemy_horror_range: List[int]
+    primary_enemy_type: str
+    location_count: int
+    avg_clues_per_location: float
+    avg_shroud_value: float
+    # locked_doors: bool
+    special_movement_rules: bool
+    total_clues_in_scenario: int
+    chaos_tokens: List[ChaosToken]
+    # special_token_effects: Dict[str, Dict[str, str]]
+    doom_threshold: int
+    agenda_count: int
+    act_count: int
+    # special_rules: List[str]
+    # victory_conditions: str
+
+    # scenario_mechanics: Dict[str, Any]
+    encounter_sets: List[str]
+    treachery_count: int
+    # enemy_spawn_rate: str
+    # scenario_length: str
+    # resource_scarcity: str
+    # card_draw_availability: str
+    # action_economy_stress: str
+    # tempo: str
+
+    model_config = {"arbitrary_types_allowed": True}
 
 
 class CardGPTResponse(BaseSchema):

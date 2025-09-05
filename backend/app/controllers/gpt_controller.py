@@ -1,6 +1,6 @@
 from asyncio.log import logger
 from fastapi import HTTPException
-from app.schemas.card_schema import Card
+from app.schemas.card_schema import CardSchema
 from app.services.gpt_service import GPTService
 from app.schemas.gpt_schema import OpenAIRequest, OpenAIResponse
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,7 +25,7 @@ class GPTController:
             if not cardData:
                 raise HTTPException(status_code=404, detail="Card not found")
 
-            card_json = Card.from_model(cardData).filter_card_for_prompt()
+            card_json = CardSchema.from_model(cardData).filter_card_for_prompt()
             request = OpenAIRequest(content=json.dumps(card_json))
             response: OpenAIResponse = await self.gpt_service.async_request(request)
 

@@ -41,6 +41,24 @@ card_taboos = Table(
     Column("taboo_id", Integer, ForeignKey("taboos.id", ondelete="CASCADE")),
 )
 
+# Association table for card-encounter set relationship
+card_encounter_sets = Table(
+    "card_encounter_sets",
+    BaseModel.metadata,
+    Column(
+        "card_code",
+        String(50),
+        ForeignKey("cards.code", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+    Column(
+        "encounter_set_id",
+        Integer,
+        ForeignKey("encounter_sets.id", ondelete="CASCADE"),
+        primary_key=True,
+    ),
+)
+
 
 class BondedCardModel(BaseModel):
     __tablename__ = "bonded_cards"
@@ -98,6 +116,44 @@ class TraitModel(BaseModel):
     cards: Mapped[List["CardModel"]] = relationship(
         secondary="card_traits", back_populates="traits"
     )
+
+
+class EncounterSetModel(BaseModel):
+    """
+    Encounter set model - stores encounter set information from ArkhamDB
+
+    Examples:
+    - Core Set encounter sets (Striking Fear, Ancient Evils, etc.)
+    - Campaign-specific encounter sets
+    - Standalone scenario encounter sets
+    """
+
+    __tablename__ = "encounter_sets"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    code: Mapped[str] = mapped_column(
+        String(50), unique=True, nullable=False, index=True
+    )
+    name: Mapped[str] = mapped_column(String(200), nullable=False)
+
+    # Pack and cycle information
+    pack_code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    pack_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+
+    # Relationships
+    cards: Mapped[List["CardModel"]] = relationship(
+        secondary=card_encounter_sets, back_populates="encounter_sets", lazy="selectin"
+    )
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dict for API responses"""
+        return {
+            "id": self.id,
+            "code": self.code,
+            "name": self.name,
+            "pack_code": self.pack_code,
+            "pack_name": self.pack_name,
+        }
 
     __table_args__ = {
         "postgresql_with_oids": False
@@ -172,6 +228,11 @@ class CardModel(BaseModel):
     traits: Mapped[List[TraitModel]] = relationship(
         secondary=card_traits, back_populates="cards", lazy="selectin"
     )
+
+    # Encounter sets relationship
+    encounter_sets: Mapped[List["EncounterSetModel"]] = relationship(
+        secondary=card_encounter_sets, back_populates="cards", lazy="selectin"
+    )
     variants: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSON)
     duplicated_by: Mapped[Optional[List[str]]] = mapped_column(JSON, nullable=True)
     alternated_by: Mapped[Optional[List[str]]] = mapped_column(JSON, nullable=True)
@@ -185,6 +246,11 @@ class CardModel(BaseModel):
     clues: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     victory: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     spoilers: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+
+    enemy_damage: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    enemy_evade: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    enemy_fight: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    enemy_horror: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
 
     # Foreign key for linked card relationship
     linked_to_code: Mapped[Optional[str]] = mapped_column(

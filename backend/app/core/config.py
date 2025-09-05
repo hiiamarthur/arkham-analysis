@@ -62,13 +62,13 @@ class Settings(BaseSettings):
 
     # Cache Settings
     CACHE_TTL_DEFAULT: int = 3600  # 1 hour
-    CACHE_TTL_CARDS: int = 1800    # 30 minutes
-    CACHE_TTL_TRAITS: int = 7200   # 2 hours
+    CACHE_TTL_CARDS: int = 1800  # 30 minutes
+    CACHE_TTL_TRAITS: int = 7200  # 2 hours
 
     # New fields
     database_url: str = ""
     ARKHAMDB_CARDS_URL: str = "https://arkhamdb.com/api/public/cards"
-    ARKHAMDB_URL: str = "https://arkhamdb.com/api/public"
+    ARKHAMDB_URL: str = "https://arkhamdb.com/api"
 
     @property
     def DATABASE_URL(self) -> str:

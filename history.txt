@@ -1,0 +1,16 @@
+ 1204  npm run dev
+ 1205  nvm use 20.14
+ 1206  nvm install 20.19
+ 1207  npm run dev
+ 1208  npm run dev
+ 1209  npm run dev
+ 1210  cd /Users/arthurlau/work/IVM/ui_vending_react && npm install @tailwindcss/postcss
+ 1211  cd /Users/arthurlau/work/IVM/video-poc && npm install
+ 1212  npm install
+ 1213  source /Users/arthurlau/work/self/arkham-analysis/backend/arkham-analysis/bin/activate
+ 1214  claude
+ 1215  claude
+ 1216  claude
+ 1217  git push
+ 1218  git push
+ 1219  ~/.bash_history

@@ -1,38 +1,50 @@
+from __future__ import annotations
 from abc import ABC, abstractmethod
-from typing import List, Optional
-
-from . import Faction
-from . import CardType
-from ..models import TabooData
+from typing import TypeVar, cast
+from dataclasses import dataclass
+from typing import Dict, List, Optional, Type
 
 
-class BaseCard(ABC):
+from .faction import Faction
+from .card_type import CardType
+from domain.models import TabooData
 
-    def __init__(
-        self,
-        code: str,
-        name: str,
-        card_type: CardType,
-        traits: List[str],
-        faction: Faction,
-        text: str,
-        back_text: Optional[str],
-        # cost: int = 0,
-        # skill_willpower: int = 0,
-        # skill_intellect: int = 0,
-        # skill_combat: int = 0,
-        # skill_agility: int = 0,
-        # play_action_cost: int = 0,
-        # is_unique: bool = False,
-        # is_permanent: bool = False,
-        taboo: Optional[TabooData] = None,
-    ):
-        self.name = name
-        self.card_type = card_type
-        self.traits = traits
-        self.text = text
-        self.back_text = back_text
-        self.taboo = taboo
+T = TypeVar("T", bound="BaseCard")
+
+
+class CardMixin:
+    """Centralized type registry for dataclass-based cards."""
+
+    _registry: Dict[CardType, Type["BaseCard"]] = {}
+
+    def __init_subclass__(cls, **kwargs):
+        super().__init_subclass__(**kwargs)
+        # If subclass defines a default for `card_type`, use it as registry key
+        card_type = getattr(cls, "card_type", None)
+        if isinstance(card_type, CardType) and card_type is not CardType.NONE:
+            CardMixin._registry[card_type] = cast(Type["BaseCard"], cls)
+
+    @classmethod
+    def from_dict(cls, data: dict) -> BaseCard:
+        type_name = data.get("card_type")
+        if not isinstance(type_name, str):
+            raise ValueError(f"Invalid card_type: {type_name}")
+        subclass = cls._registry.get(CardType.from_code(type_name))
+        if not subclass:
+            raise ValueError(f"Unknown card_type: {type_name}")
+        return subclass(**data)
+
+
+@dataclass
+class BaseCard(CardMixin, ABC):
+    code: str
+    name: str
+    card_type: CardType
+    traits: List[str]
+    faction: Faction
+    text: str
+    back_text: Optional[str] = None
+    taboo: Optional[TabooData] = None
 
     @classmethod
     def from_dict(cls, data: dict) -> "BaseCard":

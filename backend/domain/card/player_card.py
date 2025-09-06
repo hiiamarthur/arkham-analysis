@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 from . import Faction
 from ..models import TabooData
@@ -7,68 +8,96 @@ from .base_card import BaseCard
 import re
 
 
+@dataclass
 class PlayerCard(BaseCard):
-    def __init__(
-        self,
-        code: str,
-        name: str,
-        card_type: CardType,
-        traits: List[str],
-        faction: Faction,
-        text: str,
-        cost: int,
-        level: int = 0,
-        skill_willpower: int = 0,
-        skill_intellect: int = 0,
-        skill_combat: int = 0,
-        skill_agility: int = 0,
-        skill_wild: int = 0,
-        play_action_cost: int = 1,
-        is_unique: bool = False,
-        is_permanent: bool = False,
-        is_exceptional: bool = False,
-        activation_type: ActivationType = ActivationType.ACTION,
-        cost_factors: Dict[CardCostFactor, float] = {
+    cost: int = 0
+    level: int = 0
+    skill_willpower: int = 0
+    skill_intellect: int = 0
+    skill_combat: int = 0
+    skill_agility: int = 0
+    skill_wild: int = 0
+    play_action_cost: int = 1
+    is_unique: bool = False
+    is_permanent: bool = False
+    is_exceptional: bool = False
+    activation_type: ActivationType = ActivationType.ACTION
+    cost_factors: Dict[CardCostFactor, float] = field(
+        default_factory=lambda: {
             CardCostFactor.ACTION: 1,
             CardCostFactor.RESOURCE: 1,
             CardCostFactor.ICON: 1,
             CardCostFactor.XP: 1,
-        },
-        taboo: Optional[TabooData] = None,
-    ):
-        super().__init__(
-            code,
-            name,
-            card_type,
-            traits,
-            faction,
-            text,
-            "",
-            # cost,
-            # skill_willpower,
-            # skill_intellect,
-            # skill_combat,
-            # skill_agility,
-            # play_action_cost,
-            # is_unique,
-            # is_permanent,
-        )
-        self.cost = cost
-        self.skill_willpower = skill_willpower
-        self.skill_intellect = skill_intellect
-        self.skill_combat = skill_combat
-        self.skill_agility = skill_agility
-        self.play_action_cost = play_action_cost
-        self.is_unique = is_unique
-        self.is_permanent = is_permanent
+        }
+    )
+    taboo: Optional[TabooData] = None
 
-        self.taboo = taboo
-        self.level = level
-        self.activation_type = activation_type
-        self.skill_wild = skill_wild
-        self.cost_factors = cost_factors
-        if is_exceptional:
+    def __post_init__(self):
+        # apply exceptional XP doubling
+        if self.is_exceptional:
             self.level *= 2
+
+    # def __init__(
+    #     self,
+    #     code: str,
+    #     name: str,
+    #     card_type: CardType,
+    #     traits: List[str],
+    #     faction: Faction,
+    #     text: str,
+    #     cost: int,
+    #     level: int = 0,
+    #     skill_willpower: int = 0,
+    #     skill_intellect: int = 0,
+    #     skill_combat: int = 0,
+    #     skill_agility: int = 0,
+    #     skill_wild: int = 0,
+    #     play_action_cost: int = 1,
+    #     is_unique: bool = False,
+    #     is_permanent: bool = False,
+    #     is_exceptional: bool = False,
+    #     activation_type: ActivationType = ActivationType.ACTION,
+    #     cost_factors: Dict[CardCostFactor, float] = {
+    #         CardCostFactor.ACTION: 1,
+    #         CardCostFactor.RESOURCE: 1,
+    #         CardCostFactor.ICON: 1,
+    #         CardCostFactor.XP: 1,
+    #     },
+    #     taboo: Optional[TabooData] = None,
+    # ):
+    #     super().__init__(
+    #         code,
+    #         name,
+    #         card_type,
+    #         traits,
+    #         faction,
+    #         text,
+    #         "",
+    #         # cost,
+    #         # skill_willpower,
+    #         # skill_intellect,
+    #         # skill_combat,
+    #         # skill_agility,
+    #         # play_action_cost,
+    #         # is_unique,
+    #         # is_permanent,
+    #     )
+    #     self.cost = cost
+    #     self.skill_willpower = skill_willpower
+    #     self.skill_intellect = skill_intellect
+    #     self.skill_combat = skill_combat
+    #     self.skill_agility = skill_agility
+    #     self.play_action_cost = play_action_cost
+    #     self.is_unique = is_unique
+    #     self.is_permanent = is_permanent
+
+    #     self.taboo = taboo
+    #     self.level = level
+    #     self.activation_type = activation_type
+    #     self.skill_wild = skill_wild
+    #     self.cost_factors = cost_factors
+    #     if is_exceptional:
+    #         self.level *= 2
 
     # Scoring methods moved to scoring model layer
     # The domain should not contain scoring/evaluation logic

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import List, Optional
 from . import ActivationType, CardType
 from .player_card import PlayerCard
-from . import Faction
+from .faction import Faction
 
 
 @dataclass

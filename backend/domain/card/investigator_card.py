@@ -1,8 +1,8 @@
 from dataclasses import dataclass, field
 from typing import Any, Dict, List
 
-from . import Faction
-from . import CardType
+from .faction import Faction
+from .card_type import CardType
 from .base_card import BaseCard
 from .with_health_sanity import WithHealthSanity
 

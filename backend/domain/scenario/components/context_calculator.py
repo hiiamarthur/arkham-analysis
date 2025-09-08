@@ -199,9 +199,9 @@ class ContextCalculator:
             "time_pressure": self.calculate_time_pressure(
                 doom_threshold, agenda_rate, player_count
             ),
-            "resource_scarcity": self.calculate_resource_scarcity(
-                starting_clues, player_count
-            ),
+            # "resource_scarcity": self.calculate_resource_scarcity(
+            #     starting_clues, player_count
+            # ),
             "chaos_hostility": self.calculate_chaos_hostility(chaos_bag),
             "encounter_difficulty": self.calculate_encounter_difficulty(),
             "doom_threshold": float(doom_threshold),

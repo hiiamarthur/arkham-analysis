@@ -1,6 +1,7 @@
 from typing import List, Optional, Union
 from app.models.arkham_model import CardModel
 from app.schemas.card_schema import CardSchema
+from domain.card.base_card import BaseCard
 from domain.card import EncounterCard, PlayerCard, CardType, Faction
 
 
@@ -44,6 +45,6 @@ class CardAdapter:
     @staticmethod
     def models_to_domains(
         card_models: List[CardModel],
-    ) -> List[Union[EncounterCard, PlayerCard]]:
+    ) -> List[BaseCard]:
         """Batch conversion for efficiency"""
         return [CardAdapter.model_to_domain(model) for model in card_models]

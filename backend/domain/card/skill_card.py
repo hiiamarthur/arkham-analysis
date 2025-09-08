@@ -1,9 +1,11 @@
 from dataclasses import dataclass
 from typing import List, Optional
 
-from . import ActivationType, CardCostFactor, CardType
+from .activation_type import ActivationType
+from .card_cost_factor import CardCostFactor
+from .card_type import CardType
 from .player_card import PlayerCard
-from . import Faction
+from .faction import Faction
 
 
 @dataclass

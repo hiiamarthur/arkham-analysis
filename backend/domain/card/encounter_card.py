@@ -1,8 +1,8 @@
 from abc import abstractmethod
 from dataclasses import dataclass
 from typing import List, Optional
-from . import CardType
-from . import Faction
+from .card_type import CardType
+from .faction import Faction
 from .base_card import BaseCard
 
 

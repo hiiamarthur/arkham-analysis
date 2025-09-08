@@ -15,7 +15,7 @@ if backend_path not in sys.path:
     sys.path.append(backend_path)
 
 from domain import ScenarioType, Difficulty
-from scenario import Scenario
+from .. import Scenario
 
 
 class ScenarioConfig:

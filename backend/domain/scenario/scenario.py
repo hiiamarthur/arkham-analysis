@@ -40,6 +40,7 @@ class Scenario(ABC):
         player_count: int,
         encounter_cards: List[EncounterCard],
     ):
+        print("encounter_cards", encounter_cards)
         self.scenario_type = scenario_type
         self.difficulty = difficulty
         self.campaign_type = campaign_type
@@ -59,6 +60,7 @@ class Scenario(ABC):
 
         # Apply initial setup
         self._initialize_scenario()
+        self.encounter_cards = encounter_cards
 
     def to_dict(self) -> Dict[str, Any]:
         """
@@ -95,6 +97,7 @@ class Scenario(ABC):
             # Resource analysis
             "time_pressure": self.calculate_time_pressure(),
             "resource_scarcity": self.calculate_resource_scarcity(),
+            "encounter_cards": [card.dict for card in self.encounter_cards],
         }
 
     def _serialize_config_summary(self) -> Dict[str, Any]:

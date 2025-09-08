@@ -1,5 +1,5 @@
 import asyncio
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, cast
 from datetime import datetime
 import json
 from fastapi import HTTPException
@@ -16,10 +16,12 @@ from app.models.arkham_model import CardModel, EncounterSetModel
 from app.repositories.base_repositories import BaseRepository
 
 
+from app.adapters.card_adapters import UnifiedCardAdapter
+from domain.card import EncounterCard
 from domain.scenario.rules import get_encounter_set, get_encounter_sets_for_scenario
 from domain.Token.chaos_bag import ChaosBag
 from domain.difficulty import Difficulty
-from app.schemas.card_schema import ScenarioContext
+from app.schemas.card_schema import CardSchema, ScenarioContext
 from domain.scenarios import ScenarioType, get_scenario_campaign
 from domain.scenario.factories import ScenarioFactory
 
@@ -55,8 +57,11 @@ class ScenarioService:
         encounter_set_of_scenario_record = await self.encounter_set_repo.get_first(
             filters={"filter_by[name][equals]": encounter_set_of_scenario["name"]}
         )
+        print("encounter_set_used_for_scenario", encounter_set_used_for_scenario)
         encounter_cards = await self.card_repo.get_all(
-            filter_by={"filter_by[encounter_code][in]": encounter_set_used_for_scenario}
+            filter_by={
+                "filter_by[encounter_code][equals]": encounter_set_used_for_scenario[0]
+            }
         )
         print(
             "encounter_set_of_scenario",
@@ -75,7 +80,7 @@ class ScenarioService:
             },
             # include=["traits", "linked_card", "bonded_cards.bonded_card"],
         )
-
+        print("encounter_cards", encounter_cards)
         if not scenarioCard:
             raise HTTPException(status_code=404, detail="Scenario not found")
         return ScenarioFactory.create_scenario(
@@ -84,6 +89,15 @@ class ScenarioService:
             campaign_type=get_scenario_campaign(scenario_code),
             scenario_type=scenario_code,
             difficulty=difficulty,
+            encounter_cards=[
+                cast(
+                    EncounterCard,
+                    UnifiedCardAdapter().schema_to_domain(
+                        schema=CardSchema.from_model(card)
+                    ),
+                )
+                for card in encounter_cards
+            ],
         ).to_dict()
         # return ScenarioContext(
         #     scenario_code=scenarioCard.code,

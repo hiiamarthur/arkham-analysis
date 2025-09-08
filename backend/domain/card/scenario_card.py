@@ -2,8 +2,8 @@ from abc import abstractmethod
 from dataclasses import dataclass
 from typing import List, Optional
 from .encounter_card import EncounterCard
-from . import CardType
-from . import Faction
+from .card_type import CardType
+from .faction import Faction
 
 
 @dataclass

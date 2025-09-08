@@ -3,7 +3,7 @@ Scenario Template Functions for Common Patterns
 """
 
 from typing import Dict, List, cast
-from rules.base_rules import *
+from .base_rules import *
 
 
 def create_standard_scenario_template(

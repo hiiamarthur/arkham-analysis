@@ -1,9 +1,11 @@
 from abc import abstractmethod
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
-from . import Faction
+from .faction import Faction
 from ..models import TabooData
-from . import ActivationType, CardCostFactor, CardType
+from .activation_type import ActivationType
+from .card_cost_factor import CardCostFactor
+from .card_type import CardType
 from .base_card import BaseCard
 import re
 

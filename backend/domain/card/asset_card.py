@@ -1,7 +1,8 @@
 from dataclasses import dataclass, field
 from typing import List, Optional
-from . import Faction
-from . import ActivationType, CardType
+from .faction import Faction
+from .activation_type import ActivationType
+from .card_type import CardType
 from .player_card import PlayerCard
 from .with_health_sanity import WithHealthSanity
 

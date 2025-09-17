@@ -9,6 +9,7 @@ from typing import Dict, List, Any, Optional
 import sys
 import os
 
+from ..campaigns.campaign_factory import CampaignFactory
 from domain.card import EncounterCard
 
 backend_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..")
@@ -33,29 +34,28 @@ class Scenario(ABC):
 
     def __init__(
         self,
-        campaign_chaos_bag: ChaosBag,
         campaign_type: CampaignType,
         scenario_type: ScenarioType,
         difficulty: Difficulty,
-        player_count: int,
-        encounter_cards: List[EncounterCard],
+        player_count: int = 3,
+        encounter_cards: List[EncounterCard] = [],
     ):
-        print("encounter_cards", encounter_cards)
+
         self.scenario_type = scenario_type
         self.difficulty = difficulty
         self.campaign_type = campaign_type
         self.player_count = player_count
         self._config = None
-
+        self.campaign = CampaignFactory.create_campaign(campaign_type, difficulty)
         # Initialize components (Composition pattern)
         # self.config = ScenarioConfig(scenario_type, difficulty, player_count)
         # self.config = None
         self.chaos_manager = ChaosBagManager(
-            campaign_chaos_bag, scenario_type, difficulty
+            ChaosBag(self.campaign.get_init_tokens(difficulty)),
+            scenario_type,
+            difficulty,
         )
-        self.context_calculator = ContextCalculator(
-            scenario_type, difficulty, player_count
-        )
+        self.context_calculator = ContextCalculator(self)
         self.difficulty_modifier = DifficultyModifier(difficulty)
 
         # Apply initial setup
@@ -142,7 +142,7 @@ class Scenario(ABC):
     @property
     def config(self):
         if self._config is None:
-            self._config = ScenarioConfig(self)
+            self._config = ScenarioConfig(self)  # type: ignore
         return self._config
 
     def _initialize_scenario(self) -> None:

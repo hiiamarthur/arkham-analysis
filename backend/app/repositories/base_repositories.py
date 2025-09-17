@@ -519,7 +519,7 @@ class BaseRepository(Generic[T]):
         return load_options
 
     async def get_by_id(
-        self, id: int, include: List[str] = [], use_cache: bool = True
+        self, id: int | str, include: List[str] = [], use_cache: bool = True
     ) -> Optional[T]:
         """Get a record by id with optional caching"""
         try:
@@ -647,7 +647,7 @@ class BaseRepository(Generic[T]):
     async def get_all(
         self,
         page: int = 1,
-        items_per_page: int = 10,
+        items_per_page: int = 1000,  # Increased from 10 to 1000
         order_by: List[str] = [],
         order_type: str = "asc",
         filter_by: Union[Dict, FilterCondition, None] = None,
@@ -668,7 +668,11 @@ class BaseRepository(Generic[T]):
         stmt = self._apply_select(stmt, include)
 
         stmt = self._apply_sorting(stmt, order_by, order_type)
-        stmt = self._apply_pagination(stmt, page, items_per_page)
+
+        # Apply pagination only if items_per_page > 0
+        if items_per_page > 0:
+            stmt = self._apply_pagination(stmt, page, items_per_page)
+
         stmt = self._apply_grouping(stmt, group_by)
 
         # Execute query and return results
@@ -772,6 +776,17 @@ class BaseRepository(Generic[T]):
 
     def _cast_value(self, column, value):
         """Cast value to the correct primitive type based on column type"""
+        if value is None:
+            return None
+
+        # Handle list/tuple values (for IN operations) - cast each item individually
+        if isinstance(value, (list, tuple)):
+            return [self._cast_single_value(column, item) for item in value]
+
+        return self._cast_single_value(column, value)
+
+    def _cast_single_value(self, column, value):
+        """Cast a single value to the correct primitive type based on column type"""
         if value is None:
             return None
 

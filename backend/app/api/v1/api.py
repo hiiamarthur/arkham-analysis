@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1.endpoints import cards, sync, analytics, scenarios, scoring
+from app.api.v1.endpoints import cards, sync, analytics, scenarios, scoring, decks, context
 
 api_router = APIRouter()
 
@@ -8,6 +8,12 @@ api_router.include_router(
     cards.router,
     prefix="/cards",
     tags=["cards"],
+)
+
+api_router.include_router(
+    decks.router,
+    prefix="/decks",
+    tags=["decks"],
 )
 
 api_router.include_router(
@@ -32,4 +38,10 @@ api_router.include_router(
     scoring.router,
     prefix="/scoring",
     tags=["scoring"],
+)
+
+api_router.include_router(
+    context.router,
+    prefix="/context",
+    tags=["context"],
 )

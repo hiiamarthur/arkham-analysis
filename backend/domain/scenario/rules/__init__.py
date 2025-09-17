@@ -20,6 +20,7 @@ from .encounter_sets import (
     ENCOUNTER_SET_REGISTRY,
     get_encounter_sets_for_scenario,
     get_encounter_set,
+    get_encounter_set_by_name,
 )
 from .scenario_templates import (
     create_standard_scenario_template,
@@ -44,6 +45,7 @@ __all__ = [
     "ENCOUNTER_SET_REGISTRY",
     "get_encounter_sets_for_scenario",
     "get_encounter_set",
+    "get_encounter_set_by_name",
     # Templates
     "create_standard_scenario_template",
     "create_investigation_heavy_template",

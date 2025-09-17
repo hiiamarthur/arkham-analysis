@@ -21,8 +21,9 @@ from domain import (
     ScenarioType,
     get_scenario_modifications,
 )
+from domain.scenarios import get_scenario_campaign, get_scenarios_by_campaign
 
-router = APIRouter(tags=["scenarios"])
+router = APIRouter()
 
 
 # ==================================================================================
@@ -123,16 +124,17 @@ async def get_all_scenarios(
 
     scenarios = []
     scenario_list = (
-        ScenarioType.from_campaign(campaign) if campaign else list(ScenarioType)
+        get_scenarios_by_campaign(campaign) if campaign else list(ScenarioType)
     )
 
     for scenario in scenario_list:
+        scenario_campaign = get_scenario_campaign(scenario)
         scenarios.append(
             {
-                "code": scenario.scenario_code,
+                "code": scenario.value,
                 "name": scenario.display_name,
-                "campaign": scenario.campaign.value,
-                "campaign_name": scenario.campaign.display_name,
+                "campaign": scenario_campaign.value,
+                "campaign_name": scenario_campaign.display_name,
             }
         )
 
@@ -176,7 +178,7 @@ async def get_scenario_chaos_tokens(
     # Find scenario by code
     scenario = None
     for s in ScenarioType:
-        if s.scenario_code == scenario_code:
+        if s.value == scenario_code:
             scenario = s
             break
 
@@ -196,9 +198,9 @@ async def get_scenario_chaos_tokens(
 
     return {
         "scenario": {
-            "code": scenario.scenario_code,
+            "code": scenario.value,
             "name": scenario.display_name,
-            "campaign": scenario.campaign.value,
+            "campaign": get_scenario_campaign(scenario).value,
         },
         "difficulty": difficulty.value,
         "token_modifications": modifications,
@@ -262,7 +264,7 @@ async def compare_scenario_difficulties(
     # Find scenario by code
     scenario = None
     for s in ScenarioType:
-        if s.scenario_code == scenario_code:
+        if s.value == scenario_code:
             scenario = s
             break
 
@@ -288,9 +290,9 @@ async def compare_scenario_difficulties(
 
     return {
         "scenario": {
-            "code": scenario.scenario_code,
+            "code": scenario.value,
             "name": scenario.display_name,
-            "campaign": scenario.campaign.value,
+            "campaign": get_scenario_campaign(scenario).value,
         },
         "difficulties": difficulty_comparison,
     }
@@ -307,7 +309,7 @@ async def analyze_scenario_advanced(
     # Find scenario by code
     scenario = None
     for s in ScenarioType:
-        if s.scenario_code == scenario_code:
+        if s.value == scenario_code:
             scenario = s
             break
 
@@ -325,9 +327,9 @@ async def analyze_scenario_advanced(
     # Build analysis response
     analysis = {
         "scenario": {
-            "code": scenario.scenario_code,
+            "code": scenario.value,
             "name": scenario.display_name,
-            "campaign": scenario.campaign.value,
+            "campaign": get_scenario_campaign(scenario).value,
         },
         "analysis_parameters": {
             "difficulty": analysis_request.difficulty.value,
@@ -360,7 +362,7 @@ async def simulate_chaos_bag(
     # Find scenario
     scenario = None
     for s in ScenarioType:
-        if s.scenario_code == scenario_code:
+        if s.value == scenario_code:
             scenario = s
             break
 
@@ -382,7 +384,7 @@ async def simulate_chaos_bag(
     # Mock simulation results
     results = {
         "scenario": {
-            "code": scenario.scenario_code,
+            "code": scenario.value,
             "name": scenario.display_name,
             "difficulty": difficulty.value,
         },
@@ -405,6 +407,87 @@ async def simulate_chaos_bag(
     return results
 
 
+@router.get("/{scenario_code}/stats", response_model=Dict[str, Any])
+async def get_scenario_stats(
+    response: Response,
+    scenario_code: str,
+    scenario_service: ScenarioService = Depends(get_scenario_service),
+):
+    """Get pre-computed scenario statistics for GPT and analysis"""
+    try:
+        from domain.scenarios import ScenarioType
+        from domain.scenario.rules import get_encounter_sets_for_scenario
+        from app.services.scenario_stats_service import ScenarioStatsService
+        from app.api.deps import get_card_repository
+
+        scenario_type = ScenarioType(scenario_code)
+        encounter_sets = get_encounter_sets_for_scenario(scenario_type)
+
+        # Get card repository and create stats service
+        card_repo = await get_card_repository()
+        stats_service = ScenarioStatsService(card_repo)
+
+        # Get real stats from database
+        scenario_stats = await stats_service.get_scenario_stats(encounter_sets)
+
+        response.headers.update(ARKHAM_HEADERS)
+        response.headers["Cache-Control"] = f"public, max-age={CACHE_TTL_MEDIUM}"
+
+        return {
+            "scenario_code": scenario_code,
+            "scenario_name": scenario_type.display_name,
+            "encounter_sets": encounter_sets,
+            "gpt_context_prompt": scenario_stats.to_gpt_context_prompt(),
+            "analysis_modifiers": scenario_stats.get_card_analysis_modifiers(),
+            "raw_stats": {
+                "total_enemies": scenario_stats.total_enemies,
+                "enemies_with_retaliate": scenario_stats.enemies_with_retaliate,
+                "enemies_with_hunter": scenario_stats.enemies_with_hunter,
+                "total_treacheries": scenario_stats.total_treacheries,
+                "treacheries_with_surge": scenario_stats.treacheries_with_surge,
+                "total_locations": scenario_stats.total_locations,
+                "average_shroud": scenario_stats.average_shroud,
+                "clue_locations": scenario_stats.clue_locations,
+                "total_clues_available": scenario_stats.total_clues_available,
+            },
+        }
+
+    except Exception as e:
+        return {"error": f"Failed to get scenario stats: {str(e)}"}
+
+
+@router.post("/{scenario_code}/query", response_model=Dict[str, Any])
+async def query_scenario_stat(
+    scenario_code: str,
+    query_request: dict,  # {"query": "how many enemies have retaliate"}
+    scenario_service: ScenarioService = Depends(get_scenario_service),
+):
+    """Handle dynamic scenario queries like 'how many enemies have retaliate'"""
+    try:
+        from domain.scenarios import ScenarioType
+        from domain.scenario.rules import get_encounter_sets_for_scenario
+        from app.services.scenario_stats_service import ScenarioStatsService
+        from app.api.deps import get_card_repository
+
+        scenario_type = ScenarioType(scenario_code)
+        encounter_sets = get_encounter_sets_for_scenario(scenario_type)
+
+        query = query_request.get("query", "")
+
+        # Get card repository and create stats service
+        card_repo = await get_card_repository()
+        stats_service = ScenarioStatsService(card_repo)
+
+        # Use real dynamic query functionality
+        result = await stats_service.query_dynamic_stat(encounter_sets, query)
+        result["scenario"] = scenario_code
+        result["query"] = query
+
+        return result
+    except Exception as e:
+        return {"error": f"Query failed: {str(e)}"}
+
+
 @router.post("/compare", response_model=Dict[str, Any])
 async def compare_scenarios(
     comparison_request: ScenarioComparisonRequest,  # ✅ Endpoint-specific request class
@@ -417,7 +500,7 @@ async def compare_scenarios(
         # Find scenario
         scenario = None
         for s in ScenarioType:
-            if s.scenario_code == scenario_code:
+            if s.value == scenario_code:
                 scenario = s
                 break
 
@@ -425,11 +508,12 @@ async def compare_scenarios(
             modifications = get_scenario_modifications(
                 scenario, comparison_request.difficulty
             )
+            campaign = get_scenario_campaign(scenario)
             scenarios_data.append(
                 {
-                    "code": scenario.scenario_code,
+                    "code": scenario.value,
                     "name": scenario.display_name,
-                    "campaign": scenario.campaign.value,
+                    "campaign": campaign.value,
                     "token_modifications": len(modifications),
                     "has_skull_effects": "skull" in modifications,
                     "has_special_tokens": any(

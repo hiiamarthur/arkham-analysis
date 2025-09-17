@@ -5,11 +5,14 @@ from app.database import get_async_db
 from app.services.app_service import AppService
 from app.services.arkhamdb_service import ArkhamDBService
 from app.services.cache_service import cache_service
+from app.services.deck_service import DeckService
 from app.services.scenario_service import ScenarioService
 from app.repositories.base_repositories import BaseRepository
 from app.models.arkham_model import CardModel, TabooModel, TraitModel, EncounterSetModel
 
 # Import scoring services
+from app.services.card_service import CardService
+from app.services.context_service import ContextService
 from scoring_model.services import (
     BaseCardScoringService,
     ConservativeScoringService,
@@ -73,9 +76,25 @@ async def get_arkhamdb_service() -> ArkhamDBService:
     return ArkhamDBService()
 
 
+async def get_deck_service(
+    arkhamdb_service: ArkhamDBService = Depends(get_arkhamdb_service)
+) -> DeckService:
+    """Get deck service instance with injected dependencies"""
+    return DeckService(arkhamdb_service)
+
+
 async def get_cache_service():
     """Get cache service instance"""
     return cache_service
+
+
+async def get_card_service(
+    db: AsyncSession = Depends(get_db),
+    card_repo: BaseRepository[CardModel] = Depends(get_card_repository),
+    deck_service: DeckService = Depends(get_deck_service),
+) -> CardService:
+    """Get card service instance with injected repositories and deck service"""
+    return CardService(db, card_repo, deck_service)
 
 
 async def get_scenario_service(
@@ -125,6 +144,11 @@ async def get_control_scoring_service() -> ControlScoringService:
 async def get_combo_scoring_service() -> ComboScoringService:
     """Get combo scoring service"""
     return ComboScoringService()
+
+
+async def get_context_service() -> ContextService:
+    """Get context service instance"""
+    return ContextService()
 
 
 # Scoring service dependency (when you create it later)

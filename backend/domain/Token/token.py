@@ -21,6 +21,10 @@ class TokenString(Enum):
     TABLET = "tablet"
     ELDER_THING = "elder_thing"
 
+    @staticmethod
+    def from_str(str: str) -> "TokenString":
+        return TokenString(str)
+
 
 class ChaosToken:
     def __init__(
@@ -35,10 +39,13 @@ class ChaosToken:
         self.value = value
         self.revealAnotherToken = revealAnotherToken
 
+    # def __name__(self) -> TokenString:
+    #     return self.name
+
 
 class ElderSignToken(ChaosToken):
-    def __init__(self, effect: str = "", value: int = 0):
-        super().__init__(TokenString.ELDER_SIGN, effect, value, False)
+    def __init__(self, effect: str = "", value: int = 0, revealAnotherToken: bool = False):
+        super().__init__(TokenString.ELDER_SIGN, effect, value, revealAnotherToken)
 
 
 class ZeroToken(ChaosToken):

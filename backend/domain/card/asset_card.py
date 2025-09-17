@@ -13,5 +13,11 @@ class AssetCard(PlayerCard, WithHealthSanity):
     slots: List[str] = field(default_factory=list)
     use: Optional[str] = None
 
+    # def __post_init__(self):
+    #     super().__post_init__()
+    #     # Override card_type for asset cards
+    #     if self.card_type != CardType.ASSET:
+    #         object.__setattr__(self, 'card_type', CardType.ASSET)
+
     # Scoring methods moved to scoring model layer
     # The domain should not contain scoring/evaluation logic

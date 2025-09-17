@@ -8,6 +8,7 @@ logger = logging.getLogger(__name__)
 
 ARKHAMDB_CARDS_URL = settings.ARKHAMDB_URL + "/public/cards/"
 ARKHAMDB_TABOOS_URL = settings.ARKHAMDB_URL + "/public/taboos/"
+ARKHAMDB_DECKS_URL = settings.ARKHAMDB_URL + "/public/decklists/"
 
 
 class ArkhamDBService:
@@ -137,6 +138,19 @@ class ArkhamDBService:
         except Exception as e:
             logger.error(f"Unexpected error fetching card {card_code}: {e}")
             raise
+
+    async def fetch_decks_by_date(self, date: str):
+        import re
+
+        # Validate date format YYYY-MM-DD
+        if not re.match(r"^\d{4}-\d{2}-\d{2}$", date):
+            raise ValueError("Date must be in YYYY-MM-DD format")
+
+        async with httpx.AsyncClient(timeout=self.timeout) as client:
+            response = await client.get(ARKHAMDB_DECKS_URL + "by_date/" + date)
+            response.raise_for_status()
+            data = response.json()
+            return data
 
     async def invalidate_cache(self) -> None:
         """Invalidate all ArkhamDB cache entries"""

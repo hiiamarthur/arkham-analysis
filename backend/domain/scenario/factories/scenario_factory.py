@@ -25,7 +25,6 @@ class ScenarioFactory:
 
     @staticmethod
     def create_scenario(
-        campaign_chaos_bag: ChaosBag,
         campaign_type: CampaignType,
         scenario_type: ScenarioType,
         difficulty: Difficulty,
@@ -48,7 +47,6 @@ class ScenarioFactory:
             Configured Scenario instance
         """
         return Scenario(
-            campaign_chaos_bag=campaign_chaos_bag,
             campaign_type=campaign_type,
             scenario_type=scenario_type,
             difficulty=difficulty,

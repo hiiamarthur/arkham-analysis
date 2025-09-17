@@ -21,6 +21,7 @@ class CardMixin:
         super().__init_subclass__(**kwargs)
         # If subclass defines a default for `card_type`, use it as registry key
         card_type = getattr(cls, "card_type", None)
+
         if isinstance(card_type, CardType) and card_type is not CardType.NONE:
             CardMixin._registry[card_type] = cast(Type["BaseCard"], cls)
 
@@ -45,6 +46,7 @@ class BaseCard(CardMixin, ABC):
     faction: Faction
     text: str
     card_type: CardType
+    quantity: int = 1
     back_text: Optional[str] = None
     taboo: Optional[TabooData] = None
 
@@ -52,6 +54,7 @@ class BaseCard(CardMixin, ABC):
     def from_dict(cls, data: dict) -> "BaseCard":
         # Filter data to only include fields that exist in this class
         from dataclasses import fields
+
         valid_fields = {f.name for f in fields(cls)}
         filtered_data = {k: v for k, v in data.items() if k in valid_fields}
         return cls(**filtered_data)

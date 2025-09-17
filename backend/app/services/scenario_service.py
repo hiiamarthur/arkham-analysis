@@ -18,7 +18,11 @@ from app.repositories.base_repositories import BaseRepository
 
 from app.adapters.card_adapters import UnifiedCardAdapter
 from domain.card import EncounterCard
-from domain.scenario.rules import get_encounter_set, get_encounter_sets_for_scenario
+from domain.scenario.rules import (
+    get_encounter_set,
+    get_encounter_sets_for_scenario,
+    get_encounter_set_by_name,
+)
 from domain.Token.chaos_bag import ChaosBag
 from domain.difficulty import Difficulty
 from app.schemas.card_schema import CardSchema, ScenarioContext
@@ -52,22 +56,25 @@ class ScenarioService:
 
         if cache_key in self.scenario_cache:
             return self.scenario_cache[cache_key]
-        encounter_set_of_scenario = get_encounter_set(scenario_code.value)
+        encounter_set_of_scenario = get_encounter_set_by_name(scenario_code.__str__())
+        print(
+            "encounter_set_of_scenario is",
+            encounter_set_of_scenario,
+            scenario_code.name,
+        )
         encounter_set_used_for_scenario = get_encounter_sets_for_scenario(scenario_code)
         encounter_set_of_scenario_record = await self.encounter_set_repo.get_first(
             filters={"filter_by[name][equals]": encounter_set_of_scenario["name"]}
         )
         print("encounter_set_used_for_scenario", encounter_set_used_for_scenario)
         encounter_cards = await self.card_repo.get_all(
-            filter_by={
-                "filter_by[encounter_code][equals]": encounter_set_used_for_scenario[0]
-            }
+            filter_by={"filter_by[encounter_code][in]": encounter_set_used_for_scenario}
         )
         print(
             "encounter_set_of_scenario",
             scenario_code.__str__(),
             encounter_set_of_scenario,
-            encounter_set_of_scenario_record,
+            # encounter_set_of_scenario_record,
         )
         scenarioCard = await self.card_repo.get_first(
             filters={

@@ -245,6 +245,10 @@ class CardModel(BaseModel):
     shroud: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     clues: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     victory: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    vengeance: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    doom: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    clues_fixed: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
+    stage: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     spoilers: Mapped[Optional[bool]] = mapped_column(Boolean, nullable=True)
 
     enemy_damage: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)

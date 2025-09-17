@@ -202,7 +202,7 @@ CORE_ENCOUNTER_SET = {
             ScenarioType.THE_APIARY,
         ],
     },
-    "the_gathering": {
+    "torch": {
         "name": "The Gathering",
         "icon": "the_gathering",
         "scenarios": [ScenarioType.THE_GATHERING],

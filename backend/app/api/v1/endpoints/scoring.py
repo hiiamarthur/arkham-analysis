@@ -25,7 +25,7 @@ from scoring_model.services import (
     ComboScoringService,
 )
 
-router = APIRouter(prefix="/scoring", tags=["scoring"])
+router = APIRouter()
 
 
 def get_scorer_by_strategy(

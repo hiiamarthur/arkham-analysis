@@ -57,7 +57,15 @@ class FilterCondition(BaseModel):
                 field, op, value = filters[0]
                 current.field = field
                 current.op = op
-                current.value = value
+                
+                # Handle list values for 'in' and 'not_in' operators
+                if op.lower() in ['in', 'not_in'] and isinstance(value, list):
+                    current.value = value
+                elif op.lower() in ['in', 'not_in'] and isinstance(value, str) and ',' in value:
+                    # Handle comma-separated string values for 'in' operations
+                    current.value = [item.strip() for item in value.split(',')]
+                else:
+                    current.value = value
 
                 # Add additional filters as AND conditions
                 for field, op, value in filters[1:]:
@@ -66,7 +74,15 @@ class FilterCondition(BaseModel):
                     new_condition = cls()
                     new_condition.field = field
                     new_condition.op = op
-                    new_condition.value = value
+                    
+                    # Handle list values for additional filters too
+                    if op.lower() in ['in', 'not_in'] and isinstance(value, list):
+                        new_condition.value = value
+                    elif op.lower() in ['in', 'not_in'] and isinstance(value, str) and ',' in value:
+                        new_condition.value = [item.strip() for item in value.split(',')]
+                    else:
+                        new_condition.value = value
+                        
                     current.and_.append(new_condition)
 
         print("root", root)

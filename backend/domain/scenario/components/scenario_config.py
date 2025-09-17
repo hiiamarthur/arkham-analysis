@@ -14,14 +14,17 @@ backend_path = os.path.join(
 if backend_path not in sys.path:
     sys.path.append(backend_path)
 
+from typing import TYPE_CHECKING
 from domain import ScenarioType, Difficulty
-from .. import Scenario
+
+if TYPE_CHECKING:
+    from ..scenario import Scenario
 
 
 class ScenarioConfig:
     """Manages scenario-specific configuration data and calculations"""
 
-    def __init__(self, scenario: Scenario):
+    def __init__(self, scenario: "Scenario"):
         self.scenario_type = scenario.scenario_type
         self.difficulty = scenario.difficulty
         self.player_count = scenario.player_count

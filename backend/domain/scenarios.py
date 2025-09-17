@@ -120,6 +120,13 @@ class ScenarioType(Enum):
     THE_DOOM_OF_ARKHAM_PT_I = "the_doom_of_arkham_pt_i"
     THE_DOOM_OF_ARKHAM_PT_II = "the_doom_of_arkham_pt_ii"
 
+    @property
+    def display_name(self) -> str:
+        return NAME_TO_SCENARIO_MAP[self]
+
+    def __str__(self) -> str:
+        return self.display_name
+
 
 # Separate mapping for scenario-campaign relationships
 SCENARIO_CAMPAIGN_MAP: Dict[ScenarioType, CampaignType] = {
@@ -218,6 +225,94 @@ SCENARIO_CAMPAIGN_MAP: Dict[ScenarioType, CampaignType] = {
     ScenarioType.SEPULCHRE_OF_THE_SLEEPERS: CampaignType.THE_DROWNED_CITY,
     ScenarioType.THE_DOOM_OF_ARKHAM_PT_I: CampaignType.THE_DROWNED_CITY,
     ScenarioType.THE_DOOM_OF_ARKHAM_PT_II: CampaignType.THE_DROWNED_CITY,
+}
+
+NAME_TO_SCENARIO_MAP: Dict[ScenarioType, str] = {
+    ScenarioType.THE_GATHERING: "The Gathering",
+    ScenarioType.THE_MIDNIGHT_MASKS: "The Midnight Masks",
+    ScenarioType.THE_DEVOURER_BELOW: "The Devourer Below",
+    ScenarioType.EXTRACURRICULAR_ACTIVITIES: "Extracurricular Activities",
+    ScenarioType.THE_HOUSE_ALWAYS_WINS: "The House Always Wins",
+    ScenarioType.THE_MISKATONIC_MUSEUM: "The Miskatonic Museum",
+    ScenarioType.THE_ESSEX_COUNTRY_EXPRESS: "The Essex Country Express",
+    ScenarioType.BLOOD_ON_THE_ALTAR: "Blood on the Altar",
+    ScenarioType.UNDIMENSIONED_AND_UNSEEN: "Undimensioned and Unseen",
+    ScenarioType.WHERE_DOOM_AWAITS: "Where Doom Awaits",
+    ScenarioType.LOST_IN_TIME_AND_SPACE: "Lost in Time and Space",
+    ScenarioType.CURTAIN_CALLS: "Curtain Calls",
+    ScenarioType.THE_LAST_KING: "The Last King",
+    ScenarioType.ECHO_OF_THE_PAST: "Echo of the Past",
+    ScenarioType.THE_UNSPEAKABLE_OATH: "The Unspeakable Oath",
+    ScenarioType.A_PHANTOM_OF_TRUTH: "A Phantom of Truth",
+    ScenarioType.THE_PALLID_MASK: "The Pallid Mask",
+    ScenarioType.BLACK_STAR_RISE: "Black Star Rise",
+    ScenarioType.DIM_CARCOSA: "Dim Carcosa",
+    ScenarioType.THE_UNTAMED_WILDS: "The Untamed Wilds",
+    ScenarioType.THE_DOOM_OF_EZTLI: "The Doom of Eztli",
+    ScenarioType.THREADS_OF_FATE: "Threads of Fate",
+    ScenarioType.THE_BOUNDARY_BEYOND: "The Boundary Beyond",
+    ScenarioType.HEART_OF_THE_ELDERS: "Heart of the Elders",
+    ScenarioType.THE_CITY_OF_ARCHIVES: "The City of Archives",
+    ScenarioType.THE_DEPTHS_OF_YOTH: "The Depths of Yoth",
+    ScenarioType.SHATTERED_AEONS: "Shattered Aeons",
+    ScenarioType.TURN_BACK_TIME: "Turn Back Time",
+    ScenarioType.THE_WITCHING_HOUR: "The Witching Hour",
+    ScenarioType.AT_DEATHS_DOORSTEP: "At Death's Doorstep",
+    ScenarioType.THE_SECRET_NAME: "The Secret Name",
+    ScenarioType.THE_WAGE_OF_SIN: "The Wage of Sin",
+    ScenarioType.FOR_THE_GREATER_GOOD: "For the Greater Good",
+    ScenarioType.UNION_AND_DISILLUSION: "Union and Disillusion",
+    ScenarioType.IN_THE_CLUTCHES_OF_CHAOS: "In the Clutches of Chaos",
+    ScenarioType.BEFORE_THE_BLACK_THRONE: "Before the Black Throne",
+    ScenarioType.BEYOND_THE_GATE_OF_SLEEP: "Beyond the Gate of Sleep",
+    ScenarioType.WAKING_NIGHTMARE: "Waking Nightmare",
+    ScenarioType.THE_SEARCH_FOR_KADATH: "The Search for Kadath",
+    ScenarioType.A_THOUSAND_SHAPES_OF_HORROR: "A Thousand Shapes of Horror",
+    ScenarioType.DARK_SIDE_OF_THE_MOON: "Dark Side of the Moon",
+    ScenarioType.POINT_OF_NO_RETURN: "Point of No Return",
+    ScenarioType.WHERE_THE_GODS_DWELL: "Where the Gods Dwell",
+    ScenarioType.WEAVER_OF_THE_COSMOS: "Weaver of the Cosmos",
+    ScenarioType.THE_PIT_OF_DESPAIR: "The Pit of Despair",
+    ScenarioType.THE_VANISHING_OF_ELINA_HARPER: "The Vanishing of Elina Harper",
+    ScenarioType.IN_TOO_DEEP: "In Too Deep",
+    ScenarioType.DEVIL_REEF: "Devil Reef",
+    ScenarioType.HORROR_IN_HIGH_GEAR: "Horror in High Gear",
+    ScenarioType.A_LIGHT_IN_THE_FOG: "A Light in the Fog",
+    ScenarioType.THE_LAIR_OF_DAGON: "The Lair of Dagon",
+    ScenarioType.INTO_THE_MAELSTROM: "Into the Maelstrom",
+    ScenarioType.ICE_AND_DEATH: "Ice and Death",
+    ScenarioType.FATAL_MIRAGE: "Fatal Mirage",
+    ScenarioType.TO_THE_FORBIDDEN_PEAKS: "To the Forbidden Peaks",
+    ScenarioType.CITY_OF_THE_ELDER_THINGS: "City of the Elder Things",
+    ScenarioType.THE_HEART_OF_MADNESS: "The Heart of Madness",
+    ScenarioType.RIDDLE_AND_RAIN: "Riddle and Rain",
+    ScenarioType.DEAD_HEAT: "Dead Heat",
+    ScenarioType.SANGUINE_SHADOWS: "Sanguine Shadows",
+    ScenarioType.DEALING_IN_THE_DARK: "Dealing in the Dark",
+    ScenarioType.DANCING_MAD: "Dancing Mad",
+    ScenarioType.ON_THIN_ICE: "On Thin Ice",
+    ScenarioType.DOGS_OF_WAR: "Dogs of War",
+    ScenarioType.SHADES_OF_SUFFERING: "Shades of Suffering",
+    ScenarioType.WITHOUT_A_TRACE: "Without a Trace",
+    ScenarioType.CONGRESS_OF_THE_KEYS: "Congress of the Keys",
+    ScenarioType.WRITTEN_IN_ROCK: "Written in Rock",
+    ScenarioType.HEMLOCK_HOUSE: "Hemlock House",
+    ScenarioType.THE_SILENT_HEALTH: "The Silent Health",
+    ScenarioType.THE_LOST_SISTER: "The Lost Sister",
+    ScenarioType.THE_THING_IN_THE_DEPTHS: "The Thing in the Depths",
+    ScenarioType.THE_TWISTED_HOLLOW: "The Twisted Hollow",
+    ScenarioType.THE_LONGEST_NIGHT: "The Longest Night",
+    ScenarioType.FATE_OF_THE_VALE: "Fate of the Vale",
+    ScenarioType.ONE_LAST_JOB: "One Last Job",
+    ScenarioType.THE_WESTERN_WALL: "The Western Wall",
+    ScenarioType.THE_DROWNED_QUARTER: "The Drowned Quarter",
+    ScenarioType.THE_APIARY: "The Apiary",
+    ScenarioType.THE_GRAND_VAULT: "The Grand Vault",
+    ScenarioType.COURT_OF_THE_ANCIENTS: "Court of the Ancients",
+    ScenarioType.OBSIDIAN_CANYONS: "Obsidian Canyons",
+    ScenarioType.SEPULCHRE_OF_THE_SLEEPERS: "Sepulchre of the Sleepers",
+    ScenarioType.THE_DOOM_OF_ARKHAM_PT_I: "The Doom of Arkham Pt I",
+    ScenarioType.THE_DOOM_OF_ARKHAM_PT_II: "The Doom of Arkham Pt II",
 }
 
 

@@ -3,8 +3,7 @@ API Layer Card Adapters - Unified conversion logic
 Single adapter that maps common fields and determines domain type from type_code
 """
 
-from abc import abstractmethod
-from typing import Union, overload, cast
+from typing import Union, cast
 from app.schemas.card_schema import CardSchema
 from domain.card import Faction, BaseCard, CardType, PlayerCard, EncounterCard
 from domain.card.adapters import register_card_adapter
@@ -14,7 +13,6 @@ from domain.card.adapters import register_card_adapter
 class UnifiedCardAdapter:
     """Unified adapter that handles all card types"""
 
-    @abstractmethod
     def schema_to_domain(self, schema: CardSchema) -> BaseCard:
         """Convert schema to appropriate domain object using BaseCard factory"""
 
@@ -28,6 +26,7 @@ class UnifiedCardAdapter:
             "faction": self._map_faction(schema.faction_code),
             "text": schema.text or "",
             "back_text": schema.back_text,
+            "quantity": schema.quantity or 1,
             # Player card fields
             "cost": schema.cost or 0,
             "level": 0,  # Default level
@@ -45,6 +44,21 @@ class UnifiedCardAdapter:
             "sanity": getattr(schema, "sanity", None),
             "doom": getattr(schema, "doom", None),
             "clues": getattr(schema, "clues", None),
+            "damage": schema.enemy_damage or 0,
+            "horror": schema.enemy_horror or 0,
+            "fight": schema.enemy_fight or 0,
+            "evade": schema.enemy_evade or 0,
+            "clues": schema.clues or 0,
+            "victory": schema.victory or 0,
+            "vengeance": schema.vengeance or 0,
+            "shroud": schema.shroud or 0,
+            "clue_fixed": schema.clues_fixed or False,
+            "stage": schema.stage or 0,
+            "spoilers": schema.spoilers or False,
+            "encounter_name": schema.encounter_name or "",
+            "encounter_position": schema.encounter_position or 0,
+            "doom": schema.doom or 0,
+            "health_per_investigator": schema.health_per_investigator or False,
         }
 
         # Remove None values to keep the dict clean
@@ -52,16 +66,19 @@ class UnifiedCardAdapter:
 
         # Dynamically determine the correct factory method based on card type
         card_type = schema.type_code or "unknown"
+        print(f"Card type: {card_type}")
         try:
             card_type_enum = CardType.from_code(card_type)
             # Get the registered class for this card type
             target_class = BaseCard._registry.get(card_type_enum)
+            print(f"Target class: {card_type_enum} {target_class}")
             if target_class:
                 return cast(
                     Union[PlayerCard, EncounterCard, BaseCard],
                     target_class.from_dict(card_data),
                 )
         except (ValueError, AttributeError):
+            print(f"Error converting card {schema.code} to domain: {e}")
             pass
 
         # Fallback to BaseCard factory

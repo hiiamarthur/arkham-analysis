@@ -1,5 +1,5 @@
 from __future__ import annotations
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 from app.schemas.base import BaseSchema
 from app.models.arkham_model import CardModel
 from domain.Token.token import ChaosToken
@@ -10,6 +10,29 @@ class BondedCardSchema(BaseSchema):
     code: str
     count: int
     card: CardSchema | None = None
+
+
+class DeckListSchema(BaseSchema):
+    name: str
+    date_creation: str
+    date_update: str
+    description_md: str
+    user_id: int
+    investigator_code: str
+    investigator_name: str
+    slots: Dict[str, int]
+    sideSlots: Dict[str, int] | List[Any]
+    ignoreDeckLimitSlots: Optional[Dict[str, int]]
+    version: str
+    xp: Optional[int]
+    xp_spent: Optional[int]
+    xp_adjustment: Optional[int]
+    exile_string: Optional[str]
+    taboo_id: Optional[int]
+    meta: str
+    tags: str
+    previous_deck: Optional[int]
+    next_deck: Optional[int]
 
 
 class CardSchema(BaseSchema):
@@ -74,6 +97,10 @@ class CardSchema(BaseSchema):
     shroud: int | None = None
     clues: int | None = None
     victory: int | None = None
+    vengeance: int | None = None
+    doom: int | None = None
+    clues_fixed: bool | None = None
+    stage: int | None = None
     spoilers: bool | None = None
 
     enemy_damage: int | None = None
@@ -191,7 +218,7 @@ class CardSchema(BaseSchema):
             illustrator=card_model.illustrator,
             restrictions=card_model.restrictions,
             deck_requirements=card_model.deck_requirements,
-            deck_options=card_model.deck_options,
+            deck_options=card_model.deck_options if isinstance(card_model.deck_options, dict) else {},
             imagesrc=card_model.imagesrc,
             backimagesrc=card_model.backimagesrc,
             octgn_id=card_model.octgn_id,
@@ -199,6 +226,21 @@ class CardSchema(BaseSchema):
                 TraitSchema(name=trait.name) for trait in (card_model.traits or [])
             ],
             variants=card_model.variants,
+            encounter_code=card_model.encounter_code,
+            encounter_name=card_model.encounter_name,
+            encounter_position=card_model.encounter_position,
+            shroud=card_model.shroud,
+            clues=card_model.clues,
+            victory=card_model.victory,
+            vengeance=card_model.vengeance,
+            doom=card_model.doom,
+            clues_fixed=card_model.clues_fixed,
+            stage=card_model.stage,
+            spoilers=card_model.spoilers,
+            enemy_damage=card_model.enemy_damage,
+            enemy_evade=card_model.enemy_evade,
+            enemy_fight=card_model.enemy_fight,
+            enemy_horror=card_model.enemy_horror,
             linked_card=cls._get_linked_card(card_model, _processed_codes),
             bonded_cards=[
                 BondedCardSchema(

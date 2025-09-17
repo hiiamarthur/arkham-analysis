@@ -2,26 +2,27 @@ from fastapi import APIRouter, Depends, HTTPException, Response, status, Body
 from typing import List
 from app.schemas.card_schema import CardSchema
 from app.services.app_service import AppService
+from app.api.deps import get_card_service
+from app.services.card_service import CardService
 
 # Import shared utilities from endpoints __init__.py
 from . import (
     get_validated_app_service,
     get_card_code_param,
+    get_investigator_code_param,
     get_encounter_param,
     get_pagination_params,
     get_search_params,
     get_sorting_params,
-    ArkhamApiResponse,
     CardSummary,
     PaginatedCardResponse,
     ScoringResult,
     CARD_NOT_FOUND,
-    INVALID_CARD_CODE,
     ARKHAM_HEADERS,
     CACHE_TTL_MEDIUM,
 )
 
-router = APIRouter(prefix="/cards", tags=["cards"])
+router = APIRouter()
 
 
 @router.post("/fetch_cards", response_model=List[CardSchema])
@@ -164,6 +165,29 @@ async def get_card_score(
         )
     except Exception:
         raise CARD_NOT_FOUND
+
+
+@router.get("/{card_code}/stats")
+async def get_card_stats(
+    card_code: str = Depends(get_card_code_param),
+    card_service: CardService = Depends(get_card_service),
+):
+    try:
+        """Get stats for a card"""
+        return await card_service.get_card_stats(card_code)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error getting card stats: {e}")
+
+
+@router.get("/investigator/{card_code}/stats")
+async def get_investigator_stats(
+    # investigator_code: str,
+    card_code: str = Depends(get_investigator_code_param),
+    card_service: CardService = Depends(get_card_service),
+):
+    print("investigator_code is", card_code)
+    """Get stats for an investigator"""
+    return await card_service.get_investigator_stats(card_code)
 
 
 @router.post("/bulk/score", response_model=List[ScoringResult])

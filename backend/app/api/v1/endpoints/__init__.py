@@ -53,6 +53,19 @@ def get_card_code_param(
     return card_code.lower()
 
 
+def get_investigator_code_param(
+    card_code: str = Path(
+        ...,
+        min_length=5,
+        max_length=10,
+        regex=r"^[0-9]{5}[a-z]?$",
+        description="Arkham investigator code (e.g., '01001', '02110a')",
+    )
+) -> str:
+    """Validate and format Arkham investigator code"""
+    return card_code.lower()
+
+
 def get_encounter_param(
     encounter: int = Path(
         ..., ge=0, le=50, description="Encounter set ID (0 for player cards)"

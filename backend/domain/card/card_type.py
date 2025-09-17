@@ -64,8 +64,11 @@ class CardType(Enum):
     def from_code(cls, code: str) -> "CardType":
         """Get card type from code, returns None if not found"""
         try:
+            print(f"Getting card type from code: {code}")
+            print(f"Card type: {cls(code)}")
             return cls(code)
         except ValueError:
+            print(f"Error getting card type from code: {code}")
             return CardType.NONE
 
     def __str__(self) -> str:

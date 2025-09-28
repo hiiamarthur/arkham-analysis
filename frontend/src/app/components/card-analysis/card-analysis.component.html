@@ -1,0 +1,452 @@
+<div class="card-analysis-container">
+  <div class="header">
+    <h1>Arkham Horror Card Analysis</h1>
+    <p class="subtitle">Context-aware GPT analysis for optimal card evaluation</p>
+  </div>
+
+  <form [formGroup]="analysisForm" class="analysis-form">
+    <!-- Analysis Type Selection -->
+    <div class="analysis-type-selection">
+      <h2>Analysis Type</h2>
+      <div class="button-group">
+        <button 
+          type="button" 
+          [class.active]="analysisType() === 'strength'"
+          (click)="setAnalysisType('strength')"
+          class="analysis-type-btn">
+          Card Strength
+        </button>
+        <button 
+          type="button" 
+          [class.active]="analysisType() === 'synergies'"
+          (click)="setAnalysisType('synergies')"
+          class="analysis-type-btn">
+          Card Synergies
+        </button>
+        <button 
+          type="button" 
+          [class.active]="analysisType() === 'timing'"
+          (click)="setAnalysisType('timing')"
+          class="analysis-type-btn">
+          Optimal Timing
+        </button>
+      </div>
+    </div>
+
+    <!-- Card Codes Input -->
+    <div class="form-section">
+      <h3>Cards to Analyze</h3>
+      <div class="input-group">
+        <label for="cardCodes">Card Codes (comma-separated)</label>
+        <input 
+          id="cardCodes"
+          type="text" 
+          formControlName="cardCodes"
+          placeholder="e.g., 01006, 01024, 01030"
+          class="form-input">
+        <small class="help-text">Enter ArkhamDB card codes separated by commas</small>
+      </div>
+    </div>
+
+    <!-- Investigator Context -->
+    <div class="form-section">
+      <h3>Investigator Context</h3>
+      <div class="input-group">
+        <label for="investigatorCode">Investigator Code</label>
+        <input 
+          id="investigatorCode"
+          type="text" 
+          formControlName="investigatorCode"
+          placeholder="e.g., 01001 (Roland Banks)"
+          class="form-input">
+      </div>
+    </div>
+
+    <!-- Campaign Context -->
+    <div class="form-section">
+      <div class="section-header">
+        <h3>Campaign Context</h3>
+        <label class="checkbox-label">
+          <input type="checkbox" formControlName="includeCampaignContext">
+          Include campaign context in analysis
+        </label>
+      </div>
+      
+      <div formGroupName="campaignContext" [class.disabled]="!analysisForm.get('includeCampaignContext')?.value">
+        <div class="form-row">
+          <div class="input-group">
+            <label for="campaign">Campaign</label>
+            <select id="campaign" formControlName="campaign" class="form-select">
+              <option value="">Select Campaign</option>
+              <option *ngFor="let campaign of campaigns" [value]="campaign.value">
+                {{campaign.label}}
+              </option>
+            </select>
+          </div>
+          
+          <div class="input-group">
+            <label for="difficulty">Difficulty</label>
+            <select id="difficulty" formControlName="difficulty" class="form-select">
+              <option *ngFor="let diff of difficulties" [value]="diff.value">
+                {{diff.label}}
+              </option>
+            </select>
+          </div>
+        </div>
+        
+        <div class="form-row">
+          <div class="input-group">
+            <label for="scenarioCode">Scenario Code</label>
+            <input 
+              id="scenarioCode"
+              type="text" 
+              formControlName="scenarioCode"
+              placeholder="e.g., 03043"
+              class="form-input">
+          </div>
+          
+          <div class="input-group">
+            <label for="investigatorCount">Investigator Count</label>
+            <input 
+              id="investigatorCount"
+              type="number" 
+              formControlName="investigatorCount"
+              min="1" max="4"
+              class="form-input">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Game Context -->
+    <div class="form-section">
+      <div class="section-header">
+        <h3>Game Context</h3>
+        <label class="checkbox-label">
+          <input type="checkbox" formControlName="includeGameContext">
+          Include current game state in analysis
+        </label>
+      </div>
+      
+      <div formGroupName="gameContext" [class.disabled]="!analysisForm.get('includeGameContext')?.value">
+        <!-- Scenario Progress -->
+        <div class="subsection">
+          <h4>Scenario Progress</h4>
+          <div class="form-row">
+            <div class="input-group">
+              <label for="currentScenario">Current Scenario</label>
+              <input 
+                id="currentScenario"
+                type="text" 
+                formControlName="currentScenario"
+                placeholder="e.g., 03043"
+                class="form-input">
+            </div>
+            
+            <div class="input-group">
+              <label for="currentAct">Current Act</label>
+              <input 
+                id="currentAct"
+                type="number" 
+                formControlName="currentAct"
+                min="1"
+                class="form-input">
+            </div>
+            
+            <div class="input-group">
+              <label for="currentAgenda">Current Agenda</label>
+              <input 
+                id="currentAgenda"
+                type="number" 
+                formControlName="currentAgenda"
+                min="1"
+                class="form-input">
+            </div>
+          </div>
+        </div>
+
+        <!-- Doom Pressure -->
+        <div class="subsection">
+          <h4>Doom Pressure</h4>
+          <div class="form-row">
+            <div class="input-group">
+              <label for="doomOnAgenda">Doom on Agenda</label>
+              <input 
+                id="doomOnAgenda"
+                type="number" 
+                formControlName="doomOnAgenda"
+                min="0"
+                class="form-input">
+            </div>
+            
+            <div class="input-group">
+              <label for="doomThreshold">Doom Threshold</label>
+              <input 
+                id="doomThreshold"
+                type="number" 
+                formControlName="doomThreshold"
+                min="1"
+                class="form-input">
+            </div>
+            
+            <div class="input-group">
+              <label for="totalDoomInPlay">Total Doom in Play</label>
+              <input 
+                id="totalDoomInPlay"
+                type="number" 
+                formControlName="totalDoomInPlay"
+                min="0"
+                class="form-input">
+            </div>
+          </div>
+        </div>
+
+        <!-- Game State -->
+        <div class="subsection">
+          <h4>Game State</h4>
+          <div class="form-row">
+            <div class="input-group">
+              <label for="currentPhase">Current Phase</label>
+              <select id="currentPhase" formControlName="currentPhase" class="form-select">
+                <option *ngFor="let phase of phases" [value]="phase.value">
+                  {{phase.label}}
+                </option>
+              </select>
+            </div>
+            
+            <div class="input-group">
+              <label for="turnNumber">Turn Number</label>
+              <input 
+                id="turnNumber"
+                type="number" 
+                formControlName="turnNumber"
+                min="1"
+                class="form-input">
+            </div>
+            
+            <div class="input-group">
+              <label for="activeInvestigator">Active Investigator</label>
+              <input 
+                id="activeInvestigator"
+                type="text" 
+                formControlName="activeInvestigator"
+                placeholder="e.g., 01001"
+                class="form-input">
+            </div>
+          </div>
+        </div>
+
+        <!-- Analysis Question -->
+        <div class="subsection">
+          <h4>Analysis Question</h4>
+          <div class="input-group">
+            <label for="analysisQuestion">What do you want to analyze?</label>
+            <textarea 
+              id="analysisQuestion"
+              formControlName="analysisQuestion"
+              placeholder="e.g., Roland is engaged with a dangerous enemy and low on resources. Which cards should he prioritize to survive and contribute?"
+              class="form-textarea"
+              rows="3"></textarea>
+          </div>
+        </div>
+
+        <!-- Investigators -->
+        <div class="subsection">
+          <div class="subsection-header">
+            <h4>Investigators</h4>
+            <button type="button" (click)="addInvestigator()" class="add-btn">Add Investigator</button>
+          </div>
+          
+          <div formArrayName="investigators">
+            <div *ngFor="let investigator of investigators.controls; let i = index" 
+                 [formGroupName]="i" 
+                 class="array-item">
+              <div class="array-item-header">
+                <h5>Investigator {{i + 1}}</h5>
+                <button type="button" (click)="removeInvestigator(i)" class="remove-btn">Remove</button>
+              </div>
+              
+              <div class="form-row">
+                <div class="input-group">
+                  <label>Code</label>
+                  <input type="text" formControlName="investigatorCode" class="form-input">
+                </div>
+                <div class="input-group">
+                  <label>Health</label>
+                  <input type="number" formControlName="currentHealth" class="form-input">
+                </div>
+                <div class="input-group">
+                  <label>Max Health</label>
+                  <input type="number" formControlName="maxHealth" class="form-input">
+                </div>
+                <div class="input-group">
+                  <label>Sanity</label>
+                  <input type="number" formControlName="currentSanity" class="form-input">
+                </div>
+                <div class="input-group">
+                  <label>Max Sanity</label>
+                  <input type="number" formControlName="maxSanity" class="form-input">
+                </div>
+                <div class="input-group">
+                  <label>Resources</label>
+                  <input type="number" formControlName="currentResources" class="form-input">
+                </div>
+              </div>
+              
+              <div class="form-row">
+                <div class="input-group">
+                  <label>Actions</label>
+                  <input type="number" formControlName="currentActions" class="form-input">
+                </div>
+                <div class="input-group">
+                  <label>Location</label>
+                  <input type="text" formControlName="locationCode" class="form-input">
+                </div>
+                <div class="input-group checkbox-group">
+                  <label class="checkbox-label">
+                    <input type="checkbox" formControlName="isEngaged">
+                    Engaged with Enemy
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analysis Button -->
+    <div class="form-actions">
+      <button 
+        type="button" 
+        (click)="analyzeCards()"
+        [disabled]="loading() || !analysisForm.get('cardCodes')?.value"
+        class="analyze-btn">
+        <span *ngIf="loading()">Analyzing...</span>
+        <span *ngIf="!loading()">Analyze {{analysisType() | titlecase}}</span>
+      </button>
+      
+      <button 
+        type="button" 
+        (click)="clearResults()"
+        *ngIf="hasResults() || hasError()"
+        class="clear-btn">
+        Clear Results
+      </button>
+    </div>
+  </form>
+
+  <!-- Results Section -->
+  <div class="results-section" *ngIf="hasResults() || hasError()">
+    <!-- Error Display -->
+    <div *ngIf="hasError()" class="error-message">
+      <h3>Analysis Failed</h3>
+      <p>{{error()}}</p>
+    </div>
+
+    <!-- Results Display -->
+    <div *ngIf="hasResults()" class="results-container">
+      <div class="results-header">
+        <h2>Analysis Results</h2>
+        <div class="analysis-info">
+          <span class="analysis-type">{{analysisType() | titlecase}} Analysis</span>
+          <span class="success-indicator" *ngIf="results()?.success">✓ Success</span>
+        </div>
+      </div>
+
+      <div class="results-content">
+        <div class="context-applied" *ngIf="results()?.analysis?.context_applied">
+          <h3>Context Applied</h3>
+          <div class="context-flags">
+            <span 
+              class="context-flag" 
+              [class.active]="results()?.analysis?.context_applied?.has_game_context">
+              Game Context
+            </span>
+            <span 
+              class="context-flag" 
+              [class.active]="results()?.analysis?.context_applied?.has_investigator_context">
+              Investigator Context
+            </span>
+            <span 
+              class="context-flag" 
+              [class.active]="results()?.analysis?.context_applied?.has_campaign_context">
+              Campaign Context
+            </span>
+          </div>
+        </div>
+
+        <!-- Card Analyses Results -->
+        <div class="card-analyses" *ngIf="analysisType() === 'strength' && results()?.analysis?.card_analyses">
+          <h3>Card Strength Analysis Results</h3>
+          <div 
+            *ngFor="let analysis of results()?.analysis?.card_analyses | keyvalue" 
+            class="card-analysis-item">
+            <div class="card-header">
+              <h4>{{analysis.value?.card_info?.name || analysis.key}}</h4>
+              <div class="card-meta">
+                <span class="card-code">{{analysis.key}}</span>
+                <span class="card-type" *ngIf="analysis.value?.card_info?.type">
+                  {{analysis.value?.card_info?.type | titlecase}}
+                </span>
+                <span class="card-faction" *ngIf="analysis.value?.card_info?.faction">
+                  {{analysis.value?.card_info?.faction | titlecase}}
+                </span>
+              </div>
+            </div>
+            
+            <div class="analysis-content" *ngIf="analysis.value?.strength_analysis">
+              <div class="gpt-analysis">
+                <h5>GPT Analysis</h5>
+                <pre class="analysis-text">{{analysis.value?.strength_analysis}}</pre>
+              </div>
+            </div>
+            
+            <div class="error-content" *ngIf="analysis.value?.error">
+              <div class="card-error">
+                <h5>Analysis Error</h5>
+                <p>{{analysis.value?.error}}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Synergy Analysis Results -->
+        <div class="synergy-analysis" *ngIf="analysisType() === 'synergies' && results()?.analysis?.synergy_analysis">
+          <h3>Synergy Analysis</h3>
+          <div class="synergy-content">
+            <pre class="analysis-text">{{results()?.analysis?.synergy_analysis}}</pre>
+          </div>
+        </div>
+
+        <!-- Timing Analysis Results -->
+        <div class="timing-analyses" *ngIf="analysisType() === 'timing' && results()?.analysis?.timing_analyses">
+          <h3>Timing Analysis Results</h3>
+          <div 
+            *ngFor="let timing of results()?.analysis?.timing_analyses | keyvalue" 
+            class="timing-analysis-item">
+            <div class="card-header">
+              <h4>{{timing.value?.card_info?.name || timing.key}}</h4>
+              <span class="card-code">{{timing.key}}</span>
+            </div>
+            <div class="timing-content" *ngIf="timing.value?.timing_analysis">
+              <pre class="analysis-text">{{timing.value?.timing_analysis}}</pre>
+            </div>
+            <div class="error-content" *ngIf="timing.value?.error">
+              <div class="card-error">
+                <h5>Analysis Error</h5>
+                <p>{{timing.value?.error}}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Raw Response (for debugging) -->
+        <details class="raw-response">
+          <summary>Raw API Response</summary>
+          <pre>{{results() | json}}</pre>
+        </details>
+      </div>
+    </div>
+  </div>
+</div>

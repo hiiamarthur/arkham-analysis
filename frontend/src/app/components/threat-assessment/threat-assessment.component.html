@@ -1,0 +1,219 @@
+<div class="threat-assessment-container">
+  <div class="header">
+    <h1>Threat Assessment</h1>
+    <p class="subtitle">Quick analysis of current game danger level</p>
+  </div>
+
+  <div class="assessment-form">
+    <form [formGroup]="threatForm" class="threat-form">
+      <div class="form-section">
+        <h3>Scenario Information</h3>
+        
+        <div class="preset-scenarios">
+          <h4>Quick Presets</h4>
+          <div class="preset-buttons">
+            <button 
+              *ngFor="let scenario of presetScenarios"
+              type="button"
+              (click)="loadScenario(scenario)"
+              class="preset-btn">
+              {{scenario.name}}
+            </button>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="input-group">
+            <label for="scenario">Scenario Code</label>
+            <input 
+              id="scenario"
+              type="text" 
+              formControlName="scenario"
+              placeholder="e.g., 03043"
+              class="form-input">
+          </div>
+          
+          <div class="input-group">
+            <label for="act">Current Act</label>
+            <input 
+              id="act"
+              type="number" 
+              formControlName="act"
+              min="1"
+              class="form-input">
+          </div>
+          
+          <div class="input-group">
+            <label for="agenda">Current Agenda</label>
+            <input 
+              id="agenda"
+              type="number" 
+              formControlName="agenda"
+              min="1"
+              class="form-input">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="input-group">
+            <label for="doomOnAgenda">Doom on Agenda</label>
+            <input 
+              id="doomOnAgenda"
+              type="number" 
+              formControlName="doomOnAgenda"
+              min="0"
+              class="form-input">
+          </div>
+          
+          <div class="input-group">
+            <label for="doomThreshold">Doom Threshold</label>
+            <input 
+              id="doomThreshold"
+              type="number" 
+              formControlName="doomThreshold"
+              min="1"
+              class="form-input">
+          </div>
+          
+          <div class="doom-progress" *ngIf="threatForm.get('doomOnAgenda')?.value >= 0 && threatForm.get('doomThreshold')?.value > 0">
+            <label>Doom Progress</label>
+            <div class="progress-bar">
+              <div 
+                class="progress-fill"
+                [style.width.%]="(threatForm.get('doomOnAgenda')?.value / threatForm.get('doomThreshold')?.value) * 100">
+              </div>
+              <span class="progress-text">
+                {{threatForm.get('doomOnAgenda')?.value}} / {{threatForm.get('doomThreshold')?.value}}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="form-actions">
+        <button 
+          type="button" 
+          (click)="assessThreat()"
+          [disabled]="loading() || !threatForm.valid"
+          class="assess-btn">
+          <span *ngIf="loading()">Assessing...</span>
+          <span *ngIf="!loading()">Assess Threat Level</span>
+        </button>
+        
+        <button 
+          type="button" 
+          (click)="clearAssessment()"
+          *ngIf="hasAssessment() || hasError()"
+          class="clear-btn">
+          Clear Results
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Results Section -->
+  <div class="results-section" *ngIf="hasAssessment() || hasError()">
+    <!-- Error Display -->
+    <div *ngIf="hasError()" class="error-message">
+      <h3>Assessment Failed</h3>
+      <p>{{error()}}</p>
+    </div>
+
+    <!-- Assessment Results -->
+    <div *ngIf="hasAssessment()" class="assessment-results">
+      <div class="threat-overview">
+        <h2>Threat Assessment Results</h2>
+        
+        <!-- Overall Threat Level -->
+        <div class="threat-level-display">
+          <div class="threat-meter">
+            <div class="meter-background">
+              <div 
+                class="meter-fill"
+                [style.width.%]="threatLevel().percentage"
+                [style.background-color]="threatLevel().color">
+              </div>
+            </div>
+            <div class="threat-label">
+              <span class="threat-percentage">{{threatLevel().percentage | number:'1.1-1'}}%</span>
+              <span class="threat-level" [style.color]="threatLevel().color">
+                {{threatLevel().level}} Threat
+              </span>
+            </div>
+          </div>
+          
+          <div class="threat-description">
+            <p>{{assessment()?.threat_assessment?.threat_description}}</p>
+          </div>
+        </div>
+
+        <!-- Threat Factors Breakdown -->
+        <div class="threat-factors">
+          <h3>Threat Factor Breakdown</h3>
+          <div class="factors-grid">
+            <div 
+              *ngFor="let factor of assessment()?.threat_assessment?.threat_factors | keyvalue"
+              class="factor-item">
+              <div class="factor-header">
+                <span class="factor-name">{{factor.key | titlecase | replace:'_':' '}}</span>
+                <span class="factor-value">{{factor.value * 100 | number:'1.0-0'}}%</span>
+              </div>
+              <div class="factor-bar">
+                <div 
+                  class="factor-fill"
+                  [style.width.%]="factor.value * 100"
+                  [class]="getFactorClass(factor.value)">
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Scenario Info -->
+        <div class="scenario-info">
+          <h3>Scenario Information</h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">Scenario</span>
+              <span class="info-value">{{assessment()?.scenario_info?.scenario}}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Act</span>
+              <span class="info-value">{{assessment()?.scenario_info?.act}}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Agenda</span>
+              <span class="info-value">{{assessment()?.scenario_info?.agenda}}</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Doom Pressure</span>
+              <span class="info-value">{{assessment()?.scenario_info?.doom_pressure}}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recommendations -->
+        <div class="recommendations">
+          <h3>Strategic Recommendations</h3>
+          <div class="recommendation-list">
+            <div 
+              class="recommendation-item"
+              [class]="threatLevel().level.toLowerCase()">
+              <div class="recommendation-icon">{{getRecommendationIcon()}}</div>
+              <div class="recommendation-content">
+                <h4>{{getRecommendationTitle()}}</h4>
+                <p>{{getRecommendationText()}}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Raw Data -->
+        <details class="raw-data">
+          <summary>Raw Assessment Data</summary>
+          <pre>{{assessment() | json}}</pre>
+        </details>
+      </div>
+    </div>
+  </div>
+</div>

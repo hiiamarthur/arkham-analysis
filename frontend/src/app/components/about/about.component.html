@@ -1,0 +1,178 @@
+<div class="about-container">
+  <div class="hero-section">
+    <div class="hero-content">
+      <h1 class="hero-title">
+        <span class="hero-icon">🎴</span>
+        Arkham Horror Card Analysis
+      </h1>
+      <p class="hero-subtitle">
+        Advanced context-aware card evaluation powered by GPT and comprehensive game state analysis
+      </p>
+      <div class="hero-actions">
+        <a routerLink="/analysis" class="cta-button primary">
+          Start Analysis
+        </a>
+        <a routerLink="/threat-assessment" class="cta-button secondary">
+          Threat Assessment
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <div class="features-section">
+    <div class="section-header">
+      <h2>Intelligent Features</h2>
+      <p>Powered by advanced algorithms and comprehensive game knowledge</p>
+    </div>
+    
+    <div class="features-grid">
+      <div *ngFor="let feature of features" class="feature-card">
+        <div class="feature-icon">{{feature.icon}}</div>
+        <h3 class="feature-title">{{feature.title}}</h3>
+        <p class="feature-description">{{feature.description}}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="how-it-works-section">
+    <div class="section-header">
+      <h2>How It Works</h2>
+      <p>Advanced context-aware analysis in three steps</p>
+    </div>
+    
+    <div class="steps-container">
+      <div class="step">
+        <div class="step-number">1</div>
+        <div class="step-content">
+          <h3>Context Collection</h3>
+          <p>System gathers investigator capabilities, campaign rules, current game state, and threat levels to build comprehensive context.</p>
+        </div>
+      </div>
+      
+      <div class="step-arrow">→</div>
+      
+      <div class="step">
+        <div class="step-number">2</div>
+        <div class="step-content">
+          <h3>Dynamic Axiom Calculation</h3>
+          <p>21+ game mechanics axioms adapt in real-time. Expert difficulty increases survivability values, Path to Carcosa emphasizes horror resistance.</p>
+        </div>
+      </div>
+      
+      <div class="step-arrow">→</div>
+      
+      <div class="step">
+        <div class="step-number">3</div>
+        <div class="step-content">
+          <h3>GPT Analysis</h3>
+          <p>Context-modified prompts enable GPT to provide accurate, situation-specific card evaluations and strategic recommendations.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="examples-section">
+    <div class="section-header">
+      <h2>Context-Aware Examples</h2>
+      <p>See how the same card gets different evaluations based on context</p>
+    </div>
+    
+    <div class="examples-grid">
+      <div class="example-card">
+        <h3>Emergency Cache - Roland (Expert Carcosa)</h3>
+        <div class="context-tags">
+          <span class="tag fighter">Fighter</span>
+          <span class="tag expert">Expert</span>
+          <span class="tag carcosa">Horror Focus</span>
+          <span class="tag emergency">High Threat</span>
+        </div>
+        <p class="example-text">
+          "Extremely valuable in this high-pressure situation. Resource acceleration worth 1.2 resources per extra resource. 
+          Fast action saves critical time when engaged with horror-dealing enemies."
+        </p>
+      </div>
+      
+      <div class="example-card">
+        <h3>Emergency Cache - Daisy (Easy NotZ)</h3>
+        <div class="context-tags">
+          <span class="tag seeker">Seeker</span>
+          <span class="tag easy">Easy</span>
+          <span class="tag notz">Standard</span>
+          <span class="tag stable">Low Threat</span>
+        </div>
+        <p class="example-text">
+          "Moderate value for setup phase. Consider timing for maximum tome synergy. 
+          Resource acceleration worth 0.8 resources. Can afford to wait for optimal play window."
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="tech-section">
+    <div class="section-header">
+      <h2>Technical Architecture</h2>
+      <p>Built with modern technologies for performance and scalability</p>
+    </div>
+    
+    <div class="tech-grid">
+      <div *ngFor="let tech of techStack" class="tech-item">
+        <h4 class="tech-name">{{tech.name}}</h4>
+        <p class="tech-description">{{tech.description}}</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="api-section">
+    <div class="section-header">
+      <h2>API Integration</h2>
+      <p>Comprehensive backend services for card analysis</p>
+    </div>
+    
+    <div class="api-grid">
+      <div class="api-item">
+        <h4>Card Strength Analysis</h4>
+        <code>POST /api/v1/analysis/card-strength</code>
+        <p>Context-aware power evaluation with mathematical resource conversion</p>
+      </div>
+      
+      <div class="api-item">
+        <h4>Card Synergies</h4>
+        <code>POST /api/v1/analysis/card-synergies</code>
+        <p>Multi-card interaction analysis and combo recommendations</p>
+      </div>
+      
+      <div class="api-item">
+        <h4>Optimal Timing</h4>
+        <code>POST /api/v1/analysis/card-timing</code>
+        <p>Game state-aware timing recommendations for maximum impact</p>
+      </div>
+      
+      <div class="api-item">
+        <h4>Threat Assessment</h4>
+        <code>GET /api/v1/analysis/threat-assessment</code>
+        <p>Real-time danger level calculation and strategic guidance</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-section">
+    <div class="footer-content">
+      <h3>Ready to Optimize Your Arkham Strategy?</h3>
+      <p>Start analyzing your cards with advanced context-aware intelligence</p>
+      <div class="footer-actions">
+        <a routerLink="/analysis" class="cta-button primary">
+          Begin Analysis
+        </a>
+      </div>
+      
+      <div class="disclaimer">
+        <p>
+          <small>
+            This tool is for educational and entertainment purposes. 
+            Arkham Horror: The Card Game is a trademark of Fantasy Flight Games.
+          </small>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

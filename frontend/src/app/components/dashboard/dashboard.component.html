@@ -1,0 +1,236 @@
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <div class="header-content">
+      <h1 class="dashboard-title">
+        <span class="title-icon">🎴</span>
+        Analysis Dashboard
+      </h1>
+      <p class="dashboard-subtitle">
+        Welcome to your Arkham Horror card analysis center
+      </p>
+    </div>
+    
+    <!-- Quick Action -->
+    <div class="quick-action">
+      <h3>Quick Analysis</h3>
+      <div class="quick-form">
+        <input 
+          type="text" 
+          [(ngModel)]="quickCardCode"
+          placeholder="Enter card code (e.g., 01030)"
+          class="quick-input"
+        >
+        <button 
+          class="quick-button" 
+          (click)="analyzeQuickCard()"
+          [disabled]="!quickCardCode().trim()"
+        >
+          Analyze
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stats Overview -->
+  <div class="stats-section">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">📈</div>
+        <div class="stat-content">
+          <div class="stat-number">{{stats().analysesThisWeek}}</div>
+          <div class="stat-label">Analyses This Week</div>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">⭐</div>
+        <div class="stat-content">
+          <div class="stat-number">{{stats().averageCardRating}}</div>
+          <div class="stat-label">Average Card Rating</div>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">🕵️</div>
+        <div class="stat-content">
+          <div class="stat-number">{{stats().topInvestigator}}</div>
+          <div class="stat-label">Most Analyzed Investigator</div>
+        </div>
+      </div>
+      
+      <div class="stat-card">
+        <div class="stat-icon">🃏</div>
+        <div class="stat-content">
+          <div class="stat-number">{{stats().mostAnalyzedCard}}</div>
+          <div class="stat-label">Most Analyzed Card</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="charts-section">
+    <div class="charts-grid">
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Analysis Trends</h3>
+          <span class="chart-subtitle">Weekly activity overview</span>
+        </div>
+        <div class="chart-container">
+          <canvas #analysisChart></canvas>
+        </div>
+      </div>
+      
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Popular Cards</h3>
+          <span class="chart-subtitle">Most analyzed cards</span>
+        </div>
+        <div class="chart-container">
+          <canvas #cardPopularityChart></canvas>
+        </div>
+      </div>
+      
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>Threat Levels</h3>
+          <span class="chart-subtitle">Assessment distribution</span>
+        </div>
+        <div class="chart-container">
+          <canvas #threatLevelChart></canvas>
+        </div>
+      </div>
+      
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>System Performance</h3>
+          <span class="chart-subtitle">Analysis metrics</span>
+        </div>
+        <div class="chart-container">
+          <canvas #performanceChart></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content Grid -->
+  <div class="main-content">
+    <!-- Recent Activity -->
+    <div class="section recent-activity">
+      <div class="section-header">
+        <h2>Recent Analysis Activity</h2>
+        <a routerLink="/analysis" class="section-link">View All →</a>
+      </div>
+      
+      <div class="activity-list">
+        <div *ngFor="let activity of recentActivity" class="activity-item">
+          <div class="activity-icon">
+            {{getAnalysisTypeIcon(activity.type)}}
+          </div>
+          <div class="activity-content">
+            <div class="activity-main">
+              <span class="activity-type">{{activity.type | titlecase}} Analysis</span>
+              <span class="activity-cards">{{activity.cards.join(', ')}}</span>
+            </div>
+            <div class="activity-details">
+              <span class="activity-investigator">{{activity.investigator}}</span>
+              <span class="activity-time">{{getTimeAgo(activity.timestamp)}}</span>
+            </div>
+            <div class="activity-result">{{activity.result}}</div>
+          </div>
+        </div>
+        
+        <div *ngIf="recentActivity.length === 0" class="empty-state">
+          <div class="empty-icon">📊</div>
+          <p>No recent analysis activity</p>
+          <a routerLink="/analysis" class="cta-link">Start your first analysis</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="section quick-actions">
+      <div class="section-header">
+        <h2>Quick Actions</h2>
+      </div>
+      
+      <div class="actions-grid">
+        <a routerLink="/analysis" class="action-card">
+          <div class="action-icon">🔍</div>
+          <div class="action-content">
+            <h3>Card Analysis</h3>
+            <p>Analyze card strength and value in different contexts</p>
+          </div>
+        </a>
+        
+        <a routerLink="/threat-assessment" class="action-card">
+          <div class="action-icon">⚠️</div>
+          <div class="action-content">
+            <h3>Threat Assessment</h3>
+            <p>Evaluate current game state danger levels</p>
+          </div>
+        </a>
+        
+        <a href="#" class="action-card disabled">
+          <div class="action-icon">🃏</div>
+          <div class="action-content">
+            <h3>Browse Cards</h3>
+            <p>Explore the complete Arkham Horror card database (Coming Soon)</p>
+          </div>
+        </a>
+        
+        <a href="#" class="action-card disabled">
+          <div class="action-icon">🕵️</div>
+          <div class="action-content">
+            <h3>Investigators</h3>
+            <p>View investigator profiles and capabilities (Coming Soon)</p>
+          </div>
+        </a>
+      </div>
+    </div>
+
+    <!-- Featured Scenarios -->
+    <div class="section featured-scenarios">
+      <div class="section-header">
+        <h2>Featured Scenarios</h2>
+        <span class="section-subtitle">Popular scenarios for analysis testing</span>
+      </div>
+      
+      <div class="scenarios-grid">
+        <div *ngFor="let scenario of featuredScenarios" class="scenario-card">
+          <div class="scenario-header">
+            <h3>{{scenario.name}}</h3>
+            <span 
+              class="difficulty-badge" 
+              [style.background-color]="getDifficultyColor(scenario.difficulty)"
+            >
+              {{scenario.difficulty}}
+            </span>
+          </div>
+          <div class="scenario-campaign">{{scenario.campaign}}</div>
+          <p class="scenario-description">{{scenario.description}}</p>
+          <button class="scenario-button">Use in Analysis</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Analysis Suggestions -->
+    <div class="section analysis-suggestions">
+      <div class="section-header">
+        <h2>Suggested Analysis Targets</h2>
+        <span class="section-subtitle">Popular card combinations to analyze</span>
+      </div>
+      
+      <div class="suggestions-grid">
+        <div *ngFor="let target of analysisTargets" class="suggestion-card">
+          <h3>{{target.title}}</h3>
+          <div class="suggestion-cards">
+            <span *ngFor="let card of target.cards" class="card-tag">{{card}}</span>
+          </div>
+          <p class="suggestion-description">{{target.description}}</p>
+          <button class="suggestion-button">Analyze These Cards</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

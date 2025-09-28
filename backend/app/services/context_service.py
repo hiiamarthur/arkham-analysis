@@ -1,138 +1,192 @@
 from typing import Optional, Dict, Any
-import json
-from app.schemas.context_schema import UserContextSchema
+from app.schemas.context_schema import GameContextSchema
 from app.services.cache_service import cache_service
 
 
 class ContextService:
-    """Service for managing user context and preferences"""
+    """Service for managing game context for GPT analysis"""
 
     def __init__(self):
         self.cache_service = cache_service
-        self.cache_prefix = "user_context"
+        self.cache_prefix = "game_context"
 
-    async def store_user_context(
-        self, user_context: UserContextSchema, user_id: Optional[str] = None
-    ) -> UserContextSchema:
-        """Store user context (in cache for now, could be database later)"""
-        cache_key = f"{self.cache_prefix}:{user_id or 'anonymous'}"
+    async def store_game_context(
+        self, game_context: GameContextSchema, session_id: Optional[str] = None
+    ) -> GameContextSchema:
+        """Store game context for analysis"""
+        cache_key = f"{self.cache_prefix}:{session_id or 'default'}"
         
         # Convert to dict for storage
-        context_data = user_context.dict()
+        context_data = game_context.dict()
         
-        # Store in cache with longer TTL (24 hours)
+        # Store in cache with shorter TTL (2 hours) since game state changes frequently
         await self.cache_service.set_with_key(
-            "user_contexts", cache_key, context_data, ttl=86400
+            "game_contexts", cache_key, context_data, ttl=7200
         )
         
-        return user_context
+        return game_context
 
-    async def get_user_context(
-        self, user_id: Optional[str] = None
-    ) -> Optional[UserContextSchema]:
-        """Retrieve user context"""
-        cache_key = f"{self.cache_prefix}:{user_id or 'anonymous'}"
+    async def get_game_context(
+        self, session_id: Optional[str] = None
+    ) -> Optional[GameContextSchema]:
+        """Retrieve game context"""
+        cache_key = f"{self.cache_prefix}:{session_id or 'default'}"
         
         try:
             context_data = await self.cache_service.get_with_key(
-                "user_contexts", cache_key
+                "game_contexts", cache_key
             )
             
             if context_data:
-                return UserContextSchema(**context_data)
+                return GameContextSchema(**context_data)
             
-            # Return default context if none found
-            return UserContextSchema()
+            return None
             
         except Exception as e:
-            print(f"Error retrieving user context: {e}")
-            return UserContextSchema()
+            print(f"Error retrieving game context: {e}")
+            return None
 
-    async def update_user_context(
-        self, user_id: Optional[str], user_context: UserContextSchema
-    ) -> UserContextSchema:
-        """Update existing user context"""
-        # For now, this is the same as store_user_context
-        # In a real app, you might want to merge with existing context
-        return await self.store_user_context(user_context, user_id)
+    async def update_game_context(
+        self, session_id: Optional[str], game_context: GameContextSchema
+    ) -> GameContextSchema:
+        """Update existing game context"""
+        return await self.store_game_context(game_context, session_id)
 
-    async def delete_user_context(self, user_id: Optional[str] = None):
-        """Delete user context"""
-        cache_key = f"{self.cache_prefix}:{user_id or 'anonymous'}"
+    async def delete_game_context(self, session_id: Optional[str] = None):
+        """Delete game context"""
+        cache_key = f"{self.cache_prefix}:{session_id or 'default'}"
         
         try:
-            await self.cache_service.delete_with_key("user_contexts", cache_key)
+            await self.cache_service.delete_with_key("game_contexts", cache_key)
         except Exception as e:
-            print(f"Error deleting user context: {e}")
+            print(f"Error deleting game context: {e}")
             raise
 
-    def apply_user_context_to_analysis(
-        self, analysis_result: Dict[str, Any], user_context: UserContextSchema
-    ) -> Dict[str, Any]:
-        """Apply user context to modify analysis results"""
+    def format_for_gpt_analysis(self, game_context: GameContextSchema) -> str:
+        """Format game context as a structured prompt for GPT analysis"""
         
-        # Apply weight preferences to scoring
-        if "card_rankings" in analysis_result:
-            rankings = analysis_result["card_rankings"]
-            
-            # Adjust rankings based on user preferences
-            for category in rankings:
-                if "cards" in rankings[category]:
-                    for card in rankings[category]["cards"]:
-                        self._apply_user_weights(card, user_context)
-        
-        # Filter by owned packs if specified
-        if user_context.owned_packs:
-            analysis_result = self._filter_by_owned_packs(
-                analysis_result, user_context.owned_packs
-            )
-        
-        # Add user-specific recommendations
-        analysis_result["user_recommendations"] = self._generate_user_recommendations(
-            analysis_result, user_context
-        )
-        
-        return analysis_result
+        prompt = f"""
+# Current Game State Analysis
 
-    def _apply_user_weights(self, card_data: Dict, user_context: UserContextSchema):
-        """Apply user preference weights to card scoring"""
-        weights = user_context.weight_preferences
+## Scenario Information
+- **Scenario**: {game_context.current_scenario}
+- **Act**: {game_context.current_act} | **Agenda**: {game_context.current_agenda}
+- **Difficulty**: {game_context.scenario_difficulty}
+- **Phase**: {game_context.current_phase}
+- **Turn**: {game_context.turn_number}
+
+## Doom Pressure
+- **Doom on Agenda**: {game_context.doom_on_agenda}/{game_context.doom_threshold}
+- **Total Doom in Play**: {game_context.total_doom_in_play}
+- **Turns until Agenda Advances**: {game_context.doom_threshold - game_context.doom_on_agenda}
+
+## Investigators
+"""
         
-        # Adjust score based on user weights
-        if "score" in card_data and "factors" in card_data:
-            factors = card_data["factors"]
-            adjusted_score = 0
-            
-            for factor, value in factors.items():
-                weight = weights.get(factor, 1.0)
-                adjusted_score += value * weight
-            
-            card_data["user_adjusted_score"] = adjusted_score
+        for inv in game_context.investigators:
+            is_active = "🎯 " if inv.investigator_code == game_context.active_investigator else ""
+            prompt += f"""
+{is_active}**{inv.investigator_code}**:
+- Health: {inv.current_health}/{inv.max_health}
+- Sanity: {inv.current_sanity}/{inv.max_sanity}
+- Resources: {inv.current_resources}
+- Actions: {inv.current_actions}
+- Location: {inv.location_code}
+- Engaged: {inv.is_engaged}
+"""
 
-    def _filter_by_owned_packs(
-        self, analysis_result: Dict[str, Any], owned_packs: list
-    ) -> Dict[str, Any]:
-        """Filter recommendations based on owned packs"""
-        # This would require pack information in card data
-        # For now, just add a note
-        analysis_result["pack_filter_applied"] = True
-        analysis_result["owned_packs"] = owned_packs
-        return analysis_result
+        if game_context.enemies_in_play:
+            prompt += "\n## Enemies in Play\n"
+            for enemy in game_context.enemies_in_play:
+                prompt += f"""
+- **{enemy.enemy_code}**: {enemy.current_health}/{enemy.max_health} HP
+  - Location: {enemy.location_code}
+  - Engaged with: {enemy.engaged_with}
+  - Status: {'Exhausted' if enemy.is_exhausted else 'Ready'}
+"""
 
-    def _generate_user_recommendations(
-        self, analysis_result: Dict[str, Any], user_context: UserContextSchema
-    ) -> Dict[str, Any]:
-        """Generate personalized recommendations based on user context"""
-        recommendations = {
-            "based_on_play_style": f"Recommendations optimized for {user_context.play_style} play style",
-            "difficulty_considerations": f"Analysis adjusted for {user_context.preferred_difficulty} difficulty",
-            "group_size_notes": f"Recommendations for {user_context.typical_group_size} games"
+        if game_context.locations_in_play:
+            prompt += "\n## Locations\n"
+            for location in game_context.locations_in_play:
+                prompt += f"""
+- **{location.location_code}** ({location.status}): {location.current_clues} clues
+  - Investigators: {', '.join(location.investigators_here)}
+  - Enemies: {', '.join(location.enemies_here)}
+"""
+
+        if game_context.treacheries_in_play:
+            prompt += "\n## Active Treacheries\n"
+            for treachery in game_context.treacheries_in_play:
+                prompt += f"- **{treachery.treachery_code}** (attached to {treachery.attached_to})\n"
+
+        if game_context.special_rules_active:
+            prompt += f"\n## Special Rules Active\n"
+            for rule in game_context.special_rules_active:
+                prompt += f"- {rule}\n"
+
+        prompt += f"""
+## Analysis Question
+{game_context.analysis_question}
+
+## Available Actions
+{', '.join(game_context.available_actions) if game_context.available_actions else 'Standard investigator actions'}
+
+Please analyze this game state and provide strategic recommendations for the active investigator.
+"""
+        
+        return prompt
+
+    def calculate_threat_level(self, game_context: GameContextSchema) -> Dict[str, Any]:
+        """Calculate current threat level based on game state"""
+        
+        threat_factors = {
+            "doom_pressure": 0,
+            "enemy_pressure": 0,
+            "health_pressure": 0,
+            "sanity_pressure": 0,
+            "resource_pressure": 0
         }
         
-        if user_context.max_xp_budget:
-            recommendations["xp_budget"] = f"Filtered for {user_context.max_xp_budget} XP budget"
+        # Doom pressure (0-1 scale)
+        doom_ratio = game_context.doom_on_agenda / game_context.doom_threshold
+        threat_factors["doom_pressure"] = min(doom_ratio, 1.0)
         
-        if user_context.current_campaign:
-            recommendations["campaign_specific"] = f"Optimized for {user_context.current_campaign} campaign"
+        # Enemy pressure
+        engaged_enemies = sum(1 for enemy in game_context.enemies_in_play if enemy.engaged_with)
+        threat_factors["enemy_pressure"] = min(engaged_enemies / len(game_context.investigators), 1.0)
         
-        return recommendations
+        # Health/Sanity pressure
+        total_health_ratio = 0
+        total_sanity_ratio = 0
+        for inv in game_context.investigators:
+            total_health_ratio += inv.current_health / inv.max_health
+            total_sanity_ratio += inv.current_sanity / inv.max_sanity
+        
+        threat_factors["health_pressure"] = 1 - (total_health_ratio / len(game_context.investigators))
+        threat_factors["sanity_pressure"] = 1 - (total_sanity_ratio / len(game_context.investigators))
+        
+        # Resource pressure
+        avg_resources = sum(inv.current_resources for inv in game_context.investigators) / len(game_context.investigators)
+        threat_factors["resource_pressure"] = max(0, (3 - avg_resources) / 3)  # Assuming 3 is comfortable
+        
+        # Overall threat level
+        overall_threat = sum(threat_factors.values()) / len(threat_factors)
+        
+        return {
+            "overall_threat_level": overall_threat,
+            "threat_factors": threat_factors,
+            "threat_description": self._get_threat_description(overall_threat)
+        }
+    
+    def _get_threat_description(self, threat_level: float) -> str:
+        """Get human-readable threat description"""
+        if threat_level < 0.2:
+            return "Low - Situation is under control"
+        elif threat_level < 0.4:
+            return "Moderate - Some pressure building"
+        elif threat_level < 0.6:
+            return "High - Dangerous situation"
+        elif threat_level < 0.8:
+            return "Critical - Immediate action needed"
+        else:
+            return "Extreme - Emergency measures required"

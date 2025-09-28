@@ -13,6 +13,8 @@ from app.models.arkham_model import CardModel, TabooModel, TraitModel, Encounter
 # Import scoring services
 from app.services.card_service import CardService
 from app.services.context_service import ContextService
+from app.services.analysis_service import AnalysisService
+from app.services.gpt_service import GPTService
 from scoring_model.services import (
     BaseCardScoringService,
     ConservativeScoringService,
@@ -149,6 +151,20 @@ async def get_combo_scoring_service() -> ComboScoringService:
 async def get_context_service() -> ContextService:
     """Get context service instance"""
     return ContextService()
+
+
+async def get_gpt_service() -> GPTService:
+    """Get GPT service instance"""
+    return GPTService()
+
+
+async def get_analysis_service(
+    gpt_service: GPTService = Depends(get_gpt_service),
+    context_service: ContextService = Depends(get_context_service),
+    card_service: CardService = Depends(get_card_service),
+) -> AnalysisService:
+    """Get analysis service instance with all dependencies"""
+    return AnalysisService(gpt_service, context_service, card_service)
 
 
 # Scoring service dependency (when you create it later)

@@ -21,16 +21,23 @@ class GPTService:
             "role": "system",
             "content": (
                 "You already know all keywords in Arkham Horror. Use the following axioms when analyzing: "
-                + "Average enemy health is 3. Average location clues per investigator is 2. "
-                + "Most enemies require ~2 hits to kill. Elite enemies often have 5–6 * no of player health. "
-                "Most enemies deal 1–2 damage and horror when they attack. "
-                + "Guardian focuses on fighting and protection. Seeker focuses on clue gathering and card draw. "
+                + "COMBAT: Average enemy health is {avg_enemy_health}. Most enemies require ~{hits_to_kill} hits to kill. Elite enemies often have {elite_health_multiplier} * no of player health. "
+                + "Most enemies deal {enemy_damage_range} damage and {enemy_horror_range} horror when they attack. "
+                + "INVESTIGATION: Average location clues per investigator is {avg_clues_per_location}. Average shroud value is {avg_shroud}. "
+                + "Investigation tests typically need {investigation_target_number} total skill to reliably pass. Each +1 skill icon is worth ~{skill_icon_value} resources. "
+                + "CHAOS BAG: Base test success rate is ~{base_success_rate}% for balanced tests. Each +1 skill bonus increases success by ~{skill_bonus_success_rate}%. "
+                + "Chaos token mitigation (ignore/redraw) is worth ~{chaos_token_mitigation_value} resources per use. Auto-success effects are worth ~{auto_success_value} resources. "
+                + "SURVIVABILITY: Each health/sanity point is worth ~{health_sanity_value} resources. Horror healing is worth ~{horror_heal_value} resources per point. "
+                + "Damage healing is worth ~{damage_heal_value} resources per point. Trauma prevention is worth ~{trauma_prevention_value} resources per point avoided. "
+                + "RESOURCES: One action is worth ~{action_value} resources. One card is worth ~{card_value} resources, depending on draw engine. "
+                + "Each resource gained is worth 1 resource (baseline). Resource acceleration (gaining >1 per action) is worth ~{resource_acceleration_value} per extra resource. "
+                + "TIMING: Fast cards save one action (≈{fast_card_value} resources). Reaction effects usually trigger once per round, conditional. "
+                + "FACTIONS: Guardian focuses on fighting and protection. Seeker focuses on clue gathering and card draw. "
                 + "Rogue focuses on action efficiency and resource generation. Mystic focuses on spell power and willpower tests. "
-                + "Survivor focuses on fail-to-win effects and resource-light play. Assets provide repeatable or passive effects. "
-                + "Events give one-time, powerful effects. Fast cards save one action (≈2 resources). Reaction effects usually trigger once per round, conditional. "
-                + "Charges, secrets, ammo limit how many times an effect can be used. One action is worth ~2 resources. "
-                + "One card is worth ~1–2 resources, depending on draw engine. Each turn gives 3 actions, 1 card, 1 resource. "
-                + "Clues are worth ~2.5 resources each (for seekers). Damage dealt or avoided is worth ~2–2.5 resources (for fighters). Some effects only trigger if the right situation appears. "
+                + "Survivor focuses on fail-to-win effects and resource-light play. "
+                + "CARD TYPES: Assets provide repeatable or passive effects. Events give one-time, powerful effects. "
+                + "Charges, secrets, ammo limit how many times an effect can be used. Each turn gives 3 actions, 1 card, 1 resource. "
+                + "Clues are worth ~{clue_value} resources each (context-adjusted). Damage dealt or avoided is worth ~{damage_value} resources (context-adjusted). "
                 + "Fast and reaction abilities depend on timing but don't cost actions. Exceptional cards have stronger effects but cost more XP. "
                 + "Here are edge case: - Only evaluate on special effects if the card have extra effect(like increased test success, encounter avoidance, chaos bag control, token manipulation, healing boosts, etc.) that do not applicable to existing value (actions,damage... etc), "
                 + "estimate their approximate resource-equivalent value and include it as a separate entry under key 17 ('special_effect').  - Report 'actions' only if the card directly gives or removes actions. "
@@ -111,7 +118,7 @@ class GPTService:
                 "service_tier": chat_completetion_response.service_tier,
                 "system_fingerprint": chat_completetion_response.system_fingerprint,
                 "usage": (
-                    chat_completetion_response.usage.dict()
+                    chat_completetion_response.usage.model_dump()
                     if chat_completetion_response.usage
                     else {}
                 ),

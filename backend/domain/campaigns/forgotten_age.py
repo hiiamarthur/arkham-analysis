@@ -31,19 +31,15 @@ class ForgottenAge(Campaign):
         base_tokens = [
             ElderSignToken(),
             AutoFailToken(),
-            SkullToken("", 0),  # 2 skulls in Forgotten Age
-            SkullToken("", 0),
-            CultistToken("", 0),
-            TabletToken("", 0),
-            ElderThingToken("", 0),
         ]
 
         token_configs = {
             Difficulty.EASY: {
+                PlusOneToken: 2,
                 ZeroToken: 3,
-                MinusOneToken: 3,
-                MinusTwoToken: 2,
-                MinusThreeToken: 2,
+                MinusOneToken: 2,
+                MinusTwoToken: 1,
+                MinusThreeToken: 1,
                 MinusFourToken: 1,
             },
             Difficulty.STANDARD: {

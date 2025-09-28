@@ -1,9 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from typing import Optional
 from app.schemas.context_schema import (
-    UserContextSchema,
-    UserContextCreateRequest,
-    UserContextResponse
+    GameContextSchema,
+    GameContextCreateRequest,
+    GameContextResponse
 )
 from app.services.context_service import ContextService
 from app.api.deps import get_context_service
@@ -17,99 +17,98 @@ from . import (
 router = APIRouter()
 
 
-@router.post("/user", response_model=UserContextResponse)
-async def create_user_context(
-    request: UserContextCreateRequest,
+@router.post("/game", response_model=GameContextResponse)
+async def create_game_context(
+    request: GameContextCreateRequest,
     response: Response,
     context_service: ContextService = Depends(get_context_service),
 ):
-    """Create or update user context for personalized analysis"""
+    """Create game context for GPT analysis"""
     try:
-        # Store user context (you might want to add user authentication here)
-        stored_context = await context_service.store_user_context(request.user_context)
+        stored_context = await context_service.store_game_context(request.game_context)
         
         response.headers.update(ARKHAM_HEADERS)
         response.headers["Cache-Control"] = f"private, max-age={CACHE_TTL_MEDIUM}"
         
-        return UserContextResponse(
+        return GameContextResponse(
             success=True,
-            message="User context created successfully",
-            user_context=stored_context
+            message="Game context created successfully",
+            game_context=stored_context
         )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Failed to create user context: {str(e)}"
+            detail=f"Failed to create game context: {str(e)}"
         )
 
 
-@router.get("/user", response_model=UserContextResponse)
-async def get_user_context(
+@router.get("/game", response_model=GameContextResponse)
+async def get_game_context(
     response: Response,
-    user_id: Optional[str] = None,  # In a real app, get from auth
+    session_id: Optional[str] = None,
     context_service: ContextService = Depends(get_context_service),
 ):
-    """Get user context for personalized analysis"""
+    """Get game context for analysis"""
     try:
-        user_context = await context_service.get_user_context(user_id)
+        game_context = await context_service.get_game_context(session_id)
         
         response.headers.update(ARKHAM_HEADERS)
         response.headers["Cache-Control"] = f"private, max-age={CACHE_TTL_MEDIUM}"
         
-        return UserContextResponse(
+        return GameContextResponse(
             success=True,
-            message="User context retrieved successfully",
-            user_context=user_context
+            message="Game context retrieved successfully",
+            game_context=game_context
         )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"User context not found: {str(e)}"
+            detail=f"Game context not found: {str(e)}"
         )
 
 
-@router.put("/user", response_model=UserContextResponse)
-async def update_user_context(
-    request: UserContextCreateRequest,
+@router.put("/game", response_model=GameContextResponse)
+async def update_game_context(
+    request: GameContextCreateRequest,
     response: Response,
-    user_id: Optional[str] = None,  # In a real app, get from auth
+    session_id: Optional[str] = None,
     context_service: ContextService = Depends(get_context_service),
 ):
-    """Update existing user context"""
+    """Update existing game context"""
     try:
-        updated_context = await context_service.update_user_context(
-            user_id, request.user_context
+        updated_context = await context_service.update_game_context(
+            session_id, request.game_context
         )
         
         response.headers.update(ARKHAM_HEADERS)
         
-        return UserContextResponse(
+        return GameContextResponse(
             success=True,
-            message="User context updated successfully",
-            user_context=updated_context
+            message="Game context updated successfully",
+            game_context=updated_context
         )
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"Failed to update user context: {str(e)}"
+            detail=f"Failed to update game context: {str(e)}"
         )
 
 
-@router.delete("/user")
-async def delete_user_context(
+@router.delete("/game")
+async def delete_game_context(
     response: Response,
-    user_id: Optional[str] = None,  # In a real app, get from auth
+    session_id: Optional[str] = None,
     context_service: ContextService = Depends(get_context_service),
 ):
-    """Delete user context"""
+    """Delete game context"""
     try:
-        await context_service.delete_user_context(user_id)
+        await context_service.delete_game_context(session_id)
         
         response.headers.update(ARKHAM_HEADERS)
         
-        return {"success": True, "message": "User context deleted successfully"}
+        return {"success": True, "message": "Game context deleted successfully"}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Failed to delete user context: {str(e)}"
+            detail=f"Failed to delete game context: {str(e)}"
         )

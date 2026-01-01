@@ -3,11 +3,16 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Chart, ChartConfiguration, ChartType, registerables } from 'chart.js';
+import { CustomInputComponent } from '../../shared/components/text-field.component';
+import { DataTableComponent, TableColumn, TableConfig } from '../../shared/components/data-table.component';
+import { SharedModule } from '../../shared/shared.module';
+import { TableExampleComponent } from '../table-example/table-example.component';
+import { AppStateService } from '../../services/app-state.service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, CustomInputComponent, DataTableComponent, TableExampleComponent],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
@@ -23,9 +28,74 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   totalAnalyses = signal(0);
   recentAnalyses = signal<any[]>([]);
   favoriteCards = signal<string[]>(['01030', '01031', '01032']);
-  
+
   // Quick action state
   quickCardCode = signal('');
+
+  constructor(private appState: AppStateService) {
+    Chart.register(...registerables);
+  }
+
+  // Global app state - traits and encounter sets (accessed after constructor)
+  traits = computed(() => this.appState.traits());
+  encounterSets = computed(() => this.appState.encounterSets());
+  traitCount = computed(() => this.traits().length);
+  encounterSetCount = computed(() => this.encounterSets().length);
+  
+  // Table data for recent analyses
+  recentAnalysesData = signal([
+    {
+      id: 1,
+      cardName: 'Emergency Cache',
+      investigator: 'Roland Banks',
+      analysisType: 'Resource Management',
+      rating: 9.2,
+      timestamp: '2024-01-15T10:30:00',
+      scenario: 'The Gathering'
+    },
+    {
+      id: 2,
+      cardName: 'Machete',
+      investigator: 'Roland Banks',
+      analysisType: 'Combat Efficiency',
+      rating: 8.7,
+      timestamp: '2024-01-15T09:15:00',
+      scenario: 'The Midnight Masks'
+    },
+    {
+      id: 3,
+      cardName: 'Working a Hunch',
+      investigator: 'Rex Murphy',
+      analysisType: 'Clue Gathering',
+      rating: 8.9,
+      timestamp: '2024-01-14T16:45:00',
+      scenario: 'Extracurricular Activity'
+    }
+  ]);
+
+  // Table columns for recent analyses
+  recentAnalysesColumns: TableColumn[] = [
+    { key: 'cardName', label: 'Card', sortable: true, searchable: true },
+    { key: 'investigator', label: 'Investigator', sortable: true, filterable: true },
+    { key: 'analysisType', label: 'Analysis Type', sortable: true, filterable: true },
+    { key: 'rating', label: 'Rating', sortable: true, type: 'number' },
+    { key: 'timestamp', label: 'Date', sortable: true, type: 'date' },
+    { key: 'scenario', label: 'Scenario', sortable: true, filterable: true }
+  ];
+
+  // Table configuration
+  tableConfig: TableConfig = {
+    pageSize: 5,
+    pageSizeOptions: [5, 10, 25],
+    showPagination: true,
+    showSearch: true,
+    showColumnToggle: true,
+    showFilters: true,
+    striped: true,
+    hoverable: true,
+    bordered: true,
+    responsive: true
+  };
   
   // Dashboard stats
   stats = computed(() => ({
@@ -105,7 +175,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   ];
 
   ngOnInit(): void {
-    Chart.register(...registerables);
+    // Chart already registered in constructor
   }
 
   ngAfterViewInit(): void {
@@ -368,5 +438,23 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
       case 'expert': return '#dc3545';
       default: return '#6c757d';
     }
+  }
+
+  // Table event handlers
+  onTableRowClick(row: any) {
+    console.log('Table row clicked:', row);
+    // Navigate to card analysis or show details
+  }
+
+  onTablePageChange(paginationInfo: any) {
+    console.log('Table page changed:', paginationInfo);
+  }
+
+  onTableSortChange(sortInfo: any) {
+    console.log('Table sort changed:', sortInfo);
+  }
+
+  onTableFilterChange(filterInfo: any) {
+    console.log('Table filter changed:', filterInfo);
   }
 }

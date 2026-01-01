@@ -20,6 +20,7 @@ class TokenString(Enum):
     CULTIST = "cultist"
     TABLET = "tablet"
     ELDER_THING = "elder_thing"
+    FROST = "frost"
 
     @staticmethod
     def from_str(str: str) -> "TokenString":
@@ -44,7 +45,9 @@ class ChaosToken:
 
 
 class ElderSignToken(ChaosToken):
-    def __init__(self, effect: str = "", value: int = 0, revealAnotherToken: bool = False):
+    def __init__(
+        self, effect: str = "", value: int = 0, revealAnotherToken: bool = False
+    ):
         super().__init__(TokenString.ELDER_SIGN, effect, value, revealAnotherToken)
 
 
@@ -131,3 +134,8 @@ class TabletToken(ChaosToken):
 class ElderThingToken(ChaosToken):
     def __init__(self, effect, value, revealAnotherToken: bool = False):
         super().__init__(TokenString.ELDER_THING, effect, value, revealAnotherToken)
+
+
+class FrostToken(ChaosToken):
+    def __init__(self, effect):
+        super().__init__(TokenString.FROST, effect, -1, True)

@@ -74,7 +74,7 @@ class ScenarioService:
             "encounter_set_of_scenario",
             scenario_code.__str__(),
             encounter_set_of_scenario,
-            # encounter_set_of_scenario_record,
+            encounter_set_of_scenario_record,
         )
         scenarioCard = await self.card_repo.get_first(
             filters={

@@ -10,8 +10,8 @@ from ..Token import (
     AutoFailToken,
     SkullToken,
     TabletToken,
+    ElderThingToken,
 )
-from ..Token.token import TokenString
 
 
 class Campaign(ABC):
@@ -32,6 +32,8 @@ class Campaign(ABC):
                 self.base_tokens.extend([CultistToken("", 0) for _ in range(count)])
             elif token_class == TabletToken:
                 self.base_tokens.extend([TabletToken("", 0) for _ in range(count)])
+            elif token_class == ElderThingToken:
+                self.base_tokens.extend([ElderThingToken("", 0) for _ in range(count)])
             elif token_class == ElderSignToken:
                 self.base_tokens.extend([ElderSignToken("", 0) for _ in range(count)])
             elif token_class == AutoFailToken:

@@ -12,52 +12,57 @@ from ..Token.token import (
     MinusThreeToken,
     MinusFourToken,
     MinusFiveToken,
+    SkullToken,
+    CultistToken,
+    TabletToken,
 )
-from typing import List
+from typing import Dict, List, Type
 
 
 class DunwichLegacy(Campaign):
 
-    base_tokens = [
-        ElderSignToken(),
-        AutoFailToken(),
-    ]
-
-    token_configs = {
-        Difficulty.EASY: {
-            PlusOneToken: 2,
-            ZeroToken: 3,
-            MinusOneToken: 3,
-            MinusTwoToken: 2,
-        },
-        Difficulty.STANDARD: {
-            PlusOneToken: 1,
-            ZeroToken: 2,
-            MinusOneToken: 3,
-            MinusTwoToken: 2,
-            MinusThreeToken: 1,
-            MinusFourToken: 1,
-        },
-        Difficulty.HARD: {
-            ZeroToken: 3,
-            MinusOneToken: 2,
-            MinusTwoToken: 2,
-            MinusThreeToken: 2,
-            MinusFourToken: 1,
-        },
-        Difficulty.EXPERT: {
-            ZeroToken: 1,
-            MinusOneToken: 2,
-            MinusTwoToken: 2,
-            MinusThreeToken: 3,
-            MinusFourToken: 4,
-            MinusFiveToken: 1,
-            MinusEightToken: 1,
-        },
-    }
-
     def __init__(self, difficulty: Difficulty):
-        super().__init__(CampaignType.THE_DUNWICH_LEGACY, difficulty)
+        self.base_tokens_config = {
+            ElderSignToken: 1,
+            AutoFailToken: 1,
+            SkullToken: 2,
+            CultistToken: 1,
+        }
+        super().__init__(
+            CampaignType.THE_DUNWICH_LEGACY, difficulty, self.base_tokens_config
+        )
+        self.token_configs = {
+            Difficulty.EASY: {
+                PlusOneToken: 2,
+                ZeroToken: 3,
+                MinusOneToken: 3,
+                MinusTwoToken: 2,
+            },
+            Difficulty.STANDARD: {
+                PlusOneToken: 1,
+                ZeroToken: 2,
+                MinusOneToken: 3,
+                MinusTwoToken: 2,
+                MinusThreeToken: 1,
+                MinusFourToken: 1,
+            },
+            Difficulty.HARD: {
+                ZeroToken: 3,
+                MinusOneToken: 2,
+                MinusTwoToken: 2,
+                MinusThreeToken: 2,
+                MinusFourToken: 1,
+            },
+            Difficulty.EXPERT: {
+                ZeroToken: 1,
+                MinusOneToken: 2,
+                MinusTwoToken: 2,
+                MinusThreeToken: 3,
+                MinusFourToken: 4,
+                MinusFiveToken: 1,
+                MinusEightToken: 1,
+            },
+        }
 
     def get_init_tokens(self, difficulty: Difficulty) -> List[ChaosToken]:
 
@@ -66,3 +71,6 @@ class DunwichLegacy(Campaign):
             self.base_tokens.extend([token_type() for _ in range(count)])
 
         return self.base_tokens
+
+    def get_token_config(self) -> Dict[Difficulty, Dict[Type[ChaosToken], int]]:
+        return self.token_configs

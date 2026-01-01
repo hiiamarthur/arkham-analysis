@@ -1,452 +1,793 @@
 <div class="card-analysis-container">
   <div class="header">
-    <h1>Arkham Horror Card Analysis</h1>
-    <p class="subtitle">Context-aware GPT analysis for optimal card evaluation</p>
+    <h1>
+      <span class="header-icon">🃏</span>
+      Card Analysis & Browser
+    </h1>
+    <p class="subtitle">Browse cards and perform context-aware GPT analysis</p>
   </div>
 
-  <form [formGroup]="analysisForm" class="analysis-form">
-    <!-- Analysis Type Selection -->
-    <div class="analysis-type-selection">
-      <h2>Analysis Type</h2>
-      <div class="button-group">
-        <button 
-          type="button" 
-          [class.active]="analysisType() === 'strength'"
-          (click)="setAnalysisType('strength')"
-          class="analysis-type-btn">
-          Card Strength
-        </button>
-        <button 
-          type="button" 
-          [class.active]="analysisType() === 'synergies'"
-          (click)="setAnalysisType('synergies')"
-          class="analysis-type-btn">
-          Card Synergies
-        </button>
-        <button 
-          type="button" 
-          [class.active]="analysisType() === 'timing'"
-          (click)="setAnalysisType('timing')"
-          class="analysis-type-btn">
-          Optimal Timing
-        </button>
-      </div>
-    </div>
+  <!-- Tab Navigation -->
+  <div class="tabs">
+    <button
+      class="tab-button"
+      [class.active]="activeTab() === 'browser'"
+      (click)="setActiveTab('browser')">
+      📚 Card Browser
+    </button>
+    <button
+      class="tab-button"
+      [class.active]="activeTab() === 'gpt-analysis'"
+      (click)="setActiveTab('gpt-analysis')">
+      🤖 GPT Analysis
+    </button>
+  </div>
 
-    <!-- Card Codes Input -->
-    <div class="form-section">
-      <h3>Cards to Analyze</h3>
-      <div class="input-group">
-        <label for="cardCodes">Card Codes (comma-separated)</label>
-        <input 
-          id="cardCodes"
-          type="text" 
-          formControlName="cardCodes"
-          placeholder="e.g., 01006, 01024, 01030"
-          class="form-input">
-        <small class="help-text">Enter ArkhamDB card codes separated by commas</small>
-      </div>
-    </div>
-
-    <!-- Investigator Context -->
-    <div class="form-section">
-      <h3>Investigator Context</h3>
-      <div class="input-group">
-        <label for="investigatorCode">Investigator Code</label>
-        <input 
-          id="investigatorCode"
-          type="text" 
-          formControlName="investigatorCode"
-          placeholder="e.g., 01001 (Roland Banks)"
-          class="form-input">
-      </div>
-    </div>
-
-    <!-- Campaign Context -->
-    <div class="form-section">
+  <!-- Card Browser Tab -->
+  <div class="tab-content" *ngIf="activeTab() === 'browser'">
+    <div class="browser-section">
       <div class="section-header">
-        <h3>Campaign Context</h3>
-        <label class="checkbox-label">
-          <input type="checkbox" formControlName="includeCampaignContext">
-          Include campaign context in analysis
-        </label>
+        <h2>Card Database</h2>
+        <span class="card-count">{{totalResults()}} total results</span>
       </div>
-      
-      <div formGroupName="campaignContext" [class.disabled]="!analysisForm.get('includeCampaignContext')?.value">
-        <div class="form-row">
-          <div class="input-group">
-            <label for="campaign">Campaign</label>
-            <select id="campaign" formControlName="campaign" class="form-select">
-              <option value="">Select Campaign</option>
-              <option *ngFor="let campaign of campaigns" [value]="campaign.value">
-                {{campaign.label}}
+
+      <!-- Search Filters -->
+      <div class="search-filters">
+        <div class="filter-row">
+          <div class="filter-group">
+            <label for="search-query">Search</label>
+            <input
+              id="search-query"
+              type="text"
+              [(ngModel)]="searchQuery"
+              placeholder="Search card names..."
+              class="filter-input"
+              (keyup.enter)="onSearch()"
+            />
+          </div>
+
+          <div class="filter-group">
+            <label for="search-faction">Faction</label>
+            <select id="search-faction" [(ngModel)]="searchFaction" class="filter-select">
+              <option value="">All Factions</option>
+              <option value="guardian">Guardian</option>
+              <option value="seeker">Seeker</option>
+              <option value="rogue">Rogue</option>
+              <option value="mystic">Mystic</option>
+              <option value="survivor">Survivor</option>
+              <option value="neutral">Neutral</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="search-type">Type</label>
+            <select id="search-type" [(ngModel)]="searchType" class="filter-select">
+              <option value="">All Types</option>
+              <option value="asset">Asset</option>
+              <option value="event">Event</option>
+              <option value="skill">Skill</option>
+              <option value="investigator">Investigator</option>
+              <option value="treachery">Treachery</option>
+              <option value="enemy">Enemy</option>
+            </select>
+          </div>
+
+          <div class="filter-group">
+            <label for="search-trait">Trait</label>
+            <select id="search-trait" [(ngModel)]="searchTrait" class="filter-select">
+              <option value="">All Traits</option>
+              <option *ngFor="let trait of availableTraits()" [value]="trait">
+                {{trait}}
               </option>
             </select>
           </div>
-          
-          <div class="input-group">
-            <label for="difficulty">Difficulty</label>
-            <select id="difficulty" formControlName="difficulty" class="form-select">
-              <option *ngFor="let diff of difficulties" [value]="diff.value">
-                {{diff.label}}
-              </option>
-            </select>
-          </div>
-        </div>
-        
-        <div class="form-row">
-          <div class="input-group">
-            <label for="scenarioCode">Scenario Code</label>
-            <input 
-              id="scenarioCode"
-              type="text" 
-              formControlName="scenarioCode"
-              placeholder="e.g., 03043"
-              class="form-input">
-          </div>
-          
-          <div class="input-group">
-            <label for="investigatorCount">Investigator Count</label>
-            <input 
-              id="investigatorCount"
-              type="number" 
-              formControlName="investigatorCount"
-              min="1" max="4"
-              class="form-input">
-          </div>
-        </div>
-      </div>
-    </div>
 
-    <!-- Game Context -->
-    <div class="form-section">
-      <div class="section-header">
-        <h3>Game Context</h3>
-        <label class="checkbox-label">
-          <input type="checkbox" formControlName="includeGameContext">
-          Include current game state in analysis
-        </label>
-      </div>
-      
-      <div formGroupName="gameContext" [class.disabled]="!analysisForm.get('includeGameContext')?.value">
-        <!-- Scenario Progress -->
-        <div class="subsection">
-          <h4>Scenario Progress</h4>
-          <div class="form-row">
-            <div class="input-group">
-              <label for="currentScenario">Current Scenario</label>
-              <input 
-                id="currentScenario"
-                type="text" 
-                formControlName="currentScenario"
-                placeholder="e.g., 03043"
-                class="form-input">
-            </div>
-            
-            <div class="input-group">
-              <label for="currentAct">Current Act</label>
-              <input 
-                id="currentAct"
-                type="number" 
-                formControlName="currentAct"
-                min="1"
-                class="form-input">
-            </div>
-            
-            <div class="input-group">
-              <label for="currentAgenda">Current Agenda</label>
-              <input 
-                id="currentAgenda"
-                type="number" 
-                formControlName="currentAgenda"
-                min="1"
-                class="form-input">
-            </div>
+          <div class="filter-group">
+            <label for="search-min-cost">Min Cost</label>
+            <input
+              id="search-min-cost"
+              type="number"
+              [(ngModel)]="searchMinCost"
+              placeholder="Min"
+              class="filter-input-small"
+              min="0"
+            />
+          </div>
+
+          <div class="filter-group">
+            <label for="search-max-cost">Max Cost</label>
+            <input
+              id="search-max-cost"
+              type="number"
+              [(ngModel)]="searchMaxCost"
+              placeholder="Max"
+              class="filter-input-small"
+              min="0"
+            />
           </div>
         </div>
 
-        <!-- Doom Pressure -->
-        <div class="subsection">
-          <h4>Doom Pressure</h4>
-          <div class="form-row">
-            <div class="input-group">
-              <label for="doomOnAgenda">Doom on Agenda</label>
-              <input 
-                id="doomOnAgenda"
-                type="number" 
-                formControlName="doomOnAgenda"
-                min="0"
-                class="form-input">
-            </div>
-            
-            <div class="input-group">
-              <label for="doomThreshold">Doom Threshold</label>
-              <input 
-                id="doomThreshold"
-                type="number" 
-                formControlName="doomThreshold"
-                min="1"
-                class="form-input">
-            </div>
-            
-            <div class="input-group">
-              <label for="totalDoomInPlay">Total Doom in Play</label>
-              <input 
-                id="totalDoomInPlay"
-                type="number" 
-                formControlName="totalDoomInPlay"
-                min="0"
-                class="form-input">
-            </div>
-          </div>
+        <div class="filter-actions">
+          <button class="search-button primary" (click)="onSearch()">
+            🔍 Search
+          </button>
+          <button class="search-button secondary" (click)="clearSearch()">
+            Clear Filters
+          </button>
+          <button class="search-button advanced" (click)="toggleAdvancedFilters()">
+            {{ showAdvancedFilters() ? '▼ Hide Advanced' : '▶ Show Advanced' }}
+          </button>
         </div>
 
-        <!-- Game State -->
-        <div class="subsection">
-          <h4>Game State</h4>
-          <div class="form-row">
-            <div class="input-group">
-              <label for="currentPhase">Current Phase</label>
-              <select id="currentPhase" formControlName="currentPhase" class="form-select">
-                <option *ngFor="let phase of phases" [value]="phase.value">
-                  {{phase.label}}
-                </option>
+        <!-- Advanced Filters Section -->
+        <div class="advanced-filters" *ngIf="showAdvancedFilters()">
+          <h4 class="advanced-title">Advanced Filters</h4>
+
+          <div class="advanced-grid">
+            <!-- Text Search -->
+            <div class="filter-group">
+              <label for="search-text">Card Text</label>
+              <input
+                id="search-text"
+                type="text"
+                [(ngModel)]="searchText"
+                placeholder="Search in card text..."
+                class="filter-input"
+              />
+            </div>
+
+            <div class="filter-group">
+              <label for="search-flavor">Flavor Text</label>
+              <input
+                id="search-flavor"
+                type="text"
+                [(ngModel)]="searchFlavor"
+                placeholder="Search flavor text..."
+                class="filter-input"
+              />
+            </div>
+
+            <div class="filter-group">
+              <label for="search-slot">Slot</label>
+              <select id="search-slot" [(ngModel)]="searchSlot" class="filter-select">
+                <option value="">All Slots</option>
+                <option value="Hand">Hand</option>
+                <option value="Ally">Ally</option>
+                <option value="Arcane">Arcane</option>
+                <option value="Accessory">Accessory</option>
+                <option value="Body">Body</option>
+                <option value="Tarot">Tarot</option>
               </select>
             </div>
-            
-            <div class="input-group">
-              <label for="turnNumber">Turn Number</label>
-              <input 
-                id="turnNumber"
-                type="number" 
-                formControlName="turnNumber"
-                min="1"
-                class="form-input">
-            </div>
-            
-            <div class="input-group">
-              <label for="activeInvestigator">Active Investigator</label>
-              <input 
-                id="activeInvestigator"
-                type="text" 
-                formControlName="activeInvestigator"
-                placeholder="e.g., 01001"
-                class="form-input">
-            </div>
-          </div>
-        </div>
 
-        <!-- Analysis Question -->
-        <div class="subsection">
-          <h4>Analysis Question</h4>
-          <div class="input-group">
-            <label for="analysisQuestion">What do you want to analyze?</label>
-            <textarea 
-              id="analysisQuestion"
-              formControlName="analysisQuestion"
-              placeholder="e.g., Roland is engaged with a dangerous enemy and low on resources. Which cards should he prioritize to survive and contribute?"
-              class="form-textarea"
-              rows="3"></textarea>
-          </div>
-        </div>
+            <!-- Boolean Filters -->
+            <div class="filter-group">
+              <label for="search-unique">Unique</label>
+              <select id="search-unique" [(ngModel)]="searchIsUnique" class="filter-select">
+                <option [ngValue]="undefined">Any</option>
+                <option [ngValue]="true">Yes</option>
+                <option [ngValue]="false">No</option>
+              </select>
+            </div>
 
-        <!-- Investigators -->
-        <div class="subsection">
-          <div class="subsection-header">
-            <h4>Investigators</h4>
-            <button type="button" (click)="addInvestigator()" class="add-btn">Add Investigator</button>
-          </div>
-          
-          <div formArrayName="investigators">
-            <div *ngFor="let investigator of investigators.controls; let i = index" 
-                 [formGroupName]="i" 
-                 class="array-item">
-              <div class="array-item-header">
-                <h5>Investigator {{i + 1}}</h5>
-                <button type="button" (click)="removeInvestigator(i)" class="remove-btn">Remove</button>
-              </div>
-              
-              <div class="form-row">
-                <div class="input-group">
-                  <label>Code</label>
-                  <input type="text" formControlName="investigatorCode" class="form-input">
-                </div>
-                <div class="input-group">
-                  <label>Health</label>
-                  <input type="number" formControlName="currentHealth" class="form-input">
-                </div>
-                <div class="input-group">
-                  <label>Max Health</label>
-                  <input type="number" formControlName="maxHealth" class="form-input">
-                </div>
-                <div class="input-group">
-                  <label>Sanity</label>
-                  <input type="number" formControlName="currentSanity" class="form-input">
-                </div>
-                <div class="input-group">
-                  <label>Max Sanity</label>
-                  <input type="number" formControlName="maxSanity" class="form-input">
-                </div>
-                <div class="input-group">
-                  <label>Resources</label>
-                  <input type="number" formControlName="currentResources" class="form-input">
-                </div>
-              </div>
-              
-              <div class="form-row">
-                <div class="input-group">
-                  <label>Actions</label>
-                  <input type="number" formControlName="currentActions" class="form-input">
-                </div>
-                <div class="input-group">
-                  <label>Location</label>
-                  <input type="text" formControlName="locationCode" class="form-input">
-                </div>
-                <div class="input-group checkbox-group">
-                  <label class="checkbox-label">
-                    <input type="checkbox" formControlName="isEngaged">
-                    Engaged with Enemy
-                  </label>
-                </div>
-              </div>
+            <div class="filter-group">
+              <label for="search-permanent">Permanent</label>
+              <select id="search-permanent" [(ngModel)]="searchPermanent" class="filter-select">
+                <option [ngValue]="undefined">Any</option>
+                <option [ngValue]="true">Yes</option>
+                <option [ngValue]="false">No</option>
+              </select>
+            </div>
+
+            <!-- Skill Icons -->
+            <div class="filter-group">
+              <label for="search-willpower">🔵 Willpower (Min)</label>
+              <input
+                id="search-willpower"
+                type="number"
+                [(ngModel)]="searchMinWillpower"
+                placeholder="Min"
+                class="filter-input-small"
+                min="0"
+                max="5"
+              />
+            </div>
+
+            <div class="filter-group">
+              <label for="search-intellect">🟢 Intellect (Min)</label>
+              <input
+                id="search-intellect"
+                type="number"
+                [(ngModel)]="searchMinIntellect"
+                placeholder="Min"
+                class="filter-input-small"
+                min="0"
+                max="5"
+              />
+            </div>
+
+            <div class="filter-group">
+              <label for="search-combat">⚔️ Combat (Min)</label>
+              <input
+                id="search-combat"
+                type="number"
+                [(ngModel)]="searchMinCombat"
+                placeholder="Min"
+                class="filter-input-small"
+                min="0"
+                max="5"
+              />
+            </div>
+
+            <div class="filter-group">
+              <label for="search-agility">🟡 Agility (Min)</label>
+              <input
+                id="search-agility"
+                type="number"
+                [(ngModel)]="searchMinAgility"
+                placeholder="Min"
+                class="filter-input-small"
+                min="0"
+                max="5"
+              />
+            </div>
+
+            <!-- Health and Sanity -->
+            <div class="filter-group">
+              <label for="search-health">❤️ Health (Min)</label>
+              <input
+                id="search-health"
+                type="number"
+                [(ngModel)]="searchMinHealth"
+                placeholder="Min"
+                class="filter-input-small"
+                min="0"
+              />
+            </div>
+
+            <div class="filter-group">
+              <label for="search-sanity">🧠 Sanity (Min)</label>
+              <input
+                id="search-sanity"
+                type="number"
+                [(ngModel)]="searchMinSanity"
+                placeholder="Min"
+                class="filter-input-small"
+                min="0"
+              />
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Analysis Button -->
-    <div class="form-actions">
-      <button 
-        type="button" 
-        (click)="analyzeCards()"
-        [disabled]="loading() || !analysisForm.get('cardCodes')?.value"
-        class="analyze-btn">
-        <span *ngIf="loading()">Analyzing...</span>
-        <span *ngIf="!loading()">Analyze {{analysisType() | titlecase}}</span>
-      </button>
-      
-      <button 
-        type="button" 
-        (click)="clearResults()"
-        *ngIf="hasResults() || hasError()"
-        class="clear-btn">
-        Clear Results
-      </button>
-    </div>
-  </form>
+      <app-data-table
+        [data]="cards()"
+        [columns]="cardColumns"
+        [config]="cardTableConfig"
+        [loading]="cardsLoading()"
+        (rowClick)="onCardClick($event)"
+      ></app-data-table>
 
-  <!-- Results Section -->
-  <div class="results-section" *ngIf="hasResults() || hasError()">
-    <!-- Error Display -->
-    <div *ngIf="hasError()" class="error-message">
-      <h3>Analysis Failed</h3>
-      <p>{{error()}}</p>
-    </div>
+      <!-- Server-side Pagination Controls -->
+      <div class="pagination-controls" *ngIf="totalResults() > 0">
+        <div class="pagination-info">
+          Showing {{(currentPage() - 1) * pageSize() + 1}} - {{Math.min(currentPage() * pageSize(), totalResults())}} of {{totalResults()}} cards
+        </div>
 
-    <!-- Results Display -->
-    <div *ngIf="hasResults()" class="results-container">
-      <div class="results-header">
-        <h2>Analysis Results</h2>
-        <div class="analysis-info">
-          <span class="analysis-type">{{analysisType() | titlecase}} Analysis</span>
-          <span class="success-indicator" *ngIf="results()?.success">✓ Success</span>
+        <div class="pagination-buttons">
+          <button
+            class="pagination-button"
+            [disabled]="!hasPrevPage()"
+            (click)="goToPrevPage()">
+            ← Previous
+          </button>
+
+          <span class="page-indicator">Page {{currentPage()}}</span>
+
+          <button
+            class="pagination-button"
+            [disabled]="!hasNextPage()"
+            (click)="goToNextPage()">
+            Next →
+          </button>
+        </div>
+
+        <div class="page-size-selector">
+          <label for="page-size">Items per page:</label>
+          <select
+            id="page-size"
+            [value]="pageSize()"
+            (change)="changePageSize(+$any($event.target).value)"
+            class="page-size-select">
+            <option value="10">10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+          </select>
         </div>
       </div>
+    </div>
 
-      <div class="results-content">
-        <div class="context-applied" *ngIf="results()?.analysis?.context_applied">
-          <h3>Context Applied</h3>
-          <div class="context-flags">
-            <span 
-              class="context-flag" 
-              [class.active]="results()?.analysis?.context_applied?.has_game_context">
-              Game Context
-            </span>
-            <span 
-              class="context-flag" 
-              [class.active]="results()?.analysis?.context_applied?.has_investigator_context">
-              Investigator Context
-            </span>
-            <span 
-              class="context-flag" 
-              [class.active]="results()?.analysis?.context_applied?.has_campaign_context">
-              Campaign Context
-            </span>
+    <!-- Card Detail Modal -->
+    <div class="card-detail-overlay" *ngIf="selectedCard()" (click)="closeCardDetail()">
+      <div class="card-detail-modal-large" (click)="$event.stopPropagation()">
+        <button class="close-button" (click)="closeCardDetail()">✕</button>
+
+        <div class="card-detail-content" *ngIf="selectedCard() as card">
+          <!-- Card Header Section -->
+          <div class="card-header-section">
+            <div class="card-main-info">
+              <div class="card-title-row">
+                <h2>{{card.name}}</h2>
+                <div class="faction-badge" [style.background-color]="getFactionColor(card.faction)">
+                  {{card.faction}}
+                </div>
+              </div>
+              <div class="card-meta-row">
+                <span class="card-code">{{card.code}}</span>
+                <span class="card-type">{{card.type}}</span>
+                <span class="card-class">{{card.class}}</span>
+              </div>
+            </div>
+
+            <!-- Key Stats Overview -->
+            <div class="key-stats-overview">
+              <div class="key-stat">
+                <div class="stat-icon">📊</div>
+                <div class="stat-info">
+                  <div class="stat-value">{{card.usageRate}}%</div>
+                  <div class="stat-label">Usage Rate</div>
+                </div>
+              </div>
+              <div class="key-stat">
+                <div class="stat-icon">🏆</div>
+                <div class="stat-info">
+                  <div class="stat-value">{{card.winRateWithCard}}%</div>
+                  <div class="stat-label">Win Rate</div>
+                </div>
+              </div>
+              <div class="key-stat">
+                <div class="stat-icon">📈</div>
+                <div class="stat-info">
+                  <div class="stat-value">{{card.deckInclusionRate}}%</div>
+                  <div class="stat-label">Deck Inclusion</div>
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
 
-        <!-- Card Analyses Results -->
-        <div class="card-analyses" *ngIf="analysisType() === 'strength' && results()?.analysis?.card_analyses">
-          <h3>Card Strength Analysis Results</h3>
-          <div 
-            *ngFor="let analysis of results()?.analysis?.card_analyses | keyvalue" 
-            class="card-analysis-item">
-            <div class="card-header">
-              <h4>{{analysis.value?.card_info?.name || analysis.key}}</h4>
-              <div class="card-meta">
-                <span class="card-code">{{analysis.key}}</span>
-                <span class="card-type" *ngIf="analysis.value?.card_info?.type">
-                  {{analysis.value?.card_info?.type | titlecase}}
+          <!-- Two Column Layout -->
+          <div class="modal-two-column">
+            <!-- Left Column: Card Info -->
+            <div class="left-column">
+              <!-- Traits as Tags -->
+              <div class="traits-container" *ngIf="card.traits">
+                <span *ngFor="let trait of getTraitsArray(card.traits)" class="trait-tag">
+                  {{trait}}
                 </span>
-                <span class="card-faction" *ngIf="analysis.value?.card_info?.faction">
-                  {{analysis.value?.card_info?.faction | titlecase}}
-                </span>
+              </div>
+
+              <!-- Game Stats Ribbon -->
+              <div class="game-stats-ribbon" [style.--faction-color]="getFactionColor(card.faction)">
+                <div class="stat-pill" title="Resource Cost">
+                  <span class="value cost">{{card.cost !== null ? card.cost : '–'}}</span>
+                  <span class="label">Cost</span>
+                </div>
+                <div class="stat-pill" title="Experience" *ngIf="card.xp !== undefined">
+                  <span class="value xp">{{card.xp || 0}}</span>
+                  <span class="label">XP</span>
+                </div>
+                <div class="stat-pill" *ngIf="card.slot">
+                  <span class="value">{{card.slot}}</span>
+                  <span class="label">Slot</span>
+                </div>
+                <div class="stat-pill" *ngIf="card.pack">
+                  <span class="value">{{card.pack.substring(0, 10)}}...</span>
+                  <span class="label">Pack</span>
+                </div>
+
+                <!-- Skill Icons as Circular Badges -->
+                <div class="skill-symbols-row" *ngIf="card.skillWillpower || card.skillIntellect || card.skillCombat || card.skillAgility || card.skillWild" style="margin-left: auto; border-left: 1px solid rgba(100, 116, 139, 0.3); padding-left: 1rem;">
+                  <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <div class="skill-symbol willpower" *ngIf="card.skillWillpower" [title]="'Willpower: ' + card.skillWillpower">
+                      {{card.skillWillpower}}
+                    </div>
+                    <div class="skill-symbol intellect" *ngIf="card.skillIntellect" [title]="'Intellect: ' + card.skillIntellect">
+                      {{card.skillIntellect}}
+                    </div>
+                    <div class="skill-symbol combat" *ngIf="card.skillCombat" [title]="'Combat: ' + card.skillCombat">
+                      {{card.skillCombat}}
+                    </div>
+                    <div class="skill-symbol agility" *ngIf="card.skillAgility" [title]="'Agility: ' + card.skillAgility">
+                      {{card.skillAgility}}
+                    </div>
+                    <div class="skill-symbol wild" *ngIf="card.skillWild" [title]="'Wild: ' + card.skillWild">
+                      {{card.skillWild}}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Card Text Box -->
+              <div *ngIf="card.text" style="margin-top: 1.5rem;">
+                <div class="card-text-box" [style.--faction-color]="getFactionColor(card.faction)" [innerHTML]="card.text | arkhamIcons"></div>
+              </div>
+
+              <!-- Flavor Text -->
+              <div *ngIf="card.flavor" style="margin-top: 1rem; padding: 0 0.25rem;">
+                <div style="color: #94a3b8; font-style: italic; font-size: 0.875rem; line-height: 1.6;">
+                  {{card.flavor}}
+                </div>
+              </div>
+
+              <!-- Card Analysis - Mini Cards Grid -->
+              <div style="margin-top: 2rem;">
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem;">
+                  <div class="rating-mini-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                      <span class="label">💰 Economy</span>
+                      <span style="font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #e2e8f0;">{{card.economyRating}}</span>
+                    </div>
+                    <div class="mini-bar-bg">
+                      <div class="fill" [style.width.%]="card.economyRating || 0"></div>
+                    </div>
+                  </div>
+                  <div class="rating-mini-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                      <span class="label">⚡ Impact</span>
+                      <span style="font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #e2e8f0;">{{card.impactRating}}</span>
+                    </div>
+                    <div class="mini-bar-bg">
+                      <div class="fill" [style.width.%]="card.impactRating || 0"></div>
+                    </div>
+                  </div>
+                  <div class="rating-mini-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                      <span class="label">🎯 Consistency</span>
+                      <span style="font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #e2e8f0;">{{card.consistencyRating}}</span>
+                    </div>
+                    <div class="mini-bar-bg">
+                      <div class="fill" [style.width.%]="card.consistencyRating || 0"></div>
+                    </div>
+                  </div>
+                  <div class="rating-mini-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                      <span class="label">🔄 Versatility</span>
+                      <span style="font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #e2e8f0;">{{card.versatilityScore}}</span>
+                    </div>
+                    <div class="mini-bar-bg">
+                      <div class="fill" [style.width.%]="card.versatilityScore || 0"></div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
-            
-            <div class="analysis-content" *ngIf="analysis.value?.strength_analysis">
-              <div class="gpt-analysis">
-                <h5>GPT Analysis</h5>
-                <pre class="analysis-text">{{analysis.value?.strength_analysis}}</pre>
+
+            <!-- Right Column: Stats & Analysis -->
+            <div class="right-column">
+              <!-- Top Investigators -->
+              <div class="compact-section">
+                <div class="section-mini-header">🕵️ Top Investigators</div>
+                <div class="investigator-list-clean">
+                  <div class="investigator-item-clean" *ngFor="let inv of card.topInvestigators">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.25rem;">
+                      <span style="font-weight: 600; color: #e2e8f0; font-size: 0.875rem;">{{inv.name}}</span>
+                      <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #60a5fa;">{{inv.usageRate}}%</span>
+                    </div>
+                    <div class="mini-bar-bg">
+                      <div class="fill" [style.width.%]="inv.usageRate"></div>
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
-            
-            <div class="error-content" *ngIf="analysis.value?.error">
-              <div class="card-error">
-                <h5>Analysis Error</h5>
-                <p>{{analysis.value?.error}}</p>
+
+              <!-- Synergy Cards -->
+              <div class="compact-section">
+                <div class="section-mini-header">🔗 Synergies</div>
+                <div class="synergy-list-clean">
+                  <div class="synergy-item-clean" *ngFor="let syn of card.synergyCards">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.25rem;">
+                      <span style="font-weight: 600; color: #e2e8f0; font-size: 0.875rem;">{{syn.name}}</span>
+                      <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #10b981;">{{syn.synergyScore}}%</span>
+                    </div>
+                    <div class="mini-bar-bg">
+                      <div class="fill" [style.width.%]="syn.synergyScore" style="background: linear-gradient(90deg, #10b981, #059669);"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Performance by Difficulty -->
+              <div class="compact-section">
+                <div class="section-mini-header">⚔️ By Difficulty</div>
+                <div class="performance-list-clean">
+                  <div class="performance-item-clean" *ngFor="let perf of card.performanceByDifficulty">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.25rem;">
+                      <span style="font-size: 0.875rem; color: #94a3b8;">{{perf.difficulty}}</span>
+                      <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 600;"
+                            [style.color]="perf.winRate > 70 ? '#10b981' : perf.winRate > 55 ? '#fbbf24' : '#ef4444'">
+                        {{perf.winRate}}%
+                      </span>
+                    </div>
+                    <div class="mini-bar-bg">
+                      <div class="fill" [style.width.%]="perf.winRate"
+                           [style.background]="perf.winRate > 70 ? 'linear-gradient(90deg, #10b981, #059669)' : perf.winRate > 55 ? 'linear-gradient(90deg, #fbbf24, #f59e0b)' : 'linear-gradient(90deg, #ef4444, #dc2626)'">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Performance by Campaign -->
+              <div class="compact-section">
+                <div class="section-mini-header">📚 By Campaign</div>
+                <div class="performance-list-clean">
+                  <div class="performance-item-clean" *ngFor="let camp of card.performanceByCampaign">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.25rem;">
+                      <span style="font-size: 0.875rem; color: #94a3b8;">{{camp.campaign}}</span>
+                      <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 600;"
+                            [style.color]="camp.winRate > 65 ? '#10b981' : camp.winRate > 50 ? '#fbbf24' : '#ef4444'">
+                        {{camp.winRate}}%
+                      </span>
+                    </div>
+                    <div class="mini-bar-bg">
+                      <div class="fill" [style.width.%]="camp.winRate"
+                           [style.background]="camp.winRate > 65 ? 'linear-gradient(90deg, #10b981, #059669)' : camp.winRate > 50 ? 'linear-gradient(90deg, #fbbf24, #f59e0b)' : 'linear-gradient(90deg, #ef4444, #dc2626)'">
+                      </div>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <!-- Synergy Analysis Results -->
-        <div class="synergy-analysis" *ngIf="analysisType() === 'synergies' && results()?.analysis?.synergy_analysis">
-          <h3>Synergy Analysis</h3>
-          <div class="synergy-content">
-            <pre class="analysis-text">{{results()?.analysis?.synergy_analysis}}</pre>
+          <!-- Actions Footer -->
+          <div class="modal-footer">
+            <button class="action-button primary" (click)="analyzeCardWithGPT(card)">
+              🤖 Analyze with GPT
+            </button>
+            <button class="action-button secondary" (click)="closeCardDetail()">
+              Close
+            </button>
           </div>
         </div>
-
-        <!-- Timing Analysis Results -->
-        <div class="timing-analyses" *ngIf="analysisType() === 'timing' && results()?.analysis?.timing_analyses">
-          <h3>Timing Analysis Results</h3>
-          <div 
-            *ngFor="let timing of results()?.analysis?.timing_analyses | keyvalue" 
-            class="timing-analysis-item">
-            <div class="card-header">
-              <h4>{{timing.value?.card_info?.name || timing.key}}</h4>
-              <span class="card-code">{{timing.key}}</span>
-            </div>
-            <div class="timing-content" *ngIf="timing.value?.timing_analysis">
-              <pre class="analysis-text">{{timing.value?.timing_analysis}}</pre>
-            </div>
-            <div class="error-content" *ngIf="timing.value?.error">
-              <div class="card-error">
-                <h5>Analysis Error</h5>
-                <p>{{timing.value?.error}}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Raw Response (for debugging) -->
-        <details class="raw-response">
-          <summary>Raw API Response</summary>
-          <pre>{{results() | json}}</pre>
-        </details>
       </div>
     </div>
   </div>
+
+  <!-- Card Stats Modal -->
+  <div class="stats-modal-overlay" *ngIf="showStatsModal()" (click)="closeStatsModal()">
+    <div class="stats-modal" (click)="$event.stopPropagation()">
+      <button class="close-button" (click)="closeStatsModal()">✕</button>
+
+      <div *ngIf="statsLoading()" class="stats-loading">
+        <div class="spinner"></div>
+        <p>Loading card statistics...</p>
+      </div>
+
+      <div *ngIf="!statsLoading() && selectedCardStats() as stats" class="stats-content">
+        <!-- Header -->
+        <div class="stats-header">
+          <h2>{{stats.card_info.name}}</h2>
+          <span class="card-type-badge">{{stats.card_info.type}}</span>
+        </div>
+
+        <!-- Main Layout: Stats Left, Card Details Right -->
+        <div class="stats-main-layout">
+          <!-- Left: Stats Section -->
+          <div class="stats-data-column">
+            <!-- Overview Stats -->
+            <div class="stats-overview">
+              <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-details">
+                  <div class="stat-value">{{ stats.deck_stats.popularity.overall_usage_rate * 100 | number:'1.1-1' }}%</div>
+                  <div class="stat-label">Overall Usage</div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-details">
+                  <div class="stat-value" [class.positive]="stats.deck_stats.trend.trend_direction === 'increasing'"
+                                          [class.negative]="stats.deck_stats.trend.trend_direction === 'decreasing'">
+                    {{stats.deck_stats.trend.change_rate > 0 ? '+' : ''}}{{ stats.deck_stats.trend.change_rate | number:'1.1-1' }}%
+                  </div>
+                  <div class="stat-label">Trend: {{stats.deck_stats.trend.trend_direction}}</div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-details">
+                  <div class="stat-value">{{ stats.deck_stats.popularity.investigator_spread * 100 | number:'1.1-1' }}%</div>
+                  <div class="stat-label">Investigator Spread</div>
+                </div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-icon">📚</div>
+                <div class="stat-details">
+                  <div class="stat-value">{{stats.data_source.decks_analyzed.toLocaleString()}}</div>
+                  <div class="stat-label">Decks Analyzed</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Top Investigators -->
+            <div class="stats-section">
+              <div class="stats-section-header" (click)="toggleTopInvestigators()">
+                <h3>Top 10 Investigators</h3>
+                <span class="expand-icon">{{ topInvestigatorsExpanded() ? '▼' : '▶' }}</span>
+              </div>
+              <div class="investigator-list" *ngIf="topInvestigatorsExpanded()">
+                <div *ngFor="let inv of getTopInvestigators(stats.deck_stats.popularity.investigator_usage_rate); let i = index"
+                     class="investigator-item">
+                  <div class="investigator-rank">{{i + 1}}</div>
+                  <div class="investigator-info">
+                    <div class="investigator-name">{{getInvestigatorName(inv.code)}}</div>
+                    <div class="usage-bar-container">
+                      <div class="usage-bar" [style.width.%]="inv.rate * 100"></div>
+                    </div>
+                  </div>
+                  <div class="investigator-usage">{{ inv.rate * 100 | number:'1.1-1' }}%</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Usage Trend Chart -->
+            <div class="stats-section">
+              <div class="stats-section-header" (click)="toggleUsageTrend()">
+                <h3>Usage Trend - Last {{stats.deck_stats.trend.periods_analyzed}} Months</h3>
+                <span class="expand-icon">{{ usageTrendExpanded() ? '▼' : '▶' }}</span>
+              </div>
+              <div class="trend-chart" *ngIf="usageTrendExpanded()">
+                <div *ngFor="let period of getTrendPeriods(stats.deck_stats.trend.trend_data)"
+                     class="trend-bar-container">
+                  <div class="trend-bar" [style.height.%]="getTrendBarHeight(period.value.usage_rate, stats.deck_stats.trend.trend_data)">
+                    <span class="trend-tooltip">
+                      {{ period.value.usage_rate * 100 | number:'1.1-1' }}%<br>
+                      {{period.value.decks_with_card}}/{{period.value.total_decks}} decks
+                    </span>
+                  </div>
+                  <div class="trend-label">{{formatPeriod(period.key)}}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Data Source Info -->
+            <div class="stats-footer">
+              <p>Data from {{stats.data_source.decks_analyzed.toLocaleString()}} decks over {{stats.data_source.days_covered}} days</p>
+            </div>
+          </div>
+
+          <!-- Right: Card Details Section -->
+          <div *ngIf="selectedCardDetails() as details" class="card-details-column">
+            <!-- Card Image -->
+            <div class="card-image-container">
+              <img *ngIf="details.imagesrc"
+                   [src]="getCardImageUrl(details.imagesrc)"
+                   [alt]="details.name"
+                   class="card-image"
+                   (error)="$any($event.target).src=''; $any($event.target).style.display='none'">
+              <div *ngIf="!details.imagesrc" class="no-image-placeholder">
+                <span class="no-image-icon">🃏</span>
+                <p>No image available</p>
+              </div>
+            </div>
+
+            <!-- Card Details Grid -->
+            <div class="card-details-grid">
+              <div class="detail-item" *ngIf="details.cost !== undefined && details.cost !== null">
+                <span class="detail-label">Cost:</span>
+                <span class="detail-value">{{details.cost}}</span>
+              </div>
+              <div class="detail-item" *ngIf="details.xp !== undefined && details.xp !== null">
+                <span class="detail-label">XP:</span>
+                <span class="detail-value">{{details.xp}}</span>
+              </div>
+              <div class="detail-item" *ngIf="details.faction_name">
+                <span class="detail-label">Faction:</span>
+                <span class="detail-value">{{details.faction_name}}</span>
+              </div>
+              <div class="detail-item" *ngIf="details.real_slot">
+                <span class="detail-label">Slot:</span>
+                <span class="detail-value">{{details.real_slot}}</span>
+              </div>
+              <div class="detail-item" *ngIf="details.health">
+                <span class="detail-label">Health:</span>
+                <span class="detail-value">{{details.health}}</span>
+              </div>
+              <div class="detail-item" *ngIf="details.sanity">
+                <span class="detail-label">Sanity:</span>
+                <span class="detail-value">{{details.sanity}}</span>
+              </div>
+              <div class="detail-item" *ngIf="details.deck_limit">
+                <span class="detail-label">Deck Limit:</span>
+                <span class="detail-value">{{details.deck_limit}}</span>
+              </div>
+              <div class="detail-item" *ngIf="details.is_unique">
+                <span class="detail-label">Unique:</span>
+                <span class="detail-value">Yes</span>
+              </div>
+            </div>
+
+            <!-- Other Info -->
+            <div class="card-info-container">
+              <!-- Pack Info -->
+              <div class="pack-info" *ngIf="details.pack_name">
+                <span class="detail-label">Pack:</span>
+                <span class="detail-value">{{details.pack_name}}</span>
+                <span class="detail-value" *ngIf="details.position"> (#{{details.position}})</span>
+              </div>
+
+              <!-- Illustrator -->
+              <div class="illustrator-info" *ngIf="details.illustrator">
+                <span class="detail-label">Illustrator:</span>
+                <span class="detail-value">{{details.illustrator}}</span>
+              </div>
+
+              <!-- Quantity -->
+              <div class="quantity-info" *ngIf="details.quantity">
+                <span class="detail-label">Quantity in Pack:</span>
+                <span class="detail-value">{{details.quantity}}</span>
+              </div>
+
+              <!-- Special Attributes -->
+              <div class="special-attrs" *ngIf="details.exceptional || details.permanent || details.double_sided">
+                <span class="detail-label">Special:</span>
+                <span class="detail-value">
+                  <span *ngIf="details.exceptional" class="badge">Exceptional</span>
+                  <span *ngIf="details.permanent" class="badge">Permanent</span>
+                  <span *ngIf="details.double_sided" class="badge">Double-Sided</span>
+                </span>
+              </div>
+
+              <!-- ArkhamDB URL -->
+              <div class="url-info" *ngIf="details.url">
+                <a [href]="details.url" target="_blank" class="arkhamdb-link">View on ArkhamDB ↗</a>
+              </div>
+
+              <!-- Traits -->
+              <div class="card-traits" *ngIf="details.traits">
+                <span class="detail-label">Traits:</span>
+                <span class="detail-value traits-text">{{formatTraits(details.traits)}}</span>
+              </div>
+
+              <!-- Real Name / Subname -->
+              <div class="real-name-info" *ngIf="details.real_name && details.real_name !== details.name">
+                <span class="detail-label">Real Name:</span>
+                <span class="detail-value">{{details.real_name}}</span>
+              </div>
+              <div class="subname-info" *ngIf="details.subname">
+                <span class="detail-label">Subname:</span>
+                <span class="detail-value">{{details.subname}}</span>
+              </div>
+
+              <!-- Skill Icons -->
+              <div class="skill-icons" *ngIf="details.skill_willpower || details.skill_intellect || details.skill_combat || details.skill_agility || details.skill_wild">
+                <span class="detail-label">Skills:</span>
+                <span class="skill-icon-display" *ngIf="details.skill_willpower">🔵×{{details.skill_willpower}}</span>
+                <span class="skill-icon-display" *ngIf="details.skill_intellect">🟢×{{details.skill_intellect}}</span>
+                <span class="skill-icon-display" *ngIf="details.skill_combat">⚔️×{{details.skill_combat}}</span>
+                <span class="skill-icon-display" *ngIf="details.skill_agility">🟡×{{details.skill_agility}}</span>
+                <span class="skill-icon-display" *ngIf="details.skill_wild">⭐×{{details.skill_wild}}</span>
+              </div>
+
+              <!-- Card Text -->
+              <div class="card-text" *ngIf="details.real_text || details.text">
+                <div class="detail-label">Card Text:</div>
+                <div class="detail-value text-content" [innerHTML]="(details.real_text || details.text) | arkhamIcons"></div>
+              </div>
+
+              <!-- Flavor Text -->
+              <div class="flavor-text" *ngIf="details.flavor">
+                <div class="detail-label">Flavor:</div>
+                <div class="detail-value flavor-content">{{details.flavor}}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GPT Analysis Tab -->
 </div>

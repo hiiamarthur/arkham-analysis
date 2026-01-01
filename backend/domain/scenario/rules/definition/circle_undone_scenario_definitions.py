@@ -10,6 +10,30 @@ from ..base_rules import *
 CIRCLE_UNDONE_SCENARIOS: Dict[ScenarioType, List[ScenarioRule]] = cast(
     Dict[ScenarioType, List[ScenarioRule]],
     {
+        ScenarioType.DISAPPEARANCE_AT_THE_TWLIGHT_ESTATE: [
+            PlayerCountScalingRule("starting_clues", 2, per_player=2),
+            DynamicValueRule("doom_threshold", lambda ctx: 8 + ctx["player_count"]),
+            # Hospital setting
+            LocationSetupRule(
+                required_locations=[
+                    "arkham_sanatorium",
+                    "patient_confinement",
+                    "basement",
+                ],
+            ),
+        ],
+        ScenarioType.AT_DEATHS_DOORSTEP: [
+            PlayerCountScalingRule("starting_clues", 2, per_player=2),
+            DynamicValueRule("doom_threshold", lambda ctx: 8 + ctx["player_count"]),
+            # Hospital setting
+            LocationSetupRule(
+                required_locations=[
+                    "arkham_sanatorium",
+                    "patient_confinement",
+                    "basement",
+                ],
+            ),
+        ],
         ScenarioType.THE_WITCHING_HOUR: [
             PlayerCountScalingRule("starting_clues", 2, per_player=1),
             DynamicValueRule("doom_threshold", lambda ctx: 9 + ctx["player_count"]),
@@ -111,7 +135,7 @@ CIRCLE_UNDONE_SCENARIOS: Dict[ScenarioType, List[ScenarioRule]] = cast(
             ),
             WeaknessRule(weakness_count=1),
         ],
-        ScenarioType.THE_WAGE_OF_SIN: [
+        ScenarioType.THE_WAGES_OF_SIN: [
             PlayerCountScalingRule("starting_clues", 3, per_player=2),
             DynamicValueRule("doom_threshold", lambda ctx: 10 + ctx["player_count"]),
             # Hangman's Hill investigation

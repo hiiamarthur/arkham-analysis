@@ -37,7 +37,7 @@ class EncounterCardResponse(BaseModel):
 router = APIRouter(prefix="/scenarios", tags=["scenarios"])
 
 
-@router.get("/context/{scenario_code}")
+@router.get("/{scenario_code}/context")
 async def get_scenario_context(
     scenario_code: str, difficulty: str = "Standard", db: Session = Depends(get_db)
 ) -> ScenarioContextResponse:
@@ -59,7 +59,7 @@ async def get_scenario_context(
         )
 
 
-@router.get("/context/{scenario_code}/raw")
+@router.get("/{scenario_code}/context/raw")
 async def get_raw_scenario_context(
     scenario_code: str, difficulty: str = "Standard"
 ) -> Dict[str, Any]:

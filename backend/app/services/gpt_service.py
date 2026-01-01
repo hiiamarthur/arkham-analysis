@@ -48,7 +48,7 @@ class GPTService:
                 + "Step 2. Describe its **best-case scenario**: maximum value assuming the most favorable conditions. "
                 + "Step 3. Describe its **typical-case scenario**: average expected value across normal game states. "
                 + "Step 4. Describe its **worse-case scenario**: worst value across game states. Only show value that are not equal to zero. "
-                + "return the result in JSON format as: {'name': '...','best_case_quantities': { 'clues': x, 'encounter': y, ...,'context': 'str' },'typical_case_quantities': { ... },'worse_case_quantities': {...},'notes': '...','have_trigger_prob': 'bool','trigger_condition': 'str','have_pass_prob': 'bool','pass_condition': 'str'}"
+                + "return the result in JSON format as: {{'name': '...','best_case_quantities': {{ 'clues': x, 'encounter': y, ...,'context': 'str' }},'typical_case_quantities': {{ ... }},'worse_case_quantities': {{...}},'notes': '...','have_trigger_prob': 'bool','trigger_condition': 'str','have_pass_prob': 'bool','pass_condition': 'str'}}"
             ),
         }
 

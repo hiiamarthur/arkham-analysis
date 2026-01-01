@@ -162,9 +162,10 @@ async def get_analysis_service(
     gpt_service: GPTService = Depends(get_gpt_service),
     context_service: ContextService = Depends(get_context_service),
     card_service: CardService = Depends(get_card_service),
+    scenario_service: ScenarioService = Depends(get_scenario_service),
 ) -> AnalysisService:
     """Get analysis service instance with all dependencies"""
-    return AnalysisService(gpt_service, context_service, card_service)
+    return AnalysisService(gpt_service, context_service, card_service, scenario_service)
 
 
 # Scoring service dependency (when you create it later)

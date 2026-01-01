@@ -10,7 +10,7 @@ from ..base_rules import *
 DREAM_EATERS_SCENARIOS: Dict[ScenarioType, List[ScenarioRule]] = cast(
     Dict[ScenarioType, List[ScenarioRule]],
     {
-        ScenarioType.BEYOND_THE_GATE_OF_SLEEP: [
+        ScenarioType.BEYOND_THE_GATES_OF_SLEEP: [
             PlayerCountScalingRule("starting_clues", 2, per_player=2),
             DynamicValueRule("doom_threshold", lambda ctx: 8 + ctx["player_count"]),
             # Dream investigation setup

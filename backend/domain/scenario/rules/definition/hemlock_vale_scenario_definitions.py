@@ -68,7 +68,7 @@ HEMLOCK_VALE_SCENARIOS: Dict[ScenarioType, List[ScenarioRule]] = cast(
             ),
             WeaknessRule(weakness_count=1),
         ],
-        ScenarioType.THE_SILENT_HEALTH: [
+        ScenarioType.THE_SILENT_HEATH: [
             PlayerCountScalingRule("starting_clues", 3, per_player=2),
             DynamicValueRule("doom_threshold", lambda ctx: 10 + ctx["player_count"]),
             # Hospital/medical setting

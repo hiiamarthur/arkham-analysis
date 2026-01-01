@@ -10,7 +10,7 @@ from ..base_rules import *
 DUNWICH_LEGACY_SCENARIOS: Dict[ScenarioType, List[ScenarioRule]] = cast(
     Dict[ScenarioType, List[ScenarioRule]],
     {
-        ScenarioType.EXTRACURRICULAR_ACTIVITIES: [
+        ScenarioType.EXTRACURRICULAR_ACTIVITY: [
             PlayerCountScalingRule("starting_clues", 2, per_player=2),
             DynamicValueRule("doom_threshold", lambda ctx: 8 + ctx["player_count"]),
             # University setting

@@ -1,1 +1,277 @@
 /* You can add global styles to this file, and also import other style files */
+@import url('https://fonts.googleapis.com/css2?family=Grenze+Gotisch:wght@400;700&family=Inter:wght@300;400;600&family=JetBrains+Mono&display=swap');
+
+/* Arkham Horror LCG Icon Font */
+@font-face {
+  font-family: 'ArkhamIcons';
+  src: url('/fonts/AH_LCG_v3.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+/* Global styles */
+body {
+  background: radial-gradient(circle at center, #1a1a2e 0%, #0f0f1b 100%);
+  color: #e2e8f0;
+  font-family: 'Inter', sans-serif;
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* Typography classes */
+.gothic-header {
+  font-family: 'Grenze Gotisch', serif;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+}
+
+.data-mono {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Glass morphism card */
+.glass-card {
+  background: rgba(22, 33, 62, 0.8);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Faction glow effects */
+.guardian-glow:hover {
+  border-color: #1976D2;
+  box-shadow: 0 0 15px rgba(25, 118, 210, 0.3);
+}
+
+.seeker-glow:hover {
+  border-color: #388E3C;
+  box-shadow: 0 0 15px rgba(56, 142, 60, 0.3);
+}
+
+.rogue-glow:hover {
+  border-color: #F9A825;
+  box-shadow: 0 0 15px rgba(249, 168, 37, 0.3);
+}
+
+.mystic-glow:hover {
+  border-color: #6A1B9A;
+  box-shadow: 0 0 15px rgba(106, 27, 154, 0.3);
+}
+
+.survivor-glow:hover {
+  border-color: #D32F2F;
+  box-shadow: 0 0 15px rgba(211, 47, 47, 0.3);
+}
+
+.neutral-glow:hover {
+  border-color: #616161;
+  box-shadow: 0 0 15px rgba(97, 97, 97, 0.3);
+}
+
+/* GPT pulse animation */
+.gpt-pulse {
+  animation: pulse-glow 2s infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(56, 142, 60, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(56, 142, 60, 0.5);
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(15, 15, 27, 0.5);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(100, 116, 139, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.5);
+}
+
+/* Icon classes for Arkham Horror symbols */
+.icon {
+  font-family: 'ArkhamIcons', sans-serif;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  display: inline-block;
+}
+
+/* Stat icons */
+.icon-willpower::before { content: '[willpower]'; }
+.icon-intellect::before { content: '[intellect]'; }
+.icon-combat::before { content: '[combat]'; }
+.icon-agility::before { content: '[agility]'; }
+.icon-wild::before { content: '[wild]'; }
+
+/* Class/Faction icons */
+.icon-guardian::before { content: '[guardian]'; }
+.icon-seeker::before { content: '[seeker]'; }
+.icon-rogue::before { content: '[rogue]'; }
+.icon-mystic::before { content: '[mystic]'; }
+.icon-survivor::before { content: '[survivor]'; }
+.icon-neutral::before { content: '[neutral]'; }
+
+/* Action icons */
+.icon-action::before { content: '[action]'; }
+.icon-reaction::before { content: '[reaction]'; }
+.icon-fast::before { content: '[fast]'; }
+.icon-free::before { content: '[free]'; }
+
+/* Chaos tokens */
+.icon-skull::before { content: '[skull]'; }
+.icon-cultist::before { content: '[cultist]'; }
+.icon-tablet::before { content: '[tablet]'; }
+.icon-elder_thing::before { content: '[elder_thing]'; }
+.icon-auto_fail::before { content: '[auto_fail]'; }
+.icon-elder_sign::before { content: '[elder_sign]'; }
+
+/* Resource/Health/Sanity */
+.icon-per_investigator::before { content: '[per_investigator]'; }
+
+/* Utility class for inline icons */
+.icon-inline {
+  vertical-align: middle;
+  margin: 0 0.2em;
+}
+
+/* Button styles */
+.btn-primary {
+  background: #4f46e5;
+  color: white;
+  padding: 0.5rem 1.5rem;
+  border-radius: 9999px;
+  font-weight: 600;
+  font-size: 0.875rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  transition: all 0.3s;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-primary:hover {
+  background: #4338ca;
+  box-shadow: 0 0 15px rgba(79, 70, 229, 0.3);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: #94a3b8;
+  padding: 0.5rem 1.5rem;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 0.5rem;
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.btn-secondary:hover {
+  color: #e2e8f0;
+  border-color: rgba(226, 232, 240, 0.5);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Input styles */
+.input-dark {
+  background: rgba(15, 15, 27, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  transition: all 0.3s;
+  width: 100%;
+}
+
+.input-dark:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.input-dark::placeholder {
+  color: #64748b;
+}
+
+/* Select styles */
+.select-dark {
+  background: rgba(15, 15, 27, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #e2e8f0;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  transition: all 0.3s;
+  cursor: pointer;
+}
+
+.select-dark:focus {
+  outline: none;
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+/* Progress bar */
+.progress-bar {
+  background: rgba(30, 41, 59, 0.5);
+  height: 0.5rem;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  transition: width 0.3s ease;
+}
+
+/* Status colors */
+.status-critical {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.status-warning {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.status-stable {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+/* Faction colors */
+.faction-guardian { border-left: 4px solid #1976D2 !important; }
+.faction-seeker { border-left: 4px solid #388E3C !important; }
+.faction-rogue { border-left: 4px solid #F9A825 !important; }
+.faction-mystic { border-left: 4px solid #6A1B9A !important; }
+.faction-survivor { border-left: 4px solid #D32F2F !important; }
+.faction-neutral { border-left: 4px solid #616161 !important; }

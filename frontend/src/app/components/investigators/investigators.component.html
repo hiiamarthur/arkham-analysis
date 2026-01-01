@@ -1,0 +1,159 @@
+<div class="investigators-container">
+  <!-- Header -->
+  <div class="page-header">
+    <h1>
+      <span class="header-icon">🕵️</span>
+      Investigators
+    </h1>
+    <p class="page-subtitle">Browse all investigators and view detailed statistics</p>
+  </div>
+
+  <!-- Investigators List -->
+  <div class="investigators-list" *ngIf="!selectedInvestigator()">
+    <div class="section-header">
+      <h2>All Investigators</h2>
+      <span class="section-subtitle">{{investigators().length}} investigators available</span>
+    </div>
+
+    <app-data-table
+      [data]="investigators()"
+      [columns]="investigatorColumns"
+      [config]="tableConfig"
+      [loading]="false"
+      (rowClick)="onInvestigatorClick($event)"
+    ></app-data-table>
+  </div>
+
+  <!-- Investigator Details -->
+  <div class="investigator-details" id="investigator-details" *ngIf="selectedInvestigator() as investigator">
+    <!-- Back button -->
+    <button class="back-button" (click)="backToList()">
+      ← Back to List
+    </button>
+
+    <!-- Investigator Header -->
+    <div class="detail-header">
+      <div class="investigator-card">
+        <div class="investigator-portrait" [style.background-color]="getClassColor(investigator.class)">
+          <span class="portrait-icon">🕵️</span>
+        </div>
+        <div class="investigator-info">
+          <h1>{{investigator.name}}</h1>
+          <div class="class-badge" [style.background-color]="getClassColor(investigator.class)">
+            {{investigator.class}}
+          </div>
+          <p class="expansion-info">{{investigator.expansion}}</p>
+        </div>
+      </div>
+
+      <!-- Stats Grid -->
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-icon willpower">💪</div>
+          <div class="stat-value">{{investigator.willpower}}</div>
+          <div class="stat-label">Willpower</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon intellect">🧠</div>
+          <div class="stat-value">{{investigator.intellect}}</div>
+          <div class="stat-label">Intellect</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon combat">⚔️</div>
+          <div class="stat-value">{{investigator.combat}}</div>
+          <div class="stat-label">Combat</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon agility">🏃</div>
+          <div class="stat-value">{{investigator.agility}}</div>
+          <div class="stat-label">Agility</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon health">❤️</div>
+          <div class="stat-value">{{investigator.health}}</div>
+          <div class="stat-label">Health</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon sanity">🧘</div>
+          <div class="stat-value">{{investigator.sanity}}</div>
+          <div class="stat-label">Sanity</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon deck">🃏</div>
+          <div class="stat-value">{{investigator.deckSize}}</div>
+          <div class="stat-label">Deck Size</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-icon popularity">📊</div>
+          <div class="stat-value">{{investigator.popularity}}%</div>
+          <div class="stat-label">Popularity</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Performance Stats -->
+    <div class="performance-section" *ngIf="investigatorStats() as stats">
+      <h2>Performance Statistics</h2>
+
+      <div class="performance-cards">
+        <div class="perf-card">
+          <div class="perf-icon">🎮</div>
+          <div class="perf-value">{{stats.totalGames}}</div>
+          <div class="perf-label">Total Games</div>
+        </div>
+        <div class="perf-card">
+          <div class="perf-icon">🏆</div>
+          <div class="perf-value">{{stats.winRate}}%</div>
+          <div class="perf-label">Win Rate</div>
+        </div>
+        <div class="perf-card">
+          <div class="perf-icon">⭐</div>
+          <div class="perf-value">{{stats.averageXP}}</div>
+          <div class="perf-label">Avg XP Earned</div>
+        </div>
+      </div>
+
+      <!-- Deck Archetypes -->
+      <div class="archetypes-section">
+        <h3>Popular Deck Archetypes</h3>
+        <div class="archetype-list">
+          <div class="archetype-item" *ngFor="let archetype of stats.deckArchetypes">
+            <div class="archetype-name">{{archetype.name}}</div>
+            <div class="archetype-bar">
+              <div class="archetype-fill" [style.width.%]="archetype.percentage"></div>
+            </div>
+            <div class="archetype-percentage">{{archetype.percentage}}%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scenario Performance -->
+      <div class="scenario-performance">
+        <h3>Scenario Performance</h3>
+        <div class="scenario-list">
+          <div class="scenario-item" *ngFor="let scenario of stats.scenarioPerformance">
+            <div class="scenario-name">{{scenario.scenario}}</div>
+            <div class="scenario-bar">
+              <div class="scenario-fill"
+                   [style.width.%]="scenario.winRate"
+                   [style.background-color]="scenario.winRate > 70 ? '#28a745' : scenario.winRate > 50 ? '#ffc107' : '#dc3545'">
+              </div>
+            </div>
+            <div class="scenario-winrate">{{scenario.winRate}}%</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Favorite Cards Table -->
+      <div class="favorite-cards-section">
+        <h3>Most Used Cards</h3>
+        <app-data-table
+          [data]="stats.favoriteCards"
+          [columns]="cardColumns"
+          [config]="cardTableConfig"
+          [loading]="false"
+        ></app-data-table>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,265 @@
+/**
+ * Arkham Horror LCG Icon Stylesheet
+ *
+ * Supports both SVG icons (preferred) and icon fonts (legacy).
+ *
+ * HOW IT WORKS:
+ * - SVG Mode: Inline SVG icons from Inkscape
+ * - Font Mode: Icon font with @font-face and ::before pseudo-elements
+ */
+
+/* ============================================================================
+ * SVG ICON STYLES (Primary Method)
+ * ============================================================================ */
+
+.arkham-svg-icon {
+  display: inline-block;
+  width: auto; /* Let SVG calculate width based on viewBox aspect ratio */
+  height: 1.2em;
+  vertical-align: -0.15em; /* Align with text baseline */
+  margin: 0 0.1em;
+  max-width: 1.5em; /* Prevent very wide icons from breaking layout */
+  fill: currentColor; /* SVG inherits text color */
+  position: relative;
+  top: 0.05em; /* Fine-tune vertical position */
+}
+
+/* Size variants for SVG icons */
+.arkham-svg-icon.small {
+  height: 0.9em;
+  max-width: 1.2em;
+}
+
+.arkham-svg-icon.large {
+  height: 1.5em;
+  max-width: 2em;
+}
+
+.arkham-svg-icon.xlarge {
+  height: 2em;
+  max-width: 2.5em;
+}
+
+/* ============================================================================
+ * ICON FONT STYLES (Legacy Method)
+ * ============================================================================ */
+
+/*
+ * Load the Arkham icon font
+ * Make sure to place your arkham-icons.ttf file in:
+ * frontend/src/assets/fonts/arkham-icons.ttf
+ */
+@font-face {
+  font-family: 'ArkhamIcons';
+  src: url('/assets/fonts/AH_LCG_v3.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block; /* Prevents icon flashing during load */
+}
+
+/**
+ * Base class for all Arkham icons
+ * Apply this class along with a specific icon class
+ * Example: <span class="arkham-icon arkham-willpower"></span>
+ */
+.arkham-icon {
+  font-family: 'ArkhamIcons', sans-serif;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+  display: inline-block;
+  vertical-align: middle;
+
+  /* Better font rendering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  /* Sizing */
+  font-size: 1.2em;
+  margin: 0 2px;
+}
+
+/**
+ * SKILL ICONS
+ * These represent the four core skills in Arkham Horror
+ *
+ * NOTE: The Unicode values below (e.g., '\e900') are EXAMPLES.
+ * You need to find the actual character mappings in your specific font file.
+ *
+ * To find the correct mappings:
+ * 1. Use a tool like FontForge (https://fontforge.org/)
+ * 2. Open your .ttf file
+ * 3. Look at the "Encoding" → "Compact" view
+ * 4. Find which Unicode code point each icon is assigned to
+ * 5. Update the content values below
+ */
+
+.arkham-willpower::before {
+  content: '\e041'; /* U+E041 */
+  color: #2b5b84; /* Blue */
+}
+
+.arkham-intellect::before {
+  content: '\0066'; /* U+0066 - Try this if you saw "0066" (without E prefix) in FontForge */
+  /* If this shows the letter 'f' instead of an icon, use '\e066' instead */
+  color: #6b4423; /* Brown */
+}
+
+.arkham-combat::before {
+  content: '\e902'; /* U+E902 */
+  color: #8b0000; /* Red */
+}
+
+.arkham-agility::before {
+  content: '\e903'; /* Replace with actual Unicode from font */
+  color: #2d6b2d; /* Green */
+}
+
+.arkham-wild::before {
+  content: '\e904'; /* Replace with actual Unicode from font */
+  color: #ffd700; /* Gold */
+}
+
+/**
+ * ACTION ICONS
+ */
+
+.arkham-action::before {
+  content: '\e905'; /* Replace with actual Unicode */
+  color: #ff6600;
+}
+
+.arkham-reaction::before {
+  content: '\e906'; /* Replace with actual Unicode */
+  color: #4169e1;
+}
+
+.arkham-free::before {
+  content: '\e907'; /* Replace with actual Unicode */
+  color: #28a745;
+}
+
+.arkham-fast::before {
+  content: '\e908'; /* Replace with actual Unicode */
+  color: #ff6600;
+}
+
+/**
+ * CHAOS TOKEN ICONS
+ */
+
+.arkham-skull::before {
+  content: '\e909'; /* Replace with actual Unicode */
+  color: #333;
+}
+
+.arkham-cultist::before {
+  content: '\e90a'; /* Replace with actual Unicode */
+  color: #4a0e0e;
+}
+
+.arkham-tablet::before {
+  content: '\e90b'; /* Replace with actual Unicode */
+  color: #8b4513;
+}
+
+.arkham-elder-thing::before {
+  content: '\e90c'; /* Replace with actual Unicode */
+  color: #1a472a;
+}
+
+.arkham-elder-sign::before {
+  content: '\e90d'; /* Replace with actual Unicode */
+  color: #ffd700;
+}
+
+.arkham-auto-fail::before {
+  content: '\e90e'; /* Replace with actual Unicode */
+  color: #dc3545;
+}
+
+.arkham-bless::before {
+  content: '\e90f'; /* Replace with actual Unicode */
+  color: #fff3cd;
+  text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+}
+
+.arkham-curse::before {
+  content: '\e910'; /* Replace with actual Unicode */
+  color: #4a0e4a;
+}
+
+/**
+ * FACTION ICONS
+ */
+
+.arkham-guardian::before {
+  content: '\e911'; /* Replace with actual Unicode */
+  color: #2b80c5;
+}
+
+.arkham-seeker::before {
+  content: '\e912'; /* Replace with actual Unicode */
+  color: #ec8b26;
+}
+
+.arkham-rogue::before {
+  content: '\e913'; /* Replace with actual Unicode */
+  color: #107116;
+}
+
+.arkham-mystic::before {
+  content: '\e914'; /* Replace with actual Unicode */
+  color: #4e1a45;
+}
+
+.arkham-survivor::before {
+  content: '\e915'; /* Replace with actual Unicode */
+  color: #cc3038;
+}
+
+.arkham-neutral::before {
+  content: '\e916'; /* Replace with actual Unicode */
+  color: #5a5a5a;
+}
+
+/**
+ * OTHER ICONS
+ */
+
+.arkham-per-investigator::before {
+  content: '\e917'; /* Replace with actual Unicode */
+  color: #333;
+}
+
+.arkham-codex::before {
+  content: '\e918'; /* Replace with actual Unicode */
+  color: #8b4513;
+}
+
+/**
+ * SIZE VARIATIONS
+ * You can add size variants like:
+ */
+.arkham-icon.small {
+  font-size: 0.9em;
+}
+
+.arkham-icon.large {
+  font-size: 1.5em;
+}
+
+.arkham-icon.xlarge {
+  font-size: 2em;
+}
+
+/**
+ * INLINE vs BLOCK
+ * By default icons are inline-block, but you can make them block
+ */
+.arkham-icon.block {
+  display: block;
+  text-align: center;
+}

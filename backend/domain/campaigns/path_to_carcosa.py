@@ -17,18 +17,21 @@ from ..Token.token import (
     TabletToken,
     ElderThingToken,
 )
-from typing import List
+from typing import Dict, List, Type
 
 
 class PathToCarcosa(Campaign):
 
     def __init__(self, difficulty: Difficulty):
-        super().__init__(CampaignType.THE_PATH_TO_CARCOSA, difficulty)
+        self.base_tokens_config = {
+            ElderSignToken: 1,
+            AutoFailToken: 1,
+            SkullToken: 3,
+        }
 
-        self.base_tokens = [
-            ElderSignToken(),
-            AutoFailToken(),
-        ]
+        super().__init__(
+            CampaignType.THE_PATH_TO_CARCOSA, difficulty, self.base_tokens_config
+        )
 
         self.token_configs = {
             Difficulty.EASY: {
@@ -69,3 +72,6 @@ class PathToCarcosa(Campaign):
             self.base_tokens.extend([token_type() for _ in range(count)])
 
         return self.base_tokens
+
+    def get_token_config(self) -> Dict[Difficulty, Dict[Type[ChaosToken], int]]:
+        return self.token_configs

@@ -17,7 +17,7 @@ CIRCLE_UNDONE_ENCOUNTER_SET = {
         "icon": "witch_house_ruins",
         "scenarios": [
             ScenarioType.AT_DEATHS_DOORSTEP,
-            ScenarioType.THE_WAGE_OF_SIN,
+            ScenarioType.THE_WAGES_OF_SIN,
             ScenarioType.FOR_THE_GREATER_GOOD,
         ],
     },
@@ -27,7 +27,7 @@ CIRCLE_UNDONE_ENCOUNTER_SET = {
         "scenarios": [
             ScenarioType.THE_WITCHING_HOUR,
             ScenarioType.THE_SECRET_NAME,
-            ScenarioType.THE_WAGE_OF_SIN,
+            ScenarioType.THE_WAGES_OF_SIN,
             ScenarioType.FOR_THE_GREATER_GOOD,
             ScenarioType.IN_THE_CLUTCHES_OF_CHAOS,
         ],
@@ -39,7 +39,7 @@ CIRCLE_UNDONE_ENCOUNTER_SET = {
             ScenarioType.DISAPPEARANCE_AT_THE_TWLIGHT_ESTATE,
             ScenarioType.AT_DEATHS_DOORSTEP,
             ScenarioType.THE_SECRET_NAME,
-            ScenarioType.THE_WAGE_OF_SIN,
+            ScenarioType.THE_WAGES_OF_SIN,
             ScenarioType.UNION_AND_DISILLUSION,
             ScenarioType.BEFORE_THE_BLACK_THRONE,
         ],
@@ -51,7 +51,7 @@ CIRCLE_UNDONE_ENCOUNTER_SET = {
             ScenarioType.DISAPPEARANCE_AT_THE_TWLIGHT_ESTATE,
             ScenarioType.AT_DEATHS_DOORSTEP,
             ScenarioType.THE_SECRET_NAME,
-            ScenarioType.THE_WAGE_OF_SIN,
+            ScenarioType.THE_WAGES_OF_SIN,
             ScenarioType.UNION_AND_DISILLUSION,
         ],
     },
@@ -70,7 +70,7 @@ CIRCLE_UNDONE_ENCOUNTER_SET = {
         "scenarios": [
             ScenarioType.DISAPPEARANCE_AT_THE_TWLIGHT_ESTATE,
             ScenarioType.AT_DEATHS_DOORSTEP,
-            ScenarioType.THE_WAGE_OF_SIN,
+            ScenarioType.THE_WAGES_OF_SIN,
         ],
     },
     "the_watcher": {
@@ -79,7 +79,7 @@ CIRCLE_UNDONE_ENCOUNTER_SET = {
         "scenarios": [
             ScenarioType.DISAPPEARANCE_AT_THE_TWLIGHT_ESTATE,
             ScenarioType.AT_DEATHS_DOORSTEP,
-            ScenarioType.THE_WAGE_OF_SIN,
+            ScenarioType.THE_WAGES_OF_SIN,
             ScenarioType.UNION_AND_DISILLUSION,
         ],
     },
@@ -89,7 +89,7 @@ CIRCLE_UNDONE_ENCOUNTER_SET = {
         "scenarios": [
             ScenarioType.THE_WITCHING_HOUR,
             ScenarioType.THE_SECRET_NAME,
-            ScenarioType.THE_WAGE_OF_SIN,
+            ScenarioType.THE_WAGES_OF_SIN,
             ScenarioType.IN_THE_CLUTCHES_OF_CHAOS,
         ],
     },
@@ -153,7 +153,7 @@ CIRCLE_UNDONE_ENCOUNTER_SET = {
     "the_wages_of_sin": {
         "name": "The Wages of Sin",
         "icon": "the_wages_of_sin",
-        "scenarios": [ScenarioType.THE_WAGE_OF_SIN],
+        "scenarios": [ScenarioType.THE_WAGES_OF_SIN],
     },
     "for_the_greater_good": {
         "name": "For the Greater Good",

@@ -6,7 +6,7 @@ DREAM_EATERS_ENCOUNTER_SET = {
         "name": "Agents of Nyarlathotep",
         "icon": "agents_of_nyarlathotep",
         "scenarios": [
-            ScenarioType.BEYOND_THE_GATE_OF_SLEEP,
+            ScenarioType.BEYOND_THE_GATES_OF_SLEEP,
             ScenarioType.THE_SEARCH_FOR_KADATH,
             ScenarioType.WHERE_THE_GODS_DWELL,
         ],
@@ -15,7 +15,7 @@ DREAM_EATERS_ENCOUNTER_SET = {
         "name": "Dreamer's Curse",
         "icon": "dreamers_curse",
         "scenarios": [
-            ScenarioType.BEYOND_THE_GATE_OF_SLEEP,
+            ScenarioType.BEYOND_THE_GATES_OF_SLEEP,
             ScenarioType.DARK_SIDE_OF_THE_MOON,
             ScenarioType.WHERE_THE_GODS_DWELL,
         ],
@@ -24,7 +24,7 @@ DREAM_EATERS_ENCOUNTER_SET = {
         "name": "Dreamlands",
         "icon": "dreamlands",
         "scenarios": [
-            ScenarioType.BEYOND_THE_GATE_OF_SLEEP,
+            ScenarioType.BEYOND_THE_GATES_OF_SLEEP,
             ScenarioType.THE_SEARCH_FOR_KADATH,
         ],
     },
@@ -50,7 +50,7 @@ DREAM_EATERS_ENCOUNTER_SET = {
         "name": "Zoogs",
         "icon": "zoogs",
         "scenarios": [
-            ScenarioType.BEYOND_THE_GATE_OF_SLEEP,
+            ScenarioType.BEYOND_THE_GATES_OF_SLEEP,
             ScenarioType.THE_SEARCH_FOR_KADATH,
         ],
     },
@@ -104,7 +104,7 @@ DREAM_EATERS_ENCOUNTER_SET = {
     "beyond_the_gates_of_sleep": {
         "name": "Beyond the Gates of Sleep",
         "icon": "beyond_the_gates_of_sleep",
-        "scenarios": [ScenarioType.BEYOND_THE_GATE_OF_SLEEP],
+        "scenarios": [ScenarioType.BEYOND_THE_GATES_OF_SLEEP],
     },
     "waking_nightmare": {
         "name": "Waking Nightmare",

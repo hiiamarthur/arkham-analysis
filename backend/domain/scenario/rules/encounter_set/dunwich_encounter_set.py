@@ -14,7 +14,7 @@ DUNWICH_ENCOUNTER_SET = {
         "name": "Whippoorwills",
         "icon": "whippoorwills",
         "scenarios": [
-            ScenarioType.EXTRACURRICULAR_ACTIVITIES,
+            ScenarioType.EXTRACURRICULAR_ACTIVITY,
             ScenarioType.BLOOD_ON_THE_ALTAR,
             ScenarioType.UNDIMENSIONED_AND_UNSEEN,
             ScenarioType.WHERE_DOOM_AWAITS,
@@ -24,14 +24,14 @@ DUNWICH_ENCOUNTER_SET = {
         "name": "Bishop's Thralls",
         "icon": "bishops_thralls",
         "scenarios": [
-            ScenarioType.EXTRACURRICULAR_ACTIVITIES,
+            ScenarioType.EXTRACURRICULAR_ACTIVITY,
             ScenarioType.WHERE_DOOM_AWAITS,
         ],
     },
     "extracurricular_activity": {
         "name": "Extracurricular Activity",
         "icon": "extracurricular_activity",
-        "scenarios": [ScenarioType.EXTRACURRICULAR_ACTIVITIES],
+        "scenarios": [ScenarioType.EXTRACURRICULAR_ACTIVITY],
     },
     "the_house_always_wins": {
         "name": "The House Always Wins",
@@ -52,13 +52,13 @@ DUNWICH_ENCOUNTER_SET = {
         "name": "Sorcery",
         "icon": "sorcery",
         "scenarios": [
-            ScenarioType.EXTRACURRICULAR_ACTIVITIES,
+            ScenarioType.EXTRACURRICULAR_ACTIVITY,
             ScenarioType.THE_MISKATONIC_MUSEUM,
             ScenarioType.WHERE_DOOM_AWAITS,
             ScenarioType.LOST_IN_TIME_AND_SPACE,
         ],
     },
-    "the_essex_county_express": {
+    "essex_county_express": {
         "name": "The Essex County Express",
         "icon": "the_essex_county_express",
         "scenarios": [ScenarioType.THE_ESSEX_COUNTRY_EXPRESS],
@@ -75,7 +75,7 @@ DUNWICH_ENCOUNTER_SET = {
         "name": "The Beyond",
         "icon": "the_beyond",
         "scenarios": [
-            ScenarioType.EXTRACURRICULAR_ACTIVITIES,
+            ScenarioType.EXTRACURRICULAR_ACTIVITY,
             ScenarioType.THE_MISKATONIC_MUSEUM,
             ScenarioType.THE_ESSEX_COUNTRY_EXPRESS,
             ScenarioType.LOST_IN_TIME_AND_SPACE,
@@ -91,7 +91,7 @@ DUNWICH_ENCOUNTER_SET = {
         ],
     },
     "blood_on_the_altar": {
-        "name": "Blood on the Altar",
+        "name": "Blood On The Altar",
         "icon": "blood_on_the_altar",
         "scenarios": [ScenarioType.BLOOD_ON_THE_ALTAR],
     },

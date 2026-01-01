@@ -31,7 +31,7 @@ CAMPAIGN_CYCLES: Dict[CampaignType, CycleType] = {
     CampaignType.THE_PATH_TO_CARCOSA: CycleType.CARCOSA,
     CampaignType.THE_FORGOTTEN_AGE: CycleType.FORGOTTEN,
     CampaignType.THE_CIRCLE_UNDONE: CycleType.CIRCLE,
-    CampaignType.THE_DREAM_EATER: CycleType.DREAM,
+    CampaignType.THE_DREAM_EATER_A: CycleType.DREAM,
     CampaignType.THE_INNSMOUTH_CONSPIRACY: CycleType.INNSMOUTH,
     CampaignType.THE_EDGE_OF_THE_EARTH: CycleType.EDGE,
     CampaignType.THE_SCARLET_KEY: CycleType.SCARLET,

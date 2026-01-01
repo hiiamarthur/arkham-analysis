@@ -5,7 +5,7 @@ from .dunwich_legacy import DunwichLegacy
 from .path_to_carcosa import PathToCarcosa
 from .forgotten_age import ForgottenAge
 from .circle_undone import CircleUndone
-from .dream_eaters import DreamEaters
+from .dream_eaters import DreamEatersA, DreamEatersB
 from .innsmouth_conspiracy import InnsmouthConspiracy
 from .edge_of_the_earth import EdgeOfTheEarth
 from .scarlet_keys import ScarletKeys
@@ -14,19 +14,20 @@ from .drowned_city import DrownedCity
 from .campaign_factory import CampaignFactory, create_campaign
 
 __all__ = [
-    "Campaign", 
-    "CampaignType", 
+    "Campaign",
+    "CampaignType",
     "NightOfTheZealot",
-    "DunwichLegacy", 
+    "DunwichLegacy",
     "PathToCarcosa",
     "ForgottenAge",
     "CircleUndone",
-    "DreamEaters",
+    "DreamEatersA",
+    "DreamEatersB",
     "InnsmouthConspiracy",
     "EdgeOfTheEarth",
     "ScarletKeys",
     "HemlockVale",
     "DrownedCity",
     "CampaignFactory",
-    "create_campaign"
+    "create_campaign",
 ]

@@ -1,0 +1,164 @@
+<!-- Table Controls -->
+<div class="table-controls" *ngIf="config.showSearch || config.showColumnToggle || config.showFilters">
+  <!-- Search -->
+  <div class="search-control" *ngIf="config.showSearch">
+    <app-custom-input
+      type="text"
+      [placeholder]="'Search...'"
+      (ngModelChange)="onSearchChange($event)"
+      [ngModel]="searchTerm()"
+    ></app-custom-input>
+  </div>
+
+  <!-- Column Toggle -->
+  <div class="column-toggle" *ngIf="config.showColumnToggle">
+    <button class="btn btn-secondary" (click)="columnToggleOpen = !columnToggleOpen">
+      Columns ({{visibleColumns().length}}/{{columns.length}})
+    </button>
+    <div class="column-dropdown" *ngIf="columnToggleOpen">
+      <div class="column-item" *ngFor="let column of columns">
+        <label>
+          <input 
+            type="checkbox" 
+            [checked]="column.visible !== false"
+            (change)="toggleColumnVisibility(column)"
+          >
+          {{column.label}}
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  <div class="filters" *ngIf="config.showFilters">
+    <div class="filter-item" *ngFor="let column of columns">
+      <app-custom-input
+        *ngIf="column.filterable"
+        type="text"
+        [placeholder]="'Filter ' + column.label"
+        (ngModelChange)="onFilterChange(column.key, $event)"
+        [ngModel]="filters()[column.key] || ''"
+      ></app-custom-input>
+    </div>
+    <button class="btn btn-outline" (click)="clearFilters()">Clear Filters</button>
+  </div>
+</div>
+
+<!-- Table Container -->
+<div class="table-container" [class.responsive]="config.responsive">
+  <!-- Loading State -->
+  <div class="loading-overlay" *ngIf="loading">
+    <div class="spinner"></div>
+    <p>Loading...</p>
+  </div>
+
+  <!-- Table -->
+  <table 
+    class="data-table"
+    [class.striped]="config.striped"
+    [class.hoverable]="config.hoverable"
+    [class.bordered]="config.bordered"
+  >
+    <!-- Table Header -->
+    <thead>
+      <tr>
+        <th 
+          *ngFor="let column of visibleColumns()"
+          [style.width]="column.width"
+          [class.sortable]="column.sortable"
+          (click)="column.sortable ? onSort(column.key) : null"
+        >
+          <div class="header-content">
+            <span>{{column.label}}</span>
+            <span class="sort-icon" *ngIf="column.sortable">
+              {{getSortIcon(column.key)}}
+            </span>
+          </div>
+        </th>
+      </tr>
+    </thead>
+
+    <!-- Table Body -->
+    <tbody>
+      <tr 
+        *ngFor="let row of paginatedData(); trackBy: trackByFn"
+        (click)="onRowClick(row)"
+        [class.clickable]="true"
+      >
+        <td 
+          *ngFor="let column of visibleColumns()"
+          [class]="'column-' + column.type"
+        >
+          {{renderCellValue(row, column)}}
+        </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- Empty State -->
+  <div class="empty-state" *ngIf="!loading && paginatedData().length === 0">
+    <div class="empty-icon">📊</div>
+    <h3>{{emptyMessage}}</h3>
+    <p *ngIf="searchTerm() || Object.keys(filters()).length > 0">
+      Try adjusting your search or filters
+    </p>
+  </div>
+</div>
+
+<!-- Pagination -->
+<div class="pagination-container" *ngIf="config.showPagination && paginationInfo().totalPages > 1">
+  <div class="pagination-info">
+    <span>
+      Showing {{(paginationInfo().currentPage - 1) * paginationInfo().pageSize + 1}} 
+      to {{Math.min(paginationInfo().currentPage * paginationInfo().pageSize, paginationInfo().totalItems)}} 
+      of {{paginationInfo().totalItems}} entries
+    </span>
+    
+    <div class="page-size-selector">
+      <label>Show:</label>
+      <select 
+        [ngModel]="pageSize()" 
+        (ngModelChange)="onPageSizeChange($event)"
+      >
+        <option *ngFor="let size of config.pageSizeOptions" [value]="size">
+          {{size}}
+        </option>
+      </select>
+      <span>entries</span>
+    </div>
+  </div>
+
+  <div class="pagination">
+    <!-- Previous Button -->
+    <button 
+      class="btn btn-outline"
+      [disabled]="paginationInfo().currentPage === 1"
+      (click)="onPageChange(paginationInfo().currentPage - 1)"
+    >
+      Previous
+    </button>
+
+    <!-- Page Numbers -->
+    <div class="page-numbers">
+      <button 
+        *ngFor="let page of getPageNumbers()"
+        class="btn"
+        [class.btn-primary]="page === paginationInfo().currentPage"
+        [class.btn-outline]="page !== paginationInfo().currentPage"
+        [disabled]="page === -1"
+        (click)="page !== -1 ? onPageChange(page) : null"
+      >
+        {{page === -1 ? '...' : page}}
+      </button>
+    </div>
+
+    <!-- Next Button -->
+    <button 
+      class="btn btn-outline"
+      [disabled]="paginationInfo().currentPage === paginationInfo().totalPages"
+      (click)="onPageChange(paginationInfo().currentPage + 1)"
+    >
+      Next
+    </button>
+  </div>
+</div>

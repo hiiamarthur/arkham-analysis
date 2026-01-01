@@ -18,22 +18,23 @@ from ..Token.token import (
     TabletToken,
     ElderThingToken,
 )
-from typing import List
+from typing import Dict, List, Type
 
 
 class ForgottenAge(Campaign):
 
     def __init__(self, difficulty: Difficulty):
-        super().__init__(CampaignType.THE_FORGOTTEN_AGE, difficulty)
+        self.base_tokens_config = {
+            ElderSignToken: 1,
+            AutoFailToken: 1,
+            SkullToken: 2,
+            ElderThingToken: 1,
+        }
+        super().__init__(
+            CampaignType.THE_FORGOTTEN_AGE, difficulty, self.base_tokens_config
+        )
 
-    def get_init_tokens(self, difficulty: Difficulty) -> List[ChaosToken]:
-        # Base tokens that all difficulties have
-        base_tokens = [
-            ElderSignToken(),
-            AutoFailToken(),
-        ]
-
-        token_configs = {
+        self.token_configs = {
             Difficulty.EASY: {
                 PlusOneToken: 2,
                 ZeroToken: 3,
@@ -67,8 +68,14 @@ class ForgottenAge(Campaign):
             },
         }
 
-        config = token_configs.get(difficulty, {})
-        for token_type, count in config.items():
-            base_tokens.extend([token_type() for _ in range(count)])
+    def get_init_tokens(self, difficulty: Difficulty) -> List[ChaosToken]:
+        # Base tokens that all difficulties have
 
-        return base_tokens
+        config = self.token_configs.get(difficulty, {})
+        for token_type, count in config.items():
+            self.base_tokens.extend([token_type() for _ in range(count)])
+
+        return self.base_tokens
+
+    def get_token_config(self) -> Dict[Difficulty, Dict[Type[ChaosToken], int]]:
+        return self.token_configs

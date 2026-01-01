@@ -10,7 +10,7 @@ from ..base_rules import *
 SCARLET_KEYS_SCENARIOS: Dict[ScenarioType, List[ScenarioRule]] = cast(
     Dict[ScenarioType, List[ScenarioRule]],
     {
-        ScenarioType.RIDDLE_AND_RAIN: [
+        ScenarioType.RIDDLES_AND_RAIN: [
             PlayerCountScalingRule("starting_clues", 3, per_player=2),
             DynamicValueRule("doom_threshold", lambda ctx: 9 + ctx["player_count"]),
             # London setting with investigation
@@ -171,7 +171,7 @@ SCARLET_KEYS_SCENARIOS: Dict[ScenarioType, List[ScenarioRule]] = cast(
             ),
             WeaknessRule(weakness_count=1),
         ],
-        ScenarioType.DEALING_IN_THE_DARK: [
+        ScenarioType.DEALINGS_IN_THE_DARK: [
             PlayerCountScalingRule("starting_clues", 2, per_player=2),
             DynamicValueRule("doom_threshold", lambda ctx: 8 + ctx["player_count"]),
             # Underground marketplace

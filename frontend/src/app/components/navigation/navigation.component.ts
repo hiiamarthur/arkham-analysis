@@ -13,6 +13,7 @@ export class NavigationComponent {
   menuItems = [
     { path: '/dashboard', label: 'Dashboard', icon: '📊' },
     { path: '/analysis', label: 'Card Analysis', icon: '🃏' },
+    { path: '/investigators', label: 'Investigators', icon: '🕵️' },
     { path: '/threat-assessment', label: 'Threat Assessment', icon: '⚠️' },
     { path: '/about', label: 'About', icon: 'ℹ️' }
   ];

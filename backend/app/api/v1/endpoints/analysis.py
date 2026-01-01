@@ -16,18 +16,17 @@ router = APIRouter()
 
 class CardAnalysisRequest(BaseModel):
     """Request for context-aware card analysis"""
+
     card_codes: List[str] = Field(description="Cards to analyze")
     game_context: Optional[GameContextSchema] = Field(
-        default=None,
-        description="Current game state for contextual analysis"
+        default=None, description="Current game state for contextual analysis"
     )
     investigator_code: Optional[str] = Field(
-        default=None, 
-        description="Investigator context for analysis"
+        default=None, description="Investigator context for analysis"
     )
     campaign_context: Optional[Dict[str, Any]] = Field(
         default=None,
-        description="Campaign-specific context (difficulty, special rules, etc.)"
+        description="Campaign-specific context (difficulty, special rules, etc.)",
     )
 
     class Config:
@@ -37,7 +36,7 @@ class CardAnalysisRequest(BaseModel):
                 "investigator_code": "01001",
                 "campaign_context": {
                     "campaign": "night_of_the_zealot",
-                    "difficulty": "standard"
+                    "difficulty": "standard",
                 },
                 "game_context": {
                     "current_scenario": "01104",
@@ -48,22 +47,23 @@ class CardAnalysisRequest(BaseModel):
                             "investigator_code": "01001",
                             "current_health": 7,
                             "max_health": 9,
-                            "current_resources": 2
+                            "current_resources": 2,
                         }
                     ],
                     "active_investigator": "01001",
-                    "analysis_question": "Which cards should I prioritize playing?"
-                }
+                    "analysis_question": "Which cards should I prioritize playing?",
+                },
             }
         }
 
 
 class AnalysisResponse(BaseModel):
     """Response containing comprehensive analysis"""
+
     success: bool
     message: str
     analysis: Optional[Dict[str, Any]] = None
-    
+
     class Config:
         schema_extra = {
             "example": {
@@ -73,17 +73,17 @@ class AnalysisResponse(BaseModel):
                     "analysis_type": "comprehensive_game_analysis",
                     "threat_assessment": {
                         "overall_threat_level": 0.6,
-                        "threat_description": "High - Dangerous situation"
+                        "threat_description": "High - Dangerous situation",
                     },
                     "gpt_analysis": "Based on the current situation...",
                     "recommended_actions": [
                         {
                             "priority": "HIGH",
                             "action": "evade_enemy",
-                            "description": "Enemy is dangerous, consider evading"
+                            "description": "Enemy is dangerous, consider evading",
                         }
-                    ]
-                }
+                    ],
+                },
             }
         }
 
@@ -105,24 +105,25 @@ async def analyze_card_strength(
             investigator_code=request.investigator_code,
             campaign_context=request.campaign_context,
         )
-        
+
         response.headers.update(ARKHAM_HEADERS)
         response.headers["Cache-Control"] = f"private, max-age=300"  # 5 minutes
-        
+
         return AnalysisResponse(
             success=True,
             message="Card strength analysis completed successfully",
-            analysis=analysis_result
+            analysis=analysis_result,
         )
-        
+
     except Exception as e:
+        print(f"Error analyzing card strength: {e}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Card strength analysis failed: {str(e)}"
+            detail=f"Card strength analysis failed: {str(e)}",
         )
 
 
-@router.post("/card-synergies", response_model=AnalysisResponse)  
+@router.post("/card-synergies", response_model=AnalysisResponse)
 async def analyze_card_synergies(
     request: CardAnalysisRequest,
     response: Response,
@@ -138,20 +139,20 @@ async def analyze_card_synergies(
             investigator_code=request.investigator_code,
             campaign_context=request.campaign_context,
         )
-        
+
         response.headers.update(ARKHAM_HEADERS)
         response.headers["Cache-Control"] = f"private, max-age=600"  # 10 minutes
-        
+
         return AnalysisResponse(
             success=True,
             message="Card synergy analysis completed",
-            analysis=analysis_result
+            analysis=analysis_result,
         )
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Card synergy analysis failed: {str(e)}"
+            detail=f"Card synergy analysis failed: {str(e)}",
         )
 
 
@@ -171,20 +172,20 @@ async def analyze_card_timing(
             game_context=request.game_context,
             investigator_code=request.investigator_code,
         )
-        
+
         response.headers.update(ARKHAM_HEADERS)
         response.headers["Cache-Control"] = f"private, max-age=60"  # 1 minute
-        
+
         return AnalysisResponse(
             success=True,
             message="Card timing analysis completed",
-            analysis=analysis_result
+            analysis=analysis_result,
         )
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Card timing analysis failed: {str(e)}"
+            detail=f"Card timing analysis failed: {str(e)}",
         )
 
 
@@ -212,14 +213,16 @@ async def get_threat_assessment(
             doom_threshold=doom_threshold,
             investigators=[],  # Empty for quick assessment
             active_investigator="",
-            analysis_question="Threat assessment"
+            analysis_question="Threat assessment",
         )
-        
-        threat_assessment = analysis_service.context_service.calculate_threat_level(minimal_context)
-        
+
+        threat_assessment = analysis_service.context_service.calculate_threat_level(
+            minimal_context
+        )
+
         response.headers.update(ARKHAM_HEADERS)
         response.headers["Cache-Control"] = f"public, max-age=60"  # 1 minute
-        
+
         return {
             "success": True,
             "threat_assessment": threat_assessment,
@@ -227,12 +230,12 @@ async def get_threat_assessment(
                 "scenario": scenario,
                 "act": act,
                 "agenda": agenda,
-                "doom_pressure": f"{doom_on_agenda}/{doom_threshold}"
-            }
+                "doom_pressure": f"{doom_on_agenda}/{doom_threshold}",
+            },
         }
-        
+
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Threat assessment failed: {str(e)}"
+            detail=f"Threat assessment failed: {str(e)}",
         )

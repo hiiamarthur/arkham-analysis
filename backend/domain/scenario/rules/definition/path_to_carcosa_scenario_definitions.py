@@ -10,7 +10,7 @@ from ..base_rules import *
 PATH_TO_CARCOSA_SCENARIOS: Dict[ScenarioType, List[ScenarioRule]] = cast(
     Dict[ScenarioType, List[ScenarioRule]],
     {
-        ScenarioType.CURTAIN_CALLS: [
+        ScenarioType.CURTAIN_CALL: [
             PlayerCountScalingRule("starting_clues", 2, per_player=1),
             DynamicValueRule("doom_threshold", lambda ctx: 8 + ctx["player_count"]),
             # Theater setting
@@ -62,7 +62,7 @@ PATH_TO_CARCOSA_SCENARIOS: Dict[ScenarioType, List[ScenarioRule]] = cast(
             ),
             WeaknessRule(weakness_count=1),
         ],
-        ScenarioType.ECHO_OF_THE_PAST: [
+        ScenarioType.ECHOES_OF_THE_PAST: [
             PlayerCountScalingRule("starting_clues", 2, per_player=1),
             DynamicValueRule("doom_threshold", lambda ctx: 8 + ctx["player_count"]),
             # Memory mechanics
@@ -90,7 +90,7 @@ PATH_TO_CARCOSA_SCENARIOS: Dict[ScenarioType, List[ScenarioRule]] = cast(
             DynamicValueRule("masquerade_mechanics", lambda ctx: True),
             WeaknessRule(weakness_count=1),
         ],
-        ScenarioType.BLACK_STAR_RISE: [
+        ScenarioType.BLACK_STARS_RISE: [
             PlayerCountScalingRule("starting_clues", 2, per_player=2),
             DynamicValueRule("doom_threshold", lambda ctx: 9 + ctx["player_count"]),
             # Cosmic horror

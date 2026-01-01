@@ -222,7 +222,7 @@ DROWNED_CITY_SCENARIOS: Dict[ScenarioType, List[ScenarioRule]] = cast(
             ),
             WeaknessRule(weakness_count=1),
         ],
-        ScenarioType.SEPULCHRE_OF_THE_SLEEPERS: [
+        ScenarioType.SEPULCHRE_OF_THE_SLEEPER: [
             PlayerCountScalingRule("starting_clues", 4, per_player=2),
             DynamicValueRule("doom_threshold", lambda ctx: 13 + ctx["player_count"]),
             # Ancient tomb/burial site

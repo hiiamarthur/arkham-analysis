@@ -50,7 +50,7 @@ class ScenarioConfig:
             ScenarioType.THE_MIDNIGHT_MASKS: 9,
             ScenarioType.THE_DEVOURER_BELOW: 10,
             # Dunwich Legacy
-            ScenarioType.EXTRACURRICULAR_ACTIVITIES: 8,
+            ScenarioType.EXTRACURRICULAR_ACTIVITY: 8,
             ScenarioType.THE_HOUSE_ALWAYS_WINS: 7,
             ScenarioType.THE_MISKATONIC_MUSEUM: 9,
             ScenarioType.THE_ESSEX_COUNTRY_EXPRESS: 6,  # Fast-paced scenario
@@ -59,13 +59,13 @@ class ScenarioConfig:
             ScenarioType.WHERE_DOOM_AWAITS: 9,
             ScenarioType.LOST_IN_TIME_AND_SPACE: 11,
             # Path to Carcosa
-            ScenarioType.CURTAIN_CALLS: 8,
+            ScenarioType.CURTAIN_CALL: 8,
             ScenarioType.THE_LAST_KING: 10,
-            ScenarioType.ECHO_OF_THE_PAST: 7,
+            ScenarioType.ECHOES_OF_THE_PAST: 7,
             ScenarioType.THE_UNSPEAKABLE_OATH: 9,
             ScenarioType.A_PHANTOM_OF_TRUTH: 8,
             ScenarioType.THE_PALLID_MASK: 11,
-            ScenarioType.BLACK_STAR_RISE: 9,
+            ScenarioType.BLACK_STARS_RISE: 9,
             ScenarioType.DIM_CARCOSA: 12,  # Final scenario
         }
 
@@ -96,7 +96,7 @@ class ScenarioConfig:
             ScenarioType.THE_MIDNIGHT_MASKS: 6,
             ScenarioType.THE_DEVOURER_BELOW: 5,
             # Dunwich Legacy
-            ScenarioType.EXTRACURRICULAR_ACTIVITIES: 5,
+            ScenarioType.EXTRACURRICULAR_ACTIVITY: 5,
             ScenarioType.THE_HOUSE_ALWAYS_WINS: 4,
             ScenarioType.THE_MISKATONIC_MUSEUM: 7,  # Investigation heavy
             ScenarioType.THE_ESSEX_COUNTRY_EXPRESS: 3,  # Action heavy
@@ -105,13 +105,13 @@ class ScenarioConfig:
             ScenarioType.WHERE_DOOM_AWAITS: 5,
             ScenarioType.LOST_IN_TIME_AND_SPACE: 7,
             # Path to Carcosa
-            ScenarioType.CURTAIN_CALLS: 4,
+            ScenarioType.CURTAIN_CALL: 4,
             ScenarioType.THE_LAST_KING: 6,
-            ScenarioType.ECHO_OF_THE_PAST: 5,
+            ScenarioType.ECHOES_OF_THE_PAST: 5,
             ScenarioType.THE_UNSPEAKABLE_OATH: 4,
             ScenarioType.A_PHANTOM_OF_TRUTH: 6,
             ScenarioType.THE_PALLID_MASK: 8,  # Complex investigation
-            ScenarioType.BLACK_STAR_RISE: 5,
+            ScenarioType.BLACK_STARS_RISE: 5,
             ScenarioType.DIM_CARCOSA: 7,
         }
 

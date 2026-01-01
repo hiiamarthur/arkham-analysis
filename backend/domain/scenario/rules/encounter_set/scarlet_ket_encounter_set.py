@@ -6,7 +6,7 @@ SCARLET_KEYS_ENCOUNTER_SET = {
         "name": "Crimson Conspiracy",
         "icon": "crimson_conspiracy",
         "scenarios": [
-            ScenarioType.RIDDLE_AND_RAIN,
+            ScenarioType.RIDDLES_AND_RAIN,
             ScenarioType.DANCING_MAD,
             ScenarioType.ON_THIN_ICE,
         ],
@@ -15,9 +15,9 @@ SCARLET_KEYS_ENCOUNTER_SET = {
         "name": "Dark Veiling",
         "icon": "dark_veiling",
         "scenarios": [
-            ScenarioType.RIDDLE_AND_RAIN,
+            ScenarioType.RIDDLES_AND_RAIN,
             ScenarioType.SANGUINE_SHADOWS,
-            ScenarioType.DEALING_IN_THE_DARK,
+            ScenarioType.DEALINGS_IN_THE_DARK,
             ScenarioType.ON_THIN_ICE,
             ScenarioType.SHADES_OF_SUFFERING,
         ],
@@ -26,7 +26,7 @@ SCARLET_KEYS_ENCOUNTER_SET = {
         "name": "Outsiders",
         "icon": "outsiders",
         "scenarios": [
-            ScenarioType.RIDDLE_AND_RAIN,
+            ScenarioType.RIDDLES_AND_RAIN,
             ScenarioType.ON_THIN_ICE,
             ScenarioType.WITHOUT_A_TRACE,
             ScenarioType.CONGRESS_OF_THE_KEYS,
@@ -36,7 +36,7 @@ SCARLET_KEYS_ENCOUNTER_SET = {
         "name": "Shadow of a Doubt",
         "icon": "shadow_of_a_doubt",
         "scenarios": [
-            ScenarioType.RIDDLE_AND_RAIN,
+            ScenarioType.RIDDLES_AND_RAIN,
             ScenarioType.SANGUINE_SHADOWS,
             ScenarioType.DANCING_MAD,
         ],
@@ -45,7 +45,7 @@ SCARLET_KEYS_ENCOUNTER_SET = {
         "name": "Strange Happenings",
         "icon": "strange_happenings",
         "scenarios": [
-            ScenarioType.RIDDLE_AND_RAIN,
+            ScenarioType.RIDDLES_AND_RAIN,
             ScenarioType.SANGUINE_SHADOWS,
         ],
     },
@@ -53,9 +53,9 @@ SCARLET_KEYS_ENCOUNTER_SET = {
         "name": "Spreading Corruption",
         "icon": "spreading_corruption",
         "scenarios": [
-            ScenarioType.RIDDLE_AND_RAIN,
+            ScenarioType.RIDDLES_AND_RAIN,
             ScenarioType.SANGUINE_SHADOWS,
-            ScenarioType.DEALING_IN_THE_DARK,
+            ScenarioType.DEALINGS_IN_THE_DARK,
             ScenarioType.DOGS_OF_WAR,
             ScenarioType.CONGRESS_OF_THE_KEYS,
         ],
@@ -64,9 +64,9 @@ SCARLET_KEYS_ENCOUNTER_SET = {
         "name": "Agents of the Red Coterie",
         "icon": "agents_of_the_red_coterie",
         "scenarios": [
-            ScenarioType.RIDDLE_AND_RAIN,
+            ScenarioType.RIDDLES_AND_RAIN,
             ScenarioType.SANGUINE_SHADOWS,
-            ScenarioType.DEALING_IN_THE_DARK,
+            ScenarioType.DEALINGS_IN_THE_DARK,
             ScenarioType.DANCING_MAD,
             ScenarioType.DOGS_OF_WAR,
             ScenarioType.CONGRESS_OF_THE_KEYS,
@@ -105,7 +105,7 @@ SCARLET_KEYS_ENCOUNTER_SET = {
         "name": "Agents of Yuggoth",
         "icon": "agents_of_yuggoth",
         "scenarios": [
-            ScenarioType.DEALING_IN_THE_DARK,
+            ScenarioType.DEALINGS_IN_THE_DARK,
             ScenarioType.ON_THIN_ICE,
         ],
     },
@@ -150,10 +150,10 @@ SCARLET_KEYS_ENCOUNTER_SET = {
             ScenarioType.CONGRESS_OF_THE_KEYS,
         ],
     },
-    "riddle_and_rain": {
-        "name": "Riddle and Rain",
-        "icon": "riddle_and_rain",
-        "scenarios": [ScenarioType.RIDDLE_AND_RAIN],
+    "riddles_and_rain": {
+        "name": "Riddles and Rain",
+        "icon": "riddles_and_rain",
+        "scenarios": [ScenarioType.RIDDLES_AND_RAIN],
     },
     "dead_heat": {
         "name": "Dead Heat",
@@ -165,10 +165,10 @@ SCARLET_KEYS_ENCOUNTER_SET = {
         "icon": "sanguine_shadows",
         "scenarios": [ScenarioType.SANGUINE_SHADOWS],
     },
-    "dealing_in_the_dark": {
-        "name": "Dealing in the Dark",
-        "icon": "dealing_in_the_dark",
-        "scenarios": [ScenarioType.DEALING_IN_THE_DARK],
+    "dealings_in_the_dark": {
+        "name": "Dealings in the Dark",
+        "icon": "dealings_in_the_dark",
+        "scenarios": [ScenarioType.DEALINGS_IN_THE_DARK],
     },
     "dancing_mad": {
         "name": "Dancing Mad",

@@ -435,9 +435,11 @@ class ContextCalculator:
             "enemies_without_health": sum(1 for e in enemy_cards if not e.defeatable),
         }
 
-    def calculate_chaos_bag_stats(self, chaos_bag: ChaosBag, investigator_card=None) -> Dict[str, Any]:
+    def calculate_chaos_bag_stats(
+        self, chaos_bag: ChaosBag, investigator_card=None
+    ) -> Dict[str, Any]:
         """Calculate detailed chaos bag statistics and success probability analysis
-        
+
         Args:
             chaos_bag: The chaos bag containing tokens
             investigator_card: Optional investigator card for resolving Elder Sign effects
@@ -475,19 +477,35 @@ class ContextCalculator:
             if token_name == "eldersign":
                 elder_sign_count += 1
                 # Only include in calculations if investigator context is available
-                if investigator_card and hasattr(investigator_card, 'elder_sign_effect'):
+                if investigator_card and hasattr(
+                    investigator_card, "elder_sign_effect"
+                ):
                     elder_sign_value = investigator_card.elder_sign_effect
                     numeric_tokens.append(elder_sign_value)
                     all_numeric_tokens.append(elder_sign_value)
                 else:
                     # Skip from base statistics but track in all_numeric for distribution
-                    all_numeric_tokens.append(0)  # Placeholder for distribution analysis
-                special_token_effects.append({
-                    "token_type": token_name,
-                    "effect": "Varies by investigator" if not investigator_card else getattr(investigator_card, 'elder_sign_text', "Special ability"),
-                    "value": "Variable" if not investigator_card else getattr(investigator_card, 'elder_sign_effect', 0),
-                    "count": token_distribution[token_name],
-                })
+                    all_numeric_tokens.append(
+                        0
+                    )  # Placeholder for distribution analysis
+                special_token_effects.append(
+                    {
+                        "token_type": token_name,
+                        "effect": (
+                            "Varies by investigator"
+                            if not investigator_card
+                            else getattr(
+                                investigator_card, "elder_sign_text", "Special ability"
+                            )
+                        ),
+                        "value": (
+                            "Variable"
+                            if not investigator_card
+                            else getattr(investigator_card, "elder_sign_effect", 0)
+                        ),
+                        "count": token_distribution[token_name],
+                    }
+                )
                 continue
 
             # Handle AutoFailToken specially
@@ -495,12 +513,14 @@ class ContextCalculator:
                 auto_fail_count += 1
                 # Never include auto-fail in numeric calculations as it always fails
                 all_numeric_tokens.append(-999)  # For distribution analysis only
-                special_token_effects.append({
-                    "token_type": token_name,
-                    "effect": "Automatic failure regardless of skill value",
-                    "value": "Auto-fail",
-                    "count": token_distribution[token_name],
-                })
+                special_token_effects.append(
+                    {
+                        "token_type": token_name,
+                        "effect": "Automatic failure regardless of skill value",
+                        "value": "Auto-fail",
+                        "count": token_distribution[token_name],
+                    }
+                )
                 continue
 
             # Handle standard numeric tokens
@@ -584,11 +604,13 @@ class ContextCalculator:
 
         return {
             "total_tokens": total_tokens,
-            "calculable_tokens": len(numeric_tokens),  # Only tokens used in base statistics
+            "calculable_tokens": len(
+                numeric_tokens
+            ),  # Only tokens used in base statistics
             "excluded_tokens": {
                 "elder_sign_count": elder_sign_count,
                 "auto_fail_count": auto_fail_count,
-                "note": "Elder Sign excluded unless investigator context provided; Auto Fail always excluded from calculations"
+                "note": "Elder Sign excluded unless investigator context provided; Auto Fail always excluded from calculations",
             },
             "token_distribution": token_distribution,
             "numeric_summary": {
@@ -603,7 +625,7 @@ class ContextCalculator:
                 ),
                 "worst_token": min(numeric_tokens) if numeric_tokens else 0,
                 "best_token": max(numeric_tokens) if numeric_tokens else 0,
-                "calculation_note": f"Based on {len(numeric_tokens)} calculable tokens out of {total_tokens} total tokens"
+                "calculation_note": f"Based on {len(numeric_tokens)} calculable tokens out of {total_tokens} total tokens",
             },
             "special_tokens": special_tokens,
             "success_probabilities": success_probabilities,
@@ -791,7 +813,7 @@ class ContextCalculator:
         investigator_card=None,
     ) -> Dict[str, Any]:
         """Calculate comprehensive scenario context
-        
+
         Args:
             doom_threshold: Maximum doom before defeat
             starting_clues: Initial clues in scenario
@@ -896,7 +918,7 @@ class ContextCalculator:
         # Easier scenarios
         easy_scenarios = {
             ScenarioType.THE_GATHERING,
-            ScenarioType.EXTRACURRICULAR_ACTIVITIES,
+            ScenarioType.EXTRACURRICULAR_ACTIVITY,
         }
 
         if self.scenario_type in hard_scenarios:

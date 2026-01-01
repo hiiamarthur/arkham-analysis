@@ -33,7 +33,28 @@
 
   <!-- Stats Overview -->
   <div class="stats-section">
+    <app-custom-input
+      type="text"
+      [(ngModel)]="quickCardCode"
+      placeholder="Enter card code (e.g., 01030)"
+    ></app-custom-input>
     <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-icon">🏷️</div>
+        <div class="stat-content">
+          <div class="stat-number">{{traitCount()}}</div>
+          <div class="stat-label">Unique Traits</div>
+        </div>
+      </div>
+
+      <div class="stat-card">
+        <div class="stat-icon">📦</div>
+        <div class="stat-content">
+          <div class="stat-number">{{encounterSetCount()}}</div>
+          <div class="stat-label">Encounter Sets</div>
+        </div>
+      </div>
+
       <div class="stat-card">
         <div class="stat-icon">📈</div>
         <div class="stat-content">
@@ -41,7 +62,7 @@
           <div class="stat-label">Analyses This Week</div>
         </div>
       </div>
-      
+
       <div class="stat-card">
         <div class="stat-icon">⭐</div>
         <div class="stat-content">
@@ -115,13 +136,32 @@
 
   <!-- Main Content Grid -->
   <div class="main-content">
+    <!-- Recent Analyses Table -->
+    <div class="section recent-analyses-table">
+      <div class="section-header">
+        <h2>Recent Analyses</h2>
+        <a routerLink="/analysis" class="section-link">View All →</a>
+      </div>
+
+      <app-data-table
+        [data]="recentAnalysesData()"
+        [columns]="recentAnalysesColumns"
+        [config]="tableConfig"
+        [loading]="false"
+        (rowClick)="onTableRowClick($event)"
+        (pageChange)="onTablePageChange($event)"
+        (sortChange)="onTableSortChange($event)"
+        (filterChange)="onTableFilterChange($event)"
+      ></app-data-table>
+    </div>
+
     <!-- Recent Activity -->
     <div class="section recent-activity">
       <div class="section-header">
         <h2>Recent Analysis Activity</h2>
         <a routerLink="/analysis" class="section-link">View All →</a>
       </div>
-      
+
       <div class="activity-list">
         <div *ngFor="let activity of recentActivity" class="activity-item">
           <div class="activity-icon">
@@ -139,7 +179,7 @@
             <div class="activity-result">{{activity.result}}</div>
           </div>
         </div>
-        
+
         <div *ngIf="recentActivity.length === 0" class="empty-state">
           <div class="empty-icon">📊</div>
           <p>No recent analysis activity</p>

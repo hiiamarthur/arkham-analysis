@@ -17,7 +17,7 @@ class ScenarioType(Enum):
     THE_DEVOURER_BELOW = "the_devourer_below"
 
     # Dunwich Legacy
-    EXTRACURRICULAR_ACTIVITIES = "extracurricular_activities"
+    EXTRACURRICULAR_ACTIVITY = "extracurricular_activity"
     THE_HOUSE_ALWAYS_WINS = "the_house_always_wins"
     THE_MISKATONIC_MUSEUM = "the_miskatonic_museum"
     THE_ESSEX_COUNTRY_EXPRESS = "the_essex_country_express"
@@ -27,13 +27,13 @@ class ScenarioType(Enum):
     LOST_IN_TIME_AND_SPACE = "lost_in_time_and_space"
 
     # Path to Carcosa
-    CURTAIN_CALLS = "curtain_calls"
+    CURTAIN_CALL = "curtain_call"
     THE_LAST_KING = "the_last_king"
-    ECHO_OF_THE_PAST = "echo_of_the_past"
+    ECHOES_OF_THE_PAST = "echoes_of_the_past"
     THE_UNSPEAKABLE_OATH = "the_unspeakable_oath"
     A_PHANTOM_OF_TRUTH = "a_phantom_of_truth"
     THE_PALLID_MASK = "the_pallid_mask"
-    BLACK_STAR_RISE = "black_star_rise"
+    BLACK_STARS_RISE = "black_stars_rise"
     DIM_CARCOSA = "dim_carcosa"
 
     # Forgotten Age
@@ -52,14 +52,14 @@ class ScenarioType(Enum):
     THE_WITCHING_HOUR = "the_witching_hour"
     AT_DEATHS_DOORSTEP = "at_deaths_doorstep"
     THE_SECRET_NAME = "the_secret_name"
-    THE_WAGE_OF_SIN = "the_wage_of_sin"
+    THE_WAGES_OF_SIN = "the_wages_of_sin"
     FOR_THE_GREATER_GOOD = "for_the_greater_good"
     UNION_AND_DISILLUSION = "union_and_disillusion"
     IN_THE_CLUTCHES_OF_CHAOS = "in_the_clutches_of_chaos"
     BEFORE_THE_BLACK_THRONE = "before_the_black_throne"
 
     # Dream-Eaters
-    BEYOND_THE_GATE_OF_SLEEP = "beyond_the_gate_of_sleep"
+    BEYOND_THE_GATES_OF_SLEEP = "beyond_the_gates_of_sleep"
     WAKING_NIGHTMARE = "waking_nightmare"
     THE_SEARCH_FOR_KADATH = "the_search_for_kadath"
     A_THOUSAND_SHAPES_OF_HORROR = "a_thousand_shapes_of_horror"
@@ -86,10 +86,10 @@ class ScenarioType(Enum):
     THE_HEART_OF_MADNESS = "the_heart_of_madness"
 
     # Scarlet Key
-    RIDDLE_AND_RAIN = "riddle_and_rain"
+    RIDDLES_AND_RAIN = "riddles_and_rain"
     DEAD_HEAT = "dead_heat"
     SANGUINE_SHADOWS = "sanguine_shadows"
-    DEALING_IN_THE_DARK = "dealing_in_the_dark"
+    DEALINGS_IN_THE_DARK = "dealings_in_the_dark"
     DANCING_MAD = "dancing_mad"
     ON_THIN_ICE = "on_thin_ice"
     DOGS_OF_WAR = "dogs_of_war"
@@ -101,7 +101,7 @@ class ScenarioType(Enum):
 
     WRITTEN_IN_ROCK = "written_in_rock"
     HEMLOCK_HOUSE = "hemlock_house"
-    THE_SILENT_HEALTH = "the_silent_health"
+    THE_SILENT_HEATH = "the_silent_heath"
     THE_LOST_SISTER = "the_lost_sister"
     THE_THING_IN_THE_DEPTHS = "the_thing_in_the_depths"
     THE_TWISTED_HOLLOW = "the_twisted_hollow"
@@ -116,7 +116,7 @@ class ScenarioType(Enum):
     THE_GRAND_VAULT = "the_grand_vault"
     COURT_OF_THE_ANCIENTS = "court_of_the_ancients"
     OBSIDIAN_CANYONS = "obsidian_canyons"
-    SEPULCHRE_OF_THE_SLEEPERS = "sepulchre_of_the_sleepers"
+    SEPULCHRE_OF_THE_SLEEPER = "sepulchre_of_the_sleeper"
     THE_DOOM_OF_ARKHAM_PT_I = "the_doom_of_arkham_pt_i"
     THE_DOOM_OF_ARKHAM_PT_II = "the_doom_of_arkham_pt_ii"
 
@@ -135,7 +135,7 @@ SCENARIO_CAMPAIGN_MAP: Dict[ScenarioType, CampaignType] = {
     ScenarioType.THE_MIDNIGHT_MASKS: CampaignType.NIGHT_OF_THE_ZEALOT,
     ScenarioType.THE_DEVOURER_BELOW: CampaignType.NIGHT_OF_THE_ZEALOT,
     # Dunwich Legacy
-    ScenarioType.EXTRACURRICULAR_ACTIVITIES: CampaignType.THE_DUNWICH_LEGACY,
+    ScenarioType.EXTRACURRICULAR_ACTIVITY: CampaignType.THE_DUNWICH_LEGACY,
     ScenarioType.THE_HOUSE_ALWAYS_WINS: CampaignType.THE_DUNWICH_LEGACY,
     ScenarioType.THE_MISKATONIC_MUSEUM: CampaignType.THE_DUNWICH_LEGACY,
     ScenarioType.THE_ESSEX_COUNTRY_EXPRESS: CampaignType.THE_DUNWICH_LEGACY,
@@ -144,13 +144,13 @@ SCENARIO_CAMPAIGN_MAP: Dict[ScenarioType, CampaignType] = {
     ScenarioType.WHERE_DOOM_AWAITS: CampaignType.THE_DUNWICH_LEGACY,
     ScenarioType.LOST_IN_TIME_AND_SPACE: CampaignType.THE_DUNWICH_LEGACY,
     # Path to Carcosa
-    ScenarioType.CURTAIN_CALLS: CampaignType.THE_PATH_TO_CARCOSA,
+    ScenarioType.CURTAIN_CALL: CampaignType.THE_PATH_TO_CARCOSA,
     ScenarioType.THE_LAST_KING: CampaignType.THE_PATH_TO_CARCOSA,
-    ScenarioType.ECHO_OF_THE_PAST: CampaignType.THE_PATH_TO_CARCOSA,
+    ScenarioType.ECHOES_OF_THE_PAST: CampaignType.THE_PATH_TO_CARCOSA,
     ScenarioType.THE_UNSPEAKABLE_OATH: CampaignType.THE_PATH_TO_CARCOSA,
     ScenarioType.A_PHANTOM_OF_TRUTH: CampaignType.THE_PATH_TO_CARCOSA,
     ScenarioType.THE_PALLID_MASK: CampaignType.THE_PATH_TO_CARCOSA,
-    ScenarioType.BLACK_STAR_RISE: CampaignType.THE_PATH_TO_CARCOSA,
+    ScenarioType.BLACK_STARS_RISE: CampaignType.THE_PATH_TO_CARCOSA,
     ScenarioType.DIM_CARCOSA: CampaignType.THE_PATH_TO_CARCOSA,
     # Forgotten Age
     ScenarioType.THE_UNTAMED_WILDS: CampaignType.THE_FORGOTTEN_AGE,
@@ -161,24 +161,26 @@ SCENARIO_CAMPAIGN_MAP: Dict[ScenarioType, CampaignType] = {
     ScenarioType.THE_CITY_OF_ARCHIVES: CampaignType.THE_FORGOTTEN_AGE,
     ScenarioType.THE_DEPTHS_OF_YOTH: CampaignType.THE_FORGOTTEN_AGE,
     ScenarioType.SHATTERED_AEONS: CampaignType.THE_FORGOTTEN_AGE,
+    ScenarioType.TURN_BACK_TIME: CampaignType.THE_FORGOTTEN_AGE,
     # Circle Undone
+    ScenarioType.DISAPPEARANCE_AT_THE_TWLIGHT_ESTATE: CampaignType.THE_CIRCLE_UNDONE,
     ScenarioType.THE_WITCHING_HOUR: CampaignType.THE_CIRCLE_UNDONE,
     ScenarioType.AT_DEATHS_DOORSTEP: CampaignType.THE_CIRCLE_UNDONE,
     ScenarioType.THE_SECRET_NAME: CampaignType.THE_CIRCLE_UNDONE,
-    ScenarioType.THE_WAGE_OF_SIN: CampaignType.THE_CIRCLE_UNDONE,
+    ScenarioType.THE_WAGES_OF_SIN: CampaignType.THE_CIRCLE_UNDONE,
     ScenarioType.FOR_THE_GREATER_GOOD: CampaignType.THE_CIRCLE_UNDONE,
     ScenarioType.UNION_AND_DISILLUSION: CampaignType.THE_CIRCLE_UNDONE,
     ScenarioType.IN_THE_CLUTCHES_OF_CHAOS: CampaignType.THE_CIRCLE_UNDONE,
     ScenarioType.BEFORE_THE_BLACK_THRONE: CampaignType.THE_CIRCLE_UNDONE,
     # Dream-Eaters
-    ScenarioType.BEYOND_THE_GATE_OF_SLEEP: CampaignType.THE_DREAM_EATER,
-    ScenarioType.WAKING_NIGHTMARE: CampaignType.THE_DREAM_EATER,
-    ScenarioType.THE_SEARCH_FOR_KADATH: CampaignType.THE_DREAM_EATER,
-    ScenarioType.A_THOUSAND_SHAPES_OF_HORROR: CampaignType.THE_DREAM_EATER,
-    ScenarioType.DARK_SIDE_OF_THE_MOON: CampaignType.THE_DREAM_EATER,
-    ScenarioType.POINT_OF_NO_RETURN: CampaignType.THE_DREAM_EATER,
-    ScenarioType.WHERE_THE_GODS_DWELL: CampaignType.THE_DREAM_EATER,
-    ScenarioType.WEAVER_OF_THE_COSMOS: CampaignType.THE_DREAM_EATER,
+    ScenarioType.BEYOND_THE_GATES_OF_SLEEP: CampaignType.THE_DREAM_EATER_A,
+    ScenarioType.WAKING_NIGHTMARE: CampaignType.THE_DREAM_EATER_B,
+    ScenarioType.THE_SEARCH_FOR_KADATH: CampaignType.THE_DREAM_EATER_A,
+    ScenarioType.A_THOUSAND_SHAPES_OF_HORROR: CampaignType.THE_DREAM_EATER_B,
+    ScenarioType.DARK_SIDE_OF_THE_MOON: CampaignType.THE_DREAM_EATER_A,
+    ScenarioType.POINT_OF_NO_RETURN: CampaignType.THE_DREAM_EATER_B,
+    ScenarioType.WHERE_THE_GODS_DWELL: CampaignType.THE_DREAM_EATER_A,
+    ScenarioType.WEAVER_OF_THE_COSMOS: CampaignType.THE_DREAM_EATER_B,
     # Innsmouth Conspiracy
     ScenarioType.THE_PIT_OF_DESPAIR: CampaignType.THE_INNSMOUTH_CONSPIRACY,
     ScenarioType.THE_VANISHING_OF_ELINA_HARPER: CampaignType.THE_INNSMOUTH_CONSPIRACY,
@@ -195,10 +197,10 @@ SCENARIO_CAMPAIGN_MAP: Dict[ScenarioType, CampaignType] = {
     ScenarioType.CITY_OF_THE_ELDER_THINGS: CampaignType.THE_EDGE_OF_THE_EARTH,
     ScenarioType.THE_HEART_OF_MADNESS: CampaignType.THE_EDGE_OF_THE_EARTH,
     # Scarlet Key
-    ScenarioType.RIDDLE_AND_RAIN: CampaignType.THE_SCARLET_KEY,
+    ScenarioType.RIDDLES_AND_RAIN: CampaignType.THE_SCARLET_KEY,
     ScenarioType.DEAD_HEAT: CampaignType.THE_SCARLET_KEY,
     ScenarioType.SANGUINE_SHADOWS: CampaignType.THE_SCARLET_KEY,
-    ScenarioType.DEALING_IN_THE_DARK: CampaignType.THE_SCARLET_KEY,
+    ScenarioType.DEALINGS_IN_THE_DARK: CampaignType.THE_SCARLET_KEY,
     ScenarioType.DANCING_MAD: CampaignType.THE_SCARLET_KEY,
     ScenarioType.ON_THIN_ICE: CampaignType.THE_SCARLET_KEY,
     ScenarioType.DOGS_OF_WAR: CampaignType.THE_SCARLET_KEY,
@@ -208,7 +210,7 @@ SCENARIO_CAMPAIGN_MAP: Dict[ScenarioType, CampaignType] = {
     # Feast of Hemlock Vale
     ScenarioType.WRITTEN_IN_ROCK: CampaignType.THE_FEAST_OF_HEMLOCK_VALE,
     ScenarioType.HEMLOCK_HOUSE: CampaignType.THE_FEAST_OF_HEMLOCK_VALE,
-    ScenarioType.THE_SILENT_HEALTH: CampaignType.THE_FEAST_OF_HEMLOCK_VALE,
+    ScenarioType.THE_SILENT_HEATH: CampaignType.THE_FEAST_OF_HEMLOCK_VALE,
     ScenarioType.THE_LOST_SISTER: CampaignType.THE_FEAST_OF_HEMLOCK_VALE,
     ScenarioType.THE_THING_IN_THE_DEPTHS: CampaignType.THE_FEAST_OF_HEMLOCK_VALE,
     ScenarioType.THE_TWISTED_HOLLOW: CampaignType.THE_FEAST_OF_HEMLOCK_VALE,
@@ -222,7 +224,7 @@ SCENARIO_CAMPAIGN_MAP: Dict[ScenarioType, CampaignType] = {
     ScenarioType.THE_GRAND_VAULT: CampaignType.THE_DROWNED_CITY,
     ScenarioType.COURT_OF_THE_ANCIENTS: CampaignType.THE_DROWNED_CITY,
     ScenarioType.OBSIDIAN_CANYONS: CampaignType.THE_DROWNED_CITY,
-    ScenarioType.SEPULCHRE_OF_THE_SLEEPERS: CampaignType.THE_DROWNED_CITY,
+    ScenarioType.SEPULCHRE_OF_THE_SLEEPER: CampaignType.THE_DROWNED_CITY,
     ScenarioType.THE_DOOM_OF_ARKHAM_PT_I: CampaignType.THE_DROWNED_CITY,
     ScenarioType.THE_DOOM_OF_ARKHAM_PT_II: CampaignType.THE_DROWNED_CITY,
 }
@@ -231,21 +233,21 @@ NAME_TO_SCENARIO_MAP: Dict[ScenarioType, str] = {
     ScenarioType.THE_GATHERING: "The Gathering",
     ScenarioType.THE_MIDNIGHT_MASKS: "The Midnight Masks",
     ScenarioType.THE_DEVOURER_BELOW: "The Devourer Below",
-    ScenarioType.EXTRACURRICULAR_ACTIVITIES: "Extracurricular Activities",
+    ScenarioType.EXTRACURRICULAR_ACTIVITY: "Extracurricular Activity",
     ScenarioType.THE_HOUSE_ALWAYS_WINS: "The House Always Wins",
     ScenarioType.THE_MISKATONIC_MUSEUM: "The Miskatonic Museum",
-    ScenarioType.THE_ESSEX_COUNTRY_EXPRESS: "The Essex Country Express",
-    ScenarioType.BLOOD_ON_THE_ALTAR: "Blood on the Altar",
+    ScenarioType.THE_ESSEX_COUNTRY_EXPRESS: "The Essex County Express",
+    ScenarioType.BLOOD_ON_THE_ALTAR: "Blood On The Altar",
     ScenarioType.UNDIMENSIONED_AND_UNSEEN: "Undimensioned and Unseen",
     ScenarioType.WHERE_DOOM_AWAITS: "Where Doom Awaits",
     ScenarioType.LOST_IN_TIME_AND_SPACE: "Lost in Time and Space",
-    ScenarioType.CURTAIN_CALLS: "Curtain Calls",
+    ScenarioType.CURTAIN_CALL: "Curtain Call",
     ScenarioType.THE_LAST_KING: "The Last King",
-    ScenarioType.ECHO_OF_THE_PAST: "Echo of the Past",
+    ScenarioType.ECHOES_OF_THE_PAST: "Echoes of the Past",
     ScenarioType.THE_UNSPEAKABLE_OATH: "The Unspeakable Oath",
     ScenarioType.A_PHANTOM_OF_TRUTH: "A Phantom of Truth",
     ScenarioType.THE_PALLID_MASK: "The Pallid Mask",
-    ScenarioType.BLACK_STAR_RISE: "Black Star Rise",
+    ScenarioType.BLACK_STARS_RISE: "Black Stars Rise",
     ScenarioType.DIM_CARCOSA: "Dim Carcosa",
     ScenarioType.THE_UNTAMED_WILDS: "The Untamed Wilds",
     ScenarioType.THE_DOOM_OF_EZTLI: "The Doom of Eztli",
@@ -256,15 +258,16 @@ NAME_TO_SCENARIO_MAP: Dict[ScenarioType, str] = {
     ScenarioType.THE_DEPTHS_OF_YOTH: "The Depths of Yoth",
     ScenarioType.SHATTERED_AEONS: "Shattered Aeons",
     ScenarioType.TURN_BACK_TIME: "Turn Back Time",
+    ScenarioType.DISAPPEARANCE_AT_THE_TWLIGHT_ESTATE: "Disappearance at the Twilight Estate",
     ScenarioType.THE_WITCHING_HOUR: "The Witching Hour",
     ScenarioType.AT_DEATHS_DOORSTEP: "At Death's Doorstep",
     ScenarioType.THE_SECRET_NAME: "The Secret Name",
-    ScenarioType.THE_WAGE_OF_SIN: "The Wage of Sin",
+    ScenarioType.THE_WAGES_OF_SIN: "The Wages of Sin",
     ScenarioType.FOR_THE_GREATER_GOOD: "For the Greater Good",
     ScenarioType.UNION_AND_DISILLUSION: "Union and Disillusion",
     ScenarioType.IN_THE_CLUTCHES_OF_CHAOS: "In the Clutches of Chaos",
     ScenarioType.BEFORE_THE_BLACK_THRONE: "Before the Black Throne",
-    ScenarioType.BEYOND_THE_GATE_OF_SLEEP: "Beyond the Gate of Sleep",
+    ScenarioType.BEYOND_THE_GATES_OF_SLEEP: "Beyond the Gates of Sleep",
     ScenarioType.WAKING_NIGHTMARE: "Waking Nightmare",
     ScenarioType.THE_SEARCH_FOR_KADATH: "The Search for Kadath",
     ScenarioType.A_THOUSAND_SHAPES_OF_HORROR: "A Thousand Shapes of Horror",
@@ -285,10 +288,10 @@ NAME_TO_SCENARIO_MAP: Dict[ScenarioType, str] = {
     ScenarioType.TO_THE_FORBIDDEN_PEAKS: "To the Forbidden Peaks",
     ScenarioType.CITY_OF_THE_ELDER_THINGS: "City of the Elder Things",
     ScenarioType.THE_HEART_OF_MADNESS: "The Heart of Madness",
-    ScenarioType.RIDDLE_AND_RAIN: "Riddle and Rain",
+    ScenarioType.RIDDLES_AND_RAIN: "Riddles and Rain",
     ScenarioType.DEAD_HEAT: "Dead Heat",
     ScenarioType.SANGUINE_SHADOWS: "Sanguine Shadows",
-    ScenarioType.DEALING_IN_THE_DARK: "Dealing in the Dark",
+    ScenarioType.DEALINGS_IN_THE_DARK: "Dealings in the Dark",
     ScenarioType.DANCING_MAD: "Dancing Mad",
     ScenarioType.ON_THIN_ICE: "On Thin Ice",
     ScenarioType.DOGS_OF_WAR: "Dogs of War",
@@ -297,7 +300,7 @@ NAME_TO_SCENARIO_MAP: Dict[ScenarioType, str] = {
     ScenarioType.CONGRESS_OF_THE_KEYS: "Congress of the Keys",
     ScenarioType.WRITTEN_IN_ROCK: "Written in Rock",
     ScenarioType.HEMLOCK_HOUSE: "Hemlock House",
-    ScenarioType.THE_SILENT_HEALTH: "The Silent Health",
+    ScenarioType.THE_SILENT_HEATH: "The Silent Heath",
     ScenarioType.THE_LOST_SISTER: "The Lost Sister",
     ScenarioType.THE_THING_IN_THE_DEPTHS: "The Thing in the Depths",
     ScenarioType.THE_TWISTED_HOLLOW: "The Twisted Hollow",
@@ -310,9 +313,9 @@ NAME_TO_SCENARIO_MAP: Dict[ScenarioType, str] = {
     ScenarioType.THE_GRAND_VAULT: "The Grand Vault",
     ScenarioType.COURT_OF_THE_ANCIENTS: "Court of the Ancients",
     ScenarioType.OBSIDIAN_CANYONS: "Obsidian Canyons",
-    ScenarioType.SEPULCHRE_OF_THE_SLEEPERS: "Sepulchre of the Sleepers",
-    ScenarioType.THE_DOOM_OF_ARKHAM_PT_I: "The Doom of Arkham Pt I",
-    ScenarioType.THE_DOOM_OF_ARKHAM_PT_II: "The Doom of Arkham Pt II",
+    ScenarioType.SEPULCHRE_OF_THE_SLEEPER: "Sepulchre of the Sleepers",
+    ScenarioType.THE_DOOM_OF_ARKHAM_PT_I: "The Doom of Arkham Part I",
+    ScenarioType.THE_DOOM_OF_ARKHAM_PT_II: "The Doom of Arkham Part II",
 }
 
 

@@ -6,7 +6,7 @@ CARCOSA_ENCOUNTER_SET = {
         "name": "Hauntings",
         "icon": "hauntings",
         "scenarios": [
-            ScenarioType.CURTAIN_CALLS,
+            ScenarioType.CURTAIN_CALL,
             ScenarioType.THE_PALLID_MASK,
         ],
     },
@@ -14,8 +14,8 @@ CARCOSA_ENCOUNTER_SET = {
         "name": "Delusions",
         "icon": "delusions",
         "scenarios": [
-            ScenarioType.CURTAIN_CALLS,
-            ScenarioType.ECHO_OF_THE_PAST,
+            ScenarioType.CURTAIN_CALL,
+            ScenarioType.ECHOES_OF_THE_PAST,
             ScenarioType.THE_UNSPEAKABLE_OATH,
             ScenarioType.DIM_CARCOSA,
         ],
@@ -24,9 +24,9 @@ CARCOSA_ENCOUNTER_SET = {
         "name": "Evil Portents",
         "icon": "evil_portents",
         "scenarios": [
-            ScenarioType.CURTAIN_CALLS,
+            ScenarioType.CURTAIN_CALL,
             ScenarioType.A_PHANTOM_OF_TRUTH,
-            ScenarioType.BLACK_STAR_RISE,
+            ScenarioType.BLACK_STARS_RISE,
         ],
     },
     "hasturs_gift": {
@@ -49,8 +49,8 @@ CARCOSA_ENCOUNTER_SET = {
         "name": "Cult of the Yellow Sign",
         "icon": "cult_of_the_yellow_sign",
         "scenarios": [
-            ScenarioType.CURTAIN_CALLS,
-            ScenarioType.ECHO_OF_THE_PAST,
+            ScenarioType.CURTAIN_CALL,
+            ScenarioType.ECHOES_OF_THE_PAST,
             ScenarioType.DIM_CARCOSA,
         ],
     },
@@ -60,7 +60,7 @@ CARCOSA_ENCOUNTER_SET = {
         "scenarios": [
             ScenarioType.THE_LAST_KING,
             ScenarioType.A_PHANTOM_OF_TRUTH,
-            ScenarioType.BLACK_STAR_RISE,
+            ScenarioType.BLACK_STARS_RISE,
         ],
     },
     "inhabitants_of_carcosa": {
@@ -68,7 +68,7 @@ CARCOSA_ENCOUNTER_SET = {
         "icon": "inhabitants_of_carcosa",
         "scenarios": [
             ScenarioType.THE_UNSPEAKABLE_OATH,
-            ScenarioType.BLACK_STAR_RISE,
+            ScenarioType.BLACK_STARS_RISE,
             ScenarioType.DIM_CARCOSA,
         ],
     },
@@ -77,27 +77,27 @@ CARCOSA_ENCOUNTER_SET = {
         "icon": "byakhee",
         "scenarios": [
             ScenarioType.A_PHANTOM_OF_TRUTH,
-            ScenarioType.BLACK_STAR_RISE,
+            ScenarioType.BLACK_STARS_RISE,
         ],
     },
     "flood": {
         "name": "The Flood Below",
         "icon": "flood",
         "scenarios": [
-            ScenarioType.BLACK_STAR_RISE,
+            ScenarioType.BLACK_STARS_RISE,
         ],
     },
     "vortex": {
         "name": "The Vortex Above",
         "icon": "vortex",
         "scenarios": [
-            ScenarioType.BLACK_STAR_RISE,
+            ScenarioType.BLACK_STARS_RISE,
         ],
     },
     "curtain_call": {
         "name": "Curtain Call",
         "icon": "curtain_call",
-        "scenarios": [ScenarioType.CURTAIN_CALLS],
+        "scenarios": [ScenarioType.CURTAIN_CALL],
     },
     "the_last_king": {
         "name": "The Last King",
@@ -107,7 +107,7 @@ CARCOSA_ENCOUNTER_SET = {
     "echoes_of_the_past": {
         "name": "Echoes of the Past",
         "icon": "echoes_of_the_past",
-        "scenarios": [ScenarioType.ECHO_OF_THE_PAST],
+        "scenarios": [ScenarioType.ECHOES_OF_THE_PAST],
     },
     "the_unspeakable_oath": {
         "name": "The Unspeakable Oath",
@@ -127,7 +127,7 @@ CARCOSA_ENCOUNTER_SET = {
     "black_stars_rise": {
         "name": "Black Stars Rise",
         "icon": "black_stars_rise",
-        "scenarios": [ScenarioType.BLACK_STAR_RISE],
+        "scenarios": [ScenarioType.BLACK_STARS_RISE],
     },
     "dim_carcosa": {
         "name": "Dim Carcosa",

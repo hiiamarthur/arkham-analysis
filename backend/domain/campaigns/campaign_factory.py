@@ -15,7 +15,7 @@ from ..difficulty import Difficulty
 # Import all campaign classes
 from .forgotten_age import ForgottenAge
 from .circle_undone import CircleUndone
-from .dream_eaters import DreamEaters
+from .dream_eaters import DreamEatersA, DreamEatersB
 from .innsmouth_conspiracy import InnsmouthConspiracy
 from .edge_of_the_earth import EdgeOfTheEarth
 from .scarlet_keys import ScarletKeys
@@ -29,7 +29,8 @@ CAMPAIGN_REGISTRY: Dict[CampaignType, Type[Campaign]] = {
     CampaignType.THE_PATH_TO_CARCOSA: PathToCarcosa,
     CampaignType.THE_FORGOTTEN_AGE: ForgottenAge,
     CampaignType.THE_CIRCLE_UNDONE: CircleUndone,
-    CampaignType.THE_DREAM_EATER: DreamEaters,
+    CampaignType.THE_DREAM_EATER_A: DreamEatersA,
+    CampaignType.THE_DREAM_EATER_B: DreamEatersB,
     CampaignType.THE_INNSMOUTH_CONSPIRACY: InnsmouthConspiracy,
     CampaignType.THE_EDGE_OF_THE_EARTH: EdgeOfTheEarth,
     CampaignType.THE_SCARLET_KEY: ScarletKeys,
@@ -40,34 +41,36 @@ CAMPAIGN_REGISTRY: Dict[CampaignType, Type[Campaign]] = {
 
 class CampaignFactory:
     """Factory for creating campaign instances with proper chaos bag setup"""
-    
+
     @staticmethod
-    def create_campaign(campaign_type: CampaignType, difficulty: Difficulty) -> Campaign:
+    def create_campaign(
+        campaign_type: CampaignType, difficulty: Difficulty
+    ) -> Campaign:
         """
         Create a campaign instance with initialized chaos bag
-        
+
         Args:
             campaign_type: The campaign to create
             difficulty: Difficulty level for chaos bag setup
-            
+
         Returns:
             Campaign instance with properly initialized chaos bag
-            
+
         Raises:
             ValueError: If campaign type is not supported
         """
         campaign_class = CAMPAIGN_REGISTRY.get(campaign_type)
-        
+
         if not campaign_class:
             raise ValueError(f"Campaign {campaign_type.value} not implemented yet")
-        
+
         return campaign_class(difficulty)
-    
+
     @staticmethod
     def get_supported_campaigns() -> list[CampaignType]:
         """Get list of all supported campaign types"""
         return list(CAMPAIGN_REGISTRY.keys())
-    
+
     @staticmethod
     def is_campaign_supported(campaign_type: CampaignType) -> bool:
         """Check if a campaign type is supported"""

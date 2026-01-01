@@ -51,6 +51,15 @@ class ChaosBag:
                 token_prob = 1 / total
                 next_pool = token_pool[:i] + token_pool[i + 1 :]  # Remove drawn token
 
+                if (
+                    token.name == TokenString.FROST
+                    and [
+                        token for token in token_pool if token.name == TokenString.FROST
+                    ].__len__()
+                    > 0
+                ):
+                    continue  # always fail
+
                 if token.name == TokenString.AUTO_FAIL:
                     continue  # always fail
 

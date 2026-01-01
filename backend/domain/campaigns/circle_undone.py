@@ -17,27 +17,23 @@ from ..Token.token import (
     TabletToken,
     ElderThingToken,
 )
-from typing import List
+from typing import Dict, List, Type
 
 
 class CircleUndone(Campaign):
 
     def __init__(self, difficulty: Difficulty):
-        super().__init__(CampaignType.THE_CIRCLE_UNDONE, difficulty)
 
-    def get_init_tokens(self, difficulty: Difficulty) -> List[ChaosToken]:
-        # Base tokens that all difficulties have
-        base_tokens = [
-            ElderSignToken(),
-            AutoFailToken(),
-            SkullToken("", 0),  # 2 skulls in Circle Undone
-            SkullToken("", 0), 
-            CultistToken("", 0),
-            TabletToken("", 0),
-            ElderThingToken("", 0),
-        ]
+        self.base_tokens_config = {
+            ElderSignToken: 1,
+            AutoFailToken: 1,
+            SkullToken: 2,
+        }
+        super().__init__(
+            CampaignType.THE_CIRCLE_UNDONE, difficulty, self.base_tokens_config
+        )
 
-        token_configs = {
+        self.token_configs = {
             Difficulty.EASY: {
                 PlusOneToken: 1,
                 ZeroToken: 2,
@@ -70,8 +66,16 @@ class CircleUndone(Campaign):
             },
         }
 
-        config = token_configs.get(difficulty, {})
-        for token_type, count in config.items():
-            base_tokens.extend([token_type() for _ in range(count)])
+    def get_init_tokens(self, difficulty: Difficulty) -> List[ChaosToken]:
+        # Base tokens that all difficulties have
 
-        return base_tokens
+        config = self.token_configs.get(difficulty, {})
+
+        config = self.token_configs.get(difficulty, {})
+        for token_type, count in config.items():
+            self.base_tokens.extend([token_type() for _ in range(count)])
+
+        return self.base_tokens
+
+    def get_token_config(self) -> Dict[Difficulty, Dict[Type[ChaosToken], int]]:
+        return self.token_configs

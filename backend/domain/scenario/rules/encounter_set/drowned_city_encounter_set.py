@@ -8,7 +8,7 @@ DROWNED_CITY_ENCOUNTER_SET = {
         "scenarios": [
             ScenarioType.ON_THIN_ICE,
             ScenarioType.COURT_OF_THE_ANCIENTS,
-            ScenarioType.SEPULCHRE_OF_THE_SLEEPERS,
+            ScenarioType.SEPULCHRE_OF_THE_SLEEPER,
             ScenarioType.THE_DOOM_OF_ARKHAM_PT_I,
         ],
     },
@@ -38,7 +38,7 @@ DROWNED_CITY_ENCOUNTER_SET = {
         "icon": "domination",
         "scenarios": [
             ScenarioType.COURT_OF_THE_ANCIENTS,
-            ScenarioType.SEPULCHRE_OF_THE_SLEEPERS,
+            ScenarioType.SEPULCHRE_OF_THE_SLEEPER,
             ScenarioType.THE_DOOM_OF_ARKHAM_PT_I,
             ScenarioType.THE_DOOM_OF_ARKHAM_PT_II,
         ],
@@ -62,7 +62,7 @@ DROWNED_CITY_ENCOUNTER_SET = {
             ScenarioType.THE_GRAND_VAULT,
             ScenarioType.COURT_OF_THE_ANCIENTS,
             ScenarioType.OBSIDIAN_CANYONS,
-            ScenarioType.SEPULCHRE_OF_THE_SLEEPERS,
+            ScenarioType.SEPULCHRE_OF_THE_SLEEPER,
         ],
     },
     "star_spawn": {
@@ -72,7 +72,7 @@ DROWNED_CITY_ENCOUNTER_SET = {
             ScenarioType.THE_WESTERN_WALL,
             ScenarioType.THE_APIARY,
             ScenarioType.OBSIDIAN_CANYONS,
-            ScenarioType.SEPULCHRE_OF_THE_SLEEPERS,
+            ScenarioType.SEPULCHRE_OF_THE_SLEEPER,
             ScenarioType.THE_DOOM_OF_ARKHAM_PT_I,
         ],
     },
@@ -148,7 +148,7 @@ DROWNED_CITY_ENCOUNTER_SET = {
             ScenarioType.THE_APIARY,
             ScenarioType.THE_GRAND_VAULT,
             ScenarioType.COURT_OF_THE_ANCIENTS,
-            ScenarioType.SEPULCHRE_OF_THE_SLEEPERS,
+            ScenarioType.SEPULCHRE_OF_THE_SLEEPER,
         ],
     },
     "one_last_job": {
@@ -186,18 +186,18 @@ DROWNED_CITY_ENCOUNTER_SET = {
         "icon": "obsidian_canyons",
         "scenarios": [ScenarioType.OBSIDIAN_CANYONS],
     },
-    "sepulchre_of_the_sleepers": {
-        "name": "Sepulchre of the Sleepers",
-        "icon": "sepulchre_of_the_sleepers",
-        "scenarios": [ScenarioType.SEPULCHRE_OF_THE_SLEEPERS],
+    "sepulchre_of_the_sleeper": {
+        "name": "Sepulchre of the Sleeper",
+        "icon": "sepulchre_of_the_sleeper",
+        "scenarios": [ScenarioType.SEPULCHRE_OF_THE_SLEEPER],
     },
-    "the_doom_of_arkham_pt_i": {
-        "name": "The Doom of Arkham Pt. I",
+    "the_doom_of_arkham_part_1": {
+        "name": "The Doom of Arkham Part I",
         "icon": "the_doom_of_arkham_pt_i",
         "scenarios": [ScenarioType.THE_DOOM_OF_ARKHAM_PT_I],
     },
-    "the_doom_of_arkham_pt_ii": {
-        "name": "The Doom of Arkham Pt. II",
+    "the_doom_of_arkham_part_2": {
+        "name": "The Doom of Arkham Part II",
         "icon": "the_doom_of_arkham_pt_ii",
         "scenarios": [ScenarioType.THE_DOOM_OF_ARKHAM_PT_II],
     },

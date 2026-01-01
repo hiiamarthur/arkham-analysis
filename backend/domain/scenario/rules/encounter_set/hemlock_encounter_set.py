@@ -8,7 +8,7 @@ HEMLOCK_ENCOUNTER_SET = {
         "scenarios": [
             ScenarioType.WRITTEN_IN_ROCK,
             ScenarioType.HEMLOCK_HOUSE,
-            ScenarioType.THE_SILENT_HEALTH,
+            ScenarioType.THE_SILENT_HEATH,
             ScenarioType.THE_LOST_SISTER,
             ScenarioType.THE_THING_IN_THE_DEPTHS,
             ScenarioType.THE_TWISTED_HOLLOW,
@@ -20,7 +20,7 @@ HEMLOCK_ENCOUNTER_SET = {
         "scenarios": [
             ScenarioType.WRITTEN_IN_ROCK,
             ScenarioType.HEMLOCK_HOUSE,
-            ScenarioType.THE_SILENT_HEALTH,
+            ScenarioType.THE_SILENT_HEATH,
             ScenarioType.THE_LOST_SISTER,
             ScenarioType.THE_THING_IN_THE_DEPTHS,
         ],
@@ -31,7 +31,7 @@ HEMLOCK_ENCOUNTER_SET = {
         "scenarios": [
             ScenarioType.WRITTEN_IN_ROCK,
             ScenarioType.HEMLOCK_HOUSE,
-            ScenarioType.THE_SILENT_HEALTH,
+            ScenarioType.THE_SILENT_HEATH,
             ScenarioType.THE_LOST_SISTER,
             ScenarioType.THE_THING_IN_THE_DEPTHS,
             ScenarioType.FATE_OF_THE_VALE,
@@ -43,7 +43,7 @@ HEMLOCK_ENCOUNTER_SET = {
         "scenarios": [
             ScenarioType.WRITTEN_IN_ROCK,
             ScenarioType.HEMLOCK_HOUSE,
-            ScenarioType.THE_SILENT_HEALTH,
+            ScenarioType.THE_SILENT_HEATH,
             ScenarioType.THE_LOST_SISTER,
             ScenarioType.THE_LONGEST_NIGHT,
         ],
@@ -53,7 +53,7 @@ HEMLOCK_ENCOUNTER_SET = {
         "icon": "horrors_in_the_rock",
         "scenarios": [
             ScenarioType.WRITTEN_IN_ROCK,
-            ScenarioType.THE_SILENT_HEALTH,
+            ScenarioType.THE_SILENT_HEATH,
             ScenarioType.THE_LOST_SISTER,
             ScenarioType.FATE_OF_THE_VALE,
         ],
@@ -63,7 +63,7 @@ HEMLOCK_ENCOUNTER_SET = {
         "icon": "refractions",
         "scenarios": [
             ScenarioType.WRITTEN_IN_ROCK,
-            ScenarioType.THE_SILENT_HEALTH,
+            ScenarioType.THE_SILENT_HEATH,
             ScenarioType.FATE_OF_THE_VALE,
         ],
     },
@@ -72,7 +72,7 @@ HEMLOCK_ENCOUNTER_SET = {
         "icon": "agents_of_the_colour",
         "scenarios": [
             ScenarioType.HEMLOCK_HOUSE,
-            ScenarioType.THE_SILENT_HEALTH,
+            ScenarioType.THE_SILENT_HEATH,
             ScenarioType.FATE_OF_THE_VALE,
         ],
     },
@@ -81,7 +81,7 @@ HEMLOCK_ENCOUNTER_SET = {
         "icon": "blight",
         "scenarios": [
             ScenarioType.HEMLOCK_HOUSE,
-            ScenarioType.THE_SILENT_HEALTH,
+            ScenarioType.THE_SILENT_HEATH,
             ScenarioType.THE_LOST_SISTER,
             ScenarioType.THE_THING_IN_THE_DEPTHS,
             ScenarioType.THE_LONGEST_NIGHT,
@@ -101,7 +101,7 @@ HEMLOCK_ENCOUNTER_SET = {
         "icon": "transfiguration",
         "scenarios": [
             ScenarioType.HEMLOCK_HOUSE,
-            ScenarioType.THE_SILENT_HEALTH,
+            ScenarioType.THE_SILENT_HEATH,
             ScenarioType.THE_LONGEST_NIGHT,
             ScenarioType.FATE_OF_THE_VALE,
         ],
@@ -153,7 +153,7 @@ HEMLOCK_ENCOUNTER_SET = {
         "icon": "hemlock_poison",
         "scenarios": [
             ScenarioType.HEMLOCK_HOUSE,
-            ScenarioType.THE_SILENT_HEALTH,
+            ScenarioType.THE_SILENT_HEATH,
             ScenarioType.THE_LOST_SISTER,
             ScenarioType.THE_THING_IN_THE_DEPTHS,
             ScenarioType.THE_TWISTED_HOLLOW,
@@ -183,7 +183,7 @@ HEMLOCK_ENCOUNTER_SET = {
     "the_silent_heath": {
         "name": "The Silent Heath",
         "icon": "the_silent_heath",
-        "scenarios": [ScenarioType.THE_SILENT_HEALTH],
+        "scenarios": [ScenarioType.THE_SILENT_HEATH],
     },
     "the_lost_sister": {
         "name": "The Lost Sister",

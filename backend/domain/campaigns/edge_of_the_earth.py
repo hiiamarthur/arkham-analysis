@@ -17,28 +17,26 @@ from ..Token.token import (
     CultistToken,
     TabletToken,
     ElderThingToken,
+    FrostToken,
 )
-from typing import List
+from typing import Dict, List, Type
 
 
 class EdgeOfTheEarth(Campaign):
 
     def __init__(self, difficulty: Difficulty):
-        super().__init__(CampaignType.THE_EDGE_OF_THE_EARTH, difficulty)
+        self.base_tokens_config = {
+            ElderSignToken: 1,
+            AutoFailToken: 1,
+            SkullToken: 2,
+            CultistToken: 1,
+            TabletToken: 1,
+        }
+        super().__init__(
+            CampaignType.THE_EDGE_OF_THE_EARTH, difficulty, self.base_tokens_config
+        )
 
-    def get_init_tokens(self, difficulty: Difficulty) -> List[ChaosToken]:
-        # Base tokens that all difficulties have
-        base_tokens = [
-            ElderSignToken(),
-            AutoFailToken(),
-            SkullToken("", 0),  # 2 skulls in Edge of the Earth
-            SkullToken("", 0),
-            CultistToken("", 0),
-            TabletToken("", 0),
-            ElderThingToken("", 0),
-        ]
-
-        token_configs = {
+        self.token_configs = {
             Difficulty.EASY: {
                 ZeroToken: 3,
                 MinusOneToken: 3,
@@ -52,27 +50,37 @@ class EdgeOfTheEarth(Campaign):
                 MinusTwoToken: 2,
                 MinusThreeToken: 2,
                 MinusFourToken: 2,
+                FrostToken: 1,
             },
             Difficulty.HARD: {
-                ZeroToken: 1,
+                ZeroToken: 2,
                 MinusOneToken: 2,
                 MinusTwoToken: 3,
-                MinusThreeToken: 2,
+                MinusThreeToken: 1,
                 MinusFourToken: 2,
                 MinusFiveToken: 1,
+                FrostToken: 2,
             },
             Difficulty.EXPERT: {
+                ZeroToken: 1,
                 MinusOneToken: 1,
                 MinusTwoToken: 2,
-                MinusThreeToken: 3,
+                MinusThreeToken: 1,
                 MinusFourToken: 2,
-                MinusFiveToken: 2,
+                MinusFiveToken: 1,
                 MinusSevenToken: 1,
+                FrostToken: 3,
             },
         }
 
-        config = token_configs.get(difficulty, {})
-        for token_type, count in config.items():
-            base_tokens.extend([token_type() for _ in range(count)])
+    def get_init_tokens(self, difficulty: Difficulty) -> List[ChaosToken]:
+        # Base tokens that all difficulties have
 
-        return base_tokens
+        config = self.token_configs.get(difficulty, {})
+        for token_type, count in config.items():
+            self.base_tokens.extend([token_type() for _ in range(count)])
+
+        return self.base_tokens
+
+    def get_token_config(self) -> Dict[Difficulty, Dict[Type[ChaosToken], int]]:
+        return self.token_configs

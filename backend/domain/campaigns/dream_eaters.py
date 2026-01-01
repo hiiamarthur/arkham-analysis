@@ -4,6 +4,7 @@ from ..Token.token import (
     ChaosToken,
     ElderSignToken,
     AutoFailToken,
+    MinusEightToken,
     PlusOneToken,
     ZeroToken,
     MinusOneToken,
@@ -17,27 +18,26 @@ from ..Token.token import (
     TabletToken,
     ElderThingToken,
 )
-from typing import List
+from typing import Dict, List, Type
 
 
-class DreamEaters(Campaign):
+class DreamEatersA(Campaign):
 
     def __init__(self, difficulty: Difficulty):
-        super().__init__(CampaignType.THE_DREAM_EATER, difficulty)
+        self.base_tokens_config = {
+            ElderSignToken: 1,
+            AutoFailToken: 1,
+            CultistToken: 1,
+            TabletToken: 1,
+        }
+        super().__init__(
+            CampaignType.THE_DREAM_EATER_A, difficulty, self.base_tokens_config
+        )
 
     def get_init_tokens(self, difficulty: Difficulty) -> List[ChaosToken]:
         # Base tokens that all difficulties have
-        base_tokens = [
-            ElderSignToken(),
-            AutoFailToken(),
-            SkullToken("", 0),  # 2 skulls in Dream-Eaters
-            SkullToken("", 0),
-            CultistToken("", 0),
-            TabletToken("", 0), 
-            ElderThingToken("", 0),
-        ]
 
-        token_configs = {
+        self.token_configs = {
             Difficulty.EASY: {
                 PlusOneToken: 1,
                 ZeroToken: 2,
@@ -70,8 +70,73 @@ class DreamEaters(Campaign):
             },
         }
 
-        config = token_configs.get(difficulty, {})
+        config = self.token_configs.get(difficulty, {})
         for token_type, count in config.items():
-            base_tokens.extend([token_type() for _ in range(count)])
+            self.base_tokens.extend([token_type() for _ in range(count)])
 
-        return base_tokens
+        return self.base_tokens
+
+    def get_token_config(self) -> Dict[Difficulty, Dict[Type[ChaosToken], int]]:
+        return self.token_configs
+
+
+class DreamEatersB(Campaign):
+
+    def __init__(self, difficulty: Difficulty):
+        self.base_tokens_config = {
+            ElderSignToken: 1,
+            AutoFailToken: 1,
+            SkullToken: 2,
+            CultistToken: 1,
+            ElderThingToken: 2,
+        }
+        super().__init__(
+            CampaignType.THE_DREAM_EATER_B, difficulty, self.base_tokens_config
+        )
+
+        self.token_configs = {
+            Difficulty.EASY: {
+                PlusOneToken: 2,
+                ZeroToken: 3,
+                MinusOneToken: 3,
+                MinusTwoToken: 2,
+            },
+            Difficulty.STANDARD: {
+                PlusOneToken: 1,
+                ZeroToken: 2,
+                MinusOneToken: 3,
+                MinusTwoToken: 2,
+                MinusThreeToken: 1,
+                MinusFourToken: 1,
+            },
+            Difficulty.HARD: {
+                ZeroToken: 3,
+                MinusOneToken: 2,
+                MinusTwoToken: 2,
+                MinusThreeToken: 2,
+                MinusFourToken: 1,
+                MinusFiveToken: 1,
+            },
+            Difficulty.EXPERT: {
+                ZeroToken: 1,
+                MinusOneToken: 2,
+                MinusTwoToken: 2,
+                MinusThreeToken: 2,
+                MinusFourToken: 2,
+                MinusFiveToken: 1,
+                MinusSixToken: 1,
+                MinusEightToken: 1,
+            },
+        }
+
+    def get_init_tokens(self, difficulty: Difficulty) -> List[ChaosToken]:
+        # Base tokens that all difficulties have
+
+        config = self.token_configs.get(difficulty, {})
+        for token_type, count in config.items():
+            self.base_tokens.extend([token_type() for _ in range(count)])
+
+        return self.base_tokens
+
+    def get_token_config(self) -> Dict[Difficulty, Dict[Type[ChaosToken], int]]:
+        return self.token_configs

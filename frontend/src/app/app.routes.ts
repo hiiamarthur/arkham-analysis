@@ -19,6 +19,10 @@ export const routes: Routes = [
     loadComponent: () => import('./components/threat-assessment/threat-assessment.component').then(m => m.ThreatAssessmentComponent)
   },
   {
+    path: 'investigators',
+    loadComponent: () => import('./components/investigators/investigators.component').then(m => m.InvestigatorsComponent)
+  },
+  {
     path: 'about',
     loadComponent: () => import('./components/about/about.component').then(m => m.AboutComponent)
   },

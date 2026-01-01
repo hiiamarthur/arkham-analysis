@@ -208,7 +208,7 @@ async def get_scenario_chaos_tokens(
     }
 
 
-@router.get("/context", response_model=Dict[str, Any])
+@router.get("/{scenario_code}/context", response_model=Dict[str, Any])
 async def get_scenario_context(
     response: Response,
     scenario_code: ScenarioType,  # ✅ Path parameter

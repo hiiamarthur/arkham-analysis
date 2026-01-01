@@ -52,7 +52,7 @@ def get_encounter_set(encounter_code: str) -> Dict[str, Any]:
 
 def get_encounter_set_by_name(name: str) -> Dict[str, Any]:
     """Get encounter set by name"""
-    print("encounter_set is", name)
+    print("get_encounter_set_by_name is", name)
     for encounter_code, encounter_set in ENCOUNTER_SET_REGISTRY.items():
         print("encounter_set is", encounter_set, name)
         if encounter_set.get("name", "").lower() == name.lower():

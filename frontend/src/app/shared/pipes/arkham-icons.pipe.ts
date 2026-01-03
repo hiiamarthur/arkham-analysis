@@ -104,41 +104,30 @@ export class ArkhamIconsPipe implements PipeTransform {
 
     let result = text;
 
-    // First replace [token] patterns with brackets (if any)
+    // First handle double brackets [[text]] -> bold text
+    result = result.replace(/\[\[([^\]]+)\]\]/gi, (_match, token) => {
+      return `<strong>${token}</strong>`;
+    });
+
+    // Then handle single brackets [token] - either icon or bold
     result = result.replace(/\[([a-z_]+)\]/gi, (match, token) => {
       const lowerToken = token.toLowerCase();
 
       switch (mode) {
         case 'svg':
-          return this.svgIconsService.getIcon(lowerToken);
+          // Check if icon exists in available icons list
+          const availableIcons = this.svgIconsService.getAvailableIcons();
+          if (availableIcons.includes(lowerToken)) {
+            return this.svgIconsService.getIcon(lowerToken);
+          }
+          // If no icon exists, make the keyword bold without brackets
+          return `<strong>${token}</strong>`;
 
         case 'font':
-          return this.iconMapWithClasses[lowerToken] || match;
+          return this.iconMapWithClasses[lowerToken] || `<strong>${token}</strong>`;
 
         case 'emoji':
-          return this.iconMap[lowerToken] || match;
-
-        default:
-          return match;
-      }
-    });
-
-    // Also replace standalone icon names (without brackets)
-    // Matches words like "Willpower", "Intellect", "Reaction", etc. at word boundaries
-    const iconPattern = /\b(willpower|intellect|combat|agility|wild|action|reaction|free|fast|skull|cultist|tablet|elder_thing|elder_sign|auto_fail|bless|curse|per_investigator|guardian|seeker|rogue|mystic|survivor|neutral|codex)\b/gi;
-
-    result = result.replace(iconPattern, (match) => {
-      const lowerToken = match.toLowerCase();
-
-      switch (mode) {
-        case 'svg':
-          return this.svgIconsService.getIcon(lowerToken);
-
-        case 'font':
-          return this.iconMapWithClasses[lowerToken] || match;
-
-        case 'emoji':
-          return this.iconMap[lowerToken] || match;
+          return this.iconMap[lowerToken] || `<strong>${token}</strong>`;
 
         default:
           return match;

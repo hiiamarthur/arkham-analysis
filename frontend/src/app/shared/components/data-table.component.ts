@@ -1,7 +1,10 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges, signal, computed } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { CustomInputComponent } from './text-field.component';
+import { CardCodeLinkComponent } from './card-code-link.component';
+import { IconService } from '../services/icon.service';
+import { SafeHtml } from '@angular/platform-browser';
 
 export interface TableColumn {
   key: string;
@@ -38,7 +41,7 @@ export interface PaginationInfo {
 @Component({
   selector: 'app-data-table',
   standalone: true,
-  imports: [CommonModule, FormsModule, CustomInputComponent],
+  imports: [CommonModule, FormsModule, CustomInputComponent, CardCodeLinkComponent],
   templateUrl: './data-table.component.html',
   styleUrl: './data-table.component.css'
 })
@@ -53,6 +56,8 @@ export class DataTableComponent implements OnInit, OnDestroy, OnChanges {
   @Output() pageChange = new EventEmitter<PaginationInfo>();
   @Output() sortChange = new EventEmitter<{column: string, direction: 'asc' | 'desc'}>();
   @Output() filterChange = new EventEmitter<{column: string, value: any}>();
+
+  private iconService = inject(IconService);
 
   // Signals for reactive state
   dataSignal = signal<any[]>([]);
@@ -152,8 +157,6 @@ export class DataTableComponent implements OnInit, OnDestroy, OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
-      console.log('DataTable: Data input changed, updating signal');
-      console.log('New data:', changes['data'].currentValue);
       this.dataSignal.set(changes['data'].currentValue || []);
     }
   }
@@ -179,7 +182,7 @@ export class DataTableComponent implements OnInit, OnDestroy, OnChanges {
     );
   }
 
-  private getCellValue(row: any, key: string): any {
+  getCellValue(row: any, key: string): any {
     return key.split('.').reduce((obj, prop) => obj?.[prop], row);
   }
 
@@ -276,7 +279,7 @@ export class DataTableComponent implements OnInit, OnDestroy, OnChanges {
 
   renderCellValue(row: any, column: TableColumn): string {
     const value = this.getCellValue(row, column.key);
-    
+
     if (column.render) {
       return column.render(value, row);
     }
@@ -293,9 +296,19 @@ export class DataTableComponent implements OnInit, OnDestroy, OnChanges {
     }
   }
 
+  // Check if a column should render as a card code link
+  isCardCodeColumn(columnKey: string): boolean {
+    return columnKey === 'card_code' || columnKey === 'card1' || columnKey === 'card2';
+  }
+
   // TrackBy function for performance optimization
   trackByFn(index: number, item: any): any {
     return item.id || item.code || index;
+  }
+
+  // Get icon from IconService
+  getIcon(iconName: string): SafeHtml {
+    return this.iconService.getIcon(iconName);
   }
 
   // Expose Math and Object to template

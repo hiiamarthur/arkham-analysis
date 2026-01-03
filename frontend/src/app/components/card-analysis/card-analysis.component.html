@@ -1,7 +1,7 @@
 <div class="card-analysis-container">
   <div class="header">
     <h1>
-      <span class="header-icon">🃏</span>
+      <span class="header-icon" [innerHTML]="getIcon('card')"></span>
       Card Analysis & Browser
     </h1>
     <p class="subtitle">Browse cards and perform context-aware GPT analysis</p>
@@ -13,13 +13,13 @@
       class="tab-button"
       [class.active]="activeTab() === 'browser'"
       (click)="setActiveTab('browser')">
-      📚 Card Browser
+      <span [innerHTML]="getIcon('card')"></span> Card Browser
     </button>
     <button
       class="tab-button"
       [class.active]="activeTab() === 'gpt-analysis'"
       (click)="setActiveTab('gpt-analysis')">
-      🤖 GPT Analysis
+      <span [innerHTML]="getIcon('analysis')"></span> GPT Analysis
     </button>
   </div>
 
@@ -109,7 +109,7 @@
 
         <div class="filter-actions">
           <button class="search-button primary" (click)="onSearch()">
-            🔍 Search
+            <span [innerHTML]="getIcon('search')"></span> Search
           </button>
           <button class="search-button secondary" (click)="clearSearch()">
             Clear Filters
@@ -181,7 +181,7 @@
 
             <!-- Skill Icons -->
             <div class="filter-group">
-              <label for="search-willpower">🔵 Willpower (Min)</label>
+              <label for="search-willpower"><span [innerHTML]="getArkhamIcon('willpower')"></span> Willpower (Min)</label>
               <input
                 id="search-willpower"
                 type="number"
@@ -194,7 +194,7 @@
             </div>
 
             <div class="filter-group">
-              <label for="search-intellect">🟢 Intellect (Min)</label>
+              <label for="search-intellect"><span [innerHTML]="getArkhamIcon('intellect')"></span> Intellect (Min)</label>
               <input
                 id="search-intellect"
                 type="number"
@@ -207,7 +207,7 @@
             </div>
 
             <div class="filter-group">
-              <label for="search-combat">⚔️ Combat (Min)</label>
+              <label for="search-combat"><span [innerHTML]="getArkhamIcon('combat')"></span> Combat (Min)</label>
               <input
                 id="search-combat"
                 type="number"
@@ -220,7 +220,7 @@
             </div>
 
             <div class="filter-group">
-              <label for="search-agility">🟡 Agility (Min)</label>
+              <label for="search-agility"><span [innerHTML]="getArkhamIcon('agility')"></span> Agility (Min)</label>
               <input
                 id="search-agility"
                 type="number"
@@ -234,7 +234,7 @@
 
             <!-- Health and Sanity -->
             <div class="filter-group">
-              <label for="search-health">❤️ Health (Min)</label>
+              <label for="search-health"><span [innerHTML]="getIcon('health')"></span> Health (Min)</label>
               <input
                 id="search-health"
                 type="number"
@@ -246,7 +246,7 @@
             </div>
 
             <div class="filter-group">
-              <label for="search-sanity">🧠 Sanity (Min)</label>
+              <label for="search-sanity"><span [innerHTML]="getIcon('sanity')"></span> Sanity (Min)</label>
               <input
                 id="search-sanity"
                 type="number"
@@ -311,7 +311,7 @@
     <!-- Card Detail Modal -->
     <div class="card-detail-overlay" *ngIf="selectedCard()" (click)="closeCardDetail()">
       <div class="card-detail-modal-large" (click)="$event.stopPropagation()">
-        <button class="close-button" (click)="closeCardDetail()">✕</button>
+        <button class="close-button" (click)="closeCardDetail()"><span [innerHTML]="getIcon('close')"></span></button>
 
         <div class="card-detail-content" *ngIf="selectedCard() as card">
           <!-- Card Header Section -->
@@ -320,6 +320,7 @@
               <div class="card-title-row">
                 <h2>{{card.name}}</h2>
                 <div class="faction-badge" [style.background-color]="getFactionColor(card.faction)">
+                  <span [innerHTML]="getArkhamIcon(card.faction.toLowerCase())"></span>
                   {{card.faction}}
                 </div>
               </div>
@@ -333,21 +334,21 @@
             <!-- Key Stats Overview -->
             <div class="key-stats-overview">
               <div class="key-stat">
-                <div class="stat-icon">📊</div>
+                <div class="stat-icon" [innerHTML]="getIcon('popularity')"></div>
                 <div class="stat-info">
                   <div class="stat-value">{{card.usageRate}}%</div>
                   <div class="stat-label">Usage Rate</div>
                 </div>
               </div>
               <div class="key-stat">
-                <div class="stat-icon">🏆</div>
+                <div class="stat-icon" [innerHTML]="getIcon('trophy')"></div>
                 <div class="stat-info">
                   <div class="stat-value">{{card.winRateWithCard}}%</div>
                   <div class="stat-label">Win Rate</div>
                 </div>
               </div>
               <div class="key-stat">
-                <div class="stat-icon">📈</div>
+                <div class="stat-icon" [innerHTML]="getIcon('trend')"></div>
                 <div class="stat-info">
                   <div class="stat-value">{{card.deckInclusionRate}}%</div>
                   <div class="stat-label">Deck Inclusion</div>
@@ -386,23 +387,28 @@
                   <span class="label">Pack</span>
                 </div>
 
-                <!-- Skill Icons as Circular Badges -->
+                <!-- Skill Icons -->
                 <div class="skill-symbols-row" *ngIf="card.skillWillpower || card.skillIntellect || card.skillCombat || card.skillAgility || card.skillWild" style="margin-left: auto; border-left: 1px solid rgba(100, 116, 139, 0.3); padding-left: 1rem;">
-                  <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <div class="skill-symbol willpower" *ngIf="card.skillWillpower" [title]="'Willpower: ' + card.skillWillpower">
-                      {{card.skillWillpower}}
+                  <div style="display: flex; gap: 0.75rem; align-items: center;">
+                    <div class="skill-icon-item" *ngIf="card.skillWillpower" [title]="'Willpower: ' + card.skillWillpower">
+                      <span class="arkham-icon arkham-willpower"></span>
+                      <span class="skill-count">{{card.skillWillpower}}</span>
                     </div>
-                    <div class="skill-symbol intellect" *ngIf="card.skillIntellect" [title]="'Intellect: ' + card.skillIntellect">
-                      {{card.skillIntellect}}
+                    <div class="skill-icon-item" *ngIf="card.skillIntellect" [title]="'Intellect: ' + card.skillIntellect">
+                      <span class="arkham-icon arkham-intellect"></span>
+                      <span class="skill-count">{{card.skillIntellect}}</span>
                     </div>
-                    <div class="skill-symbol combat" *ngIf="card.skillCombat" [title]="'Combat: ' + card.skillCombat">
-                      {{card.skillCombat}}
+                    <div class="skill-icon-item" *ngIf="card.skillCombat" [title]="'Combat: ' + card.skillCombat">
+                      <span class="arkham-icon arkham-combat"></span>
+                      <span class="skill-count">{{card.skillCombat}}</span>
                     </div>
-                    <div class="skill-symbol agility" *ngIf="card.skillAgility" [title]="'Agility: ' + card.skillAgility">
-                      {{card.skillAgility}}
+                    <div class="skill-icon-item" *ngIf="card.skillAgility" [title]="'Agility: ' + card.skillAgility">
+                      <span class="arkham-icon arkham-agility"></span>
+                      <span class="skill-count">{{card.skillAgility}}</span>
                     </div>
-                    <div class="skill-symbol wild" *ngIf="card.skillWild" [title]="'Wild: ' + card.skillWild">
-                      {{card.skillWild}}
+                    <div class="skill-icon-item" *ngIf="card.skillWild" [title]="'Wild: ' + card.skillWild">
+                      <span class="arkham-icon arkham-wild"></span>
+                      <span class="skill-count">{{card.skillWild}}</span>
                     </div>
                   </div>
                 </div>
@@ -425,7 +431,7 @@
                 <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem;">
                   <div class="rating-mini-card">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                      <span class="label">💰 Economy</span>
+                      <span class="label"><span [innerHTML]="getIcon('economy')"></span> Economy</span>
                       <span style="font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #e2e8f0;">{{card.economyRating}}</span>
                     </div>
                     <div class="mini-bar-bg">
@@ -434,7 +440,7 @@
                   </div>
                   <div class="rating-mini-card">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                      <span class="label">⚡ Impact</span>
+                      <span class="label"><span [innerHTML]="getIcon('impact')"></span> Impact</span>
                       <span style="font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #e2e8f0;">{{card.impactRating}}</span>
                     </div>
                     <div class="mini-bar-bg">
@@ -443,7 +449,7 @@
                   </div>
                   <div class="rating-mini-card">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                      <span class="label">🎯 Consistency</span>
+                      <span class="label"><span [innerHTML]="getIcon('consistency')"></span> Consistency</span>
                       <span style="font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #e2e8f0;">{{card.consistencyRating}}</span>
                     </div>
                     <div class="mini-bar-bg">
@@ -452,7 +458,7 @@
                   </div>
                   <div class="rating-mini-card">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                      <span class="label">🔄 Versatility</span>
+                      <span class="label"><span [innerHTML]="getIcon('versatility')"></span> Versatility</span>
                       <span style="font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #e2e8f0;">{{card.versatilityScore}}</span>
                     </div>
                     <div class="mini-bar-bg">
@@ -467,7 +473,7 @@
             <div class="right-column">
               <!-- Top Investigators -->
               <div class="compact-section">
-                <div class="section-mini-header">🕵️ Top Investigators</div>
+                <div class="section-mini-header"><span [innerHTML]="getIcon('investigator')"></span> Top Investigators</div>
                 <div class="investigator-list-clean">
                   <div class="investigator-item-clean" *ngFor="let inv of card.topInvestigators">
                     <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.25rem;">
@@ -483,7 +489,7 @@
 
               <!-- Synergy Cards -->
               <div class="compact-section">
-                <div class="section-mini-header">🔗 Synergies</div>
+                <div class="section-mini-header"><span [innerHTML]="getIcon('synergy')"></span> Synergies</div>
                 <div class="synergy-list-clean">
                   <div class="synergy-item-clean" *ngFor="let syn of card.synergyCards">
                     <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.25rem;">
@@ -499,7 +505,7 @@
 
               <!-- Performance by Difficulty -->
               <div class="compact-section">
-                <div class="section-mini-header">⚔️ By Difficulty</div>
+                <div class="section-mini-header"><span [innerHTML]="getArkhamIcon('combat')"></span> By Difficulty</div>
                 <div class="performance-list-clean">
                   <div class="performance-item-clean" *ngFor="let perf of card.performanceByDifficulty">
                     <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.25rem;">
@@ -520,7 +526,7 @@
 
               <!-- Performance by Campaign -->
               <div class="compact-section">
-                <div class="section-mini-header">📚 By Campaign</div>
+                <div class="section-mini-header"><span [innerHTML]="getIcon('campaign')"></span> By Campaign</div>
                 <div class="performance-list-clean">
                   <div class="performance-item-clean" *ngFor="let camp of card.performanceByCampaign">
                     <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.25rem;">
@@ -544,7 +550,7 @@
           <!-- Actions Footer -->
           <div class="modal-footer">
             <button class="action-button primary" (click)="analyzeCardWithGPT(card)">
-              🤖 Analyze with GPT
+              <span [innerHTML]="getIcon('gpt')"></span> Analyze with GPT
             </button>
             <button class="action-button secondary" (click)="closeCardDetail()">
               Close
@@ -558,11 +564,27 @@
   <!-- Card Stats Modal -->
   <div class="stats-modal-overlay" *ngIf="showStatsModal()" (click)="closeStatsModal()">
     <div class="stats-modal" (click)="$event.stopPropagation()">
-      <button class="close-button" (click)="closeStatsModal()">✕</button>
+      <button class="close-button" (click)="closeStatsModal()"><span [innerHTML]="getIcon('close')"></span></button>
 
       <div *ngIf="statsLoading()" class="stats-loading">
-        <div class="spinner"></div>
-        <p>Loading card statistics...</p>
+        <div class="loading-skeleton">
+          <!-- Skeleton Card Image -->
+          <div class="skeleton-image"></div>
+
+          <!-- Skeleton Stats -->
+          <div class="skeleton-stats">
+            <div class="skeleton-bar skeleton-bar-wide"></div>
+            <div class="skeleton-bar skeleton-bar-medium"></div>
+            <div class="skeleton-bar skeleton-bar-short"></div>
+            <div class="skeleton-bar skeleton-bar-medium"></div>
+          </div>
+
+          <!-- Loading Spinner Overlay -->
+          <div class="spinner-overlay">
+            <div class="spinner"></div>
+            <p style="margin-top: 1rem; color: #94a3b8; font-size: 0.875rem;">Loading card data...</p>
+          </div>
+        </div>
       </div>
 
       <div *ngIf="!statsLoading() && selectedCardStats() as stats" class="stats-content">
@@ -572,94 +594,44 @@
           <span class="card-type-badge">{{stats.card_info.type}}</span>
         </div>
 
-        <!-- Main Layout: Stats Left, Card Details Right -->
-        <div class="stats-main-layout">
-          <!-- Left: Stats Section -->
-          <div class="stats-data-column">
-            <!-- Overview Stats -->
-            <div class="stats-overview">
-              <div class="stat-card">
-                <div class="stat-icon">📊</div>
-                <div class="stat-details">
-                  <div class="stat-value">{{ stats.deck_stats.popularity.overall_usage_rate * 100 | number:'1.1-1' }}%</div>
-                  <div class="stat-label">Overall Usage</div>
-                </div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-icon">📈</div>
-                <div class="stat-details">
-                  <div class="stat-value" [class.positive]="stats.deck_stats.trend.trend_direction === 'increasing'"
-                                          [class.negative]="stats.deck_stats.trend.trend_direction === 'decreasing'">
-                    {{stats.deck_stats.trend.change_rate > 0 ? '+' : ''}}{{ stats.deck_stats.trend.change_rate | number:'1.1-1' }}%
-                  </div>
-                  <div class="stat-label">Trend: {{stats.deck_stats.trend.trend_direction}}</div>
-                </div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-icon">🎯</div>
-                <div class="stat-details">
-                  <div class="stat-value">{{ stats.deck_stats.popularity.investigator_spread * 100 | number:'1.1-1' }}%</div>
-                  <div class="stat-label">Investigator Spread</div>
-                </div>
-              </div>
-              <div class="stat-card">
-                <div class="stat-icon">📚</div>
-                <div class="stat-details">
-                  <div class="stat-value">{{stats.data_source.decks_analyzed.toLocaleString()}}</div>
-                  <div class="stat-label">Decks Analyzed</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Top Investigators -->
-            <div class="stats-section">
-              <div class="stats-section-header" (click)="toggleTopInvestigators()">
-                <h3>Top 10 Investigators</h3>
-                <span class="expand-icon">{{ topInvestigatorsExpanded() ? '▼' : '▶' }}</span>
-              </div>
-              <div class="investigator-list" *ngIf="topInvestigatorsExpanded()">
-                <div *ngFor="let inv of getTopInvestigators(stats.deck_stats.popularity.investigator_usage_rate); let i = index"
-                     class="investigator-item">
-                  <div class="investigator-rank">{{i + 1}}</div>
-                  <div class="investigator-info">
-                    <div class="investigator-name">{{getInvestigatorName(inv.code)}}</div>
-                    <div class="usage-bar-container">
-                      <div class="usage-bar" [style.width.%]="inv.rate * 100"></div>
-                    </div>
-                  </div>
-                  <div class="investigator-usage">{{ inv.rate * 100 | number:'1.1-1' }}%</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Usage Trend Chart -->
-            <div class="stats-section">
-              <div class="stats-section-header" (click)="toggleUsageTrend()">
-                <h3>Usage Trend - Last {{stats.deck_stats.trend.periods_analyzed}} Months</h3>
-                <span class="expand-icon">{{ usageTrendExpanded() ? '▼' : '▶' }}</span>
-              </div>
-              <div class="trend-chart" *ngIf="usageTrendExpanded()">
-                <div *ngFor="let period of getTrendPeriods(stats.deck_stats.trend.trend_data)"
-                     class="trend-bar-container">
-                  <div class="trend-bar" [style.height.%]="getTrendBarHeight(period.value.usage_rate, stats.deck_stats.trend.trend_data)">
-                    <span class="trend-tooltip">
-                      {{ period.value.usage_rate * 100 | number:'1.1-1' }}%<br>
-                      {{period.value.decks_with_card}}/{{period.value.total_decks}} decks
-                    </span>
-                  </div>
-                  <div class="trend-label">{{formatPeriod(period.key)}}</div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Data Source Info -->
-            <div class="stats-footer">
-              <p>Data from {{stats.data_source.decks_analyzed.toLocaleString()}} decks over {{stats.data_source.days_covered}} days</p>
+        <!-- Overview Stats - Full Width at Top -->
+        <div class="stats-overview-compact">
+          <div class="stat-card-compact">
+            <span class="stat-icon-compact" [innerHTML]="getIcon('popularity')"></span>
+            <div class="stat-content-compact">
+              <div class="stat-value-compact">{{ stats.deck_stats.popularity.overall_usage_rate * 100 | number:'1.1-1' }}%</div>
+              <div class="stat-label-compact">Usage</div>
             </div>
           </div>
+          <div class="stat-card-compact">
+            <span class="stat-icon-compact" [innerHTML]="getIcon('trend')"></span>
+            <div class="stat-content-compact">
+              <div class="stat-value-compact" [class.positive]="stats.deck_stats.trend.trend_direction === 'increasing'"
+                                      [class.negative]="stats.deck_stats.trend.trend_direction === 'decreasing'">
+                {{stats.deck_stats.trend.change_rate > 0 ? '+' : ''}}{{ stats.deck_stats.trend.change_rate | number:'1.1-1' }}%
+              </div>
+              <div class="stat-label-compact">Trend</div>
+            </div>
+          </div>
+          <div class="stat-card-compact">
+            <span class="stat-icon-compact" [innerHTML]="getIcon('target')"></span>
+            <div class="stat-content-compact">
+              <div class="stat-value-compact">{{ stats.deck_stats.popularity.investigator_spread * 100 | number:'1.1-1' }}%</div>
+              <div class="stat-label-compact">Spread</div>
+            </div>
+          </div>
+          <div class="stat-card-compact">
+            <span class="stat-icon-compact" [innerHTML]="getIcon('total-decks')"></span>
+            <div class="stat-content-compact">
+              <div class="stat-value-compact">{{stats.data_source.decks_analyzed.toLocaleString()}}</div>
+              <div class="stat-label-compact">Decks</div>
+            </div>
+          </div>
+        </div>
 
-          <!-- Right: Card Details Section -->
-          <div *ngIf="selectedCardDetails() as details" class="card-details-column">
+        <!-- Card Details Section - Full Width Below Overview -->
+        <div *ngIf="selectedCardDetails() as details" class="card-details-section-top">
+          <div class="card-details-layout-horizontal">
             <!-- Card Image -->
             <div class="card-image-container">
               <img *ngIf="details.imagesrc"
@@ -668,121 +640,173 @@
                    class="card-image"
                    (error)="$any($event.target).src=''; $any($event.target).style.display='none'">
               <div *ngIf="!details.imagesrc" class="no-image-placeholder">
-                <span class="no-image-icon">🃏</span>
+                <span class="no-image-icon" [innerHTML]="getIcon('card')"></span>
                 <p>No image available</p>
               </div>
             </div>
 
-            <!-- Card Details Grid -->
-            <div class="card-details-grid">
-              <div class="detail-item" *ngIf="details.cost !== undefined && details.cost !== null">
-                <span class="detail-label">Cost:</span>
-                <span class="detail-value">{{details.cost}}</span>
+            <!-- Card Content Column -->
+            <div class="card-content-column">
+              <!-- Card Stats Ribbon -->
+              <div class="game-stats-ribbon" [style.--faction-color]="getFactionColor(details.faction_name || 'Neutral')">
+                <div class="stat-pill" *ngIf="details.faction_code">
+                  <span class="value" [innerHTML]="getArkhamIcon(details.faction_code)"></span>
+                  <span class="label">{{details.faction_name || details.faction_code}}</span>
+                </div>
+                <div class="stat-pill" *ngIf="details.cost !== undefined && details.cost !== null">
+                <span class="value cost">{{details.cost}}</span>
+                <span class="label">Cost</span>
               </div>
-              <div class="detail-item" *ngIf="details.xp !== undefined && details.xp !== null">
-                <span class="detail-label">XP:</span>
-                <span class="detail-value">{{details.xp}}</span>
+              <div class="stat-pill" *ngIf="details.xp !== undefined && details.xp !== null">
+                <span class="value xp">{{details.xp}}</span>
+                <span class="label">XP</span>
               </div>
-              <div class="detail-item" *ngIf="details.faction_name">
-                <span class="detail-label">Faction:</span>
-                <span class="detail-value">{{details.faction_name}}</span>
+              <div class="stat-pill" *ngIf="details.real_slot">
+                <span class="value">{{details.real_slot}}</span>
+                <span class="label">Slot</span>
               </div>
-              <div class="detail-item" *ngIf="details.real_slot">
-                <span class="detail-label">Slot:</span>
-                <span class="detail-value">{{details.real_slot}}</span>
+              <div class="stat-pill" *ngIf="details.health">
+                <span class="value" style="color: #ef4444;">{{details.health}}</span>
+                <span class="label">Health</span>
               </div>
-              <div class="detail-item" *ngIf="details.health">
-                <span class="detail-label">Health:</span>
-                <span class="detail-value">{{details.health}}</span>
+              <div class="stat-pill" *ngIf="details.sanity">
+                <span class="value" style="color: #3b82f6;">{{details.sanity}}</span>
+                <span class="label">Sanity</span>
               </div>
-              <div class="detail-item" *ngIf="details.sanity">
-                <span class="detail-label">Sanity:</span>
-                <span class="detail-value">{{details.sanity}}</span>
+              <div class="stat-pill" *ngIf="details.deck_limit">
+                <span class="value">{{details.deck_limit}}</span>
+                <span class="label">Deck Limit</span>
               </div>
-              <div class="detail-item" *ngIf="details.deck_limit">
-                <span class="detail-label">Deck Limit:</span>
-                <span class="detail-value">{{details.deck_limit}}</span>
-              </div>
-              <div class="detail-item" *ngIf="details.is_unique">
-                <span class="detail-label">Unique:</span>
-                <span class="detail-value">Yes</span>
+              <div class="stat-pill" *ngIf="details.is_unique">
+                <span class="value" [innerHTML]="getIcon('star')"></span>
+                <span class="label">Unique</span>
               </div>
             </div>
 
-            <!-- Other Info -->
-            <div class="card-info-container">
-              <!-- Pack Info -->
-              <div class="pack-info" *ngIf="details.pack_name">
-                <span class="detail-label">Pack:</span>
-                <span class="detail-value">{{details.pack_name}}</span>
-                <span class="detail-value" *ngIf="details.position"> (#{{details.position}})</span>
+            <!-- Traits -->
+            <div *ngIf="details.traits" style="margin-top: 0.5rem;">
+              <div class="traits-container">
+                <span *ngFor="let trait of getTraitsArray(details.traits)" class="trait-tag">
+                  {{trait}}
+                </span>
+              </div>
+            </div>
+
+            <!-- Skill Icons -->
+            <div *ngIf="details.skill_willpower || details.skill_intellect || details.skill_combat || details.skill_agility || details.skill_wild" style="margin-top: 0.5rem; display: flex; gap: 0.75rem; align-items: center;">
+              <div class="skill-icon-item" *ngIf="details.skill_willpower">
+                <span [innerHTML]="getArkhamIcon('willpower')"></span>
+                <span class="skill-count">{{details.skill_willpower}}</span>
+              </div>
+              <div class="skill-icon-item" *ngIf="details.skill_intellect">
+                <span [innerHTML]="getArkhamIcon('intellect')"></span>
+                <span class="skill-count">{{details.skill_intellect}}</span>
+              </div>
+              <div class="skill-icon-item" *ngIf="details.skill_combat">
+                <span [innerHTML]="getArkhamIcon('combat')"></span>
+                <span class="skill-count">{{details.skill_combat}}</span>
+              </div>
+              <div class="skill-icon-item" *ngIf="details.skill_agility">
+                <span [innerHTML]="getArkhamIcon('agility')"></span>
+                <span class="skill-count">{{details.skill_agility}}</span>
+              </div>
+              <div class="skill-icon-item" *ngIf="details.skill_wild">
+                <span [innerHTML]="getArkhamIcon('wild')"></span>
+                <span class="skill-count">{{details.skill_wild}}</span>
+              </div>
+            </div>
+
+            <!-- Card Text -->
+            <div *ngIf="details.real_text || details.text" style="margin-top: 0.75rem;">
+              <div class="card-text-box" [style.--faction-color]="getFactionColor(details.faction_name || 'Neutral')" [innerHTML]="(details.real_text || details.text) | arkhamIcons"></div>
+            </div>
+
+            <!-- Flavor Text -->
+            <div *ngIf="details.flavor" style="margin-top: 0.5rem; padding: 0 0.25rem;">
+              <div style="color: #94a3b8; font-style: italic; font-size: 0.875rem; line-height: 1.5;">
+                {{details.flavor}}
+              </div>
+            </div>
+
+            <!-- Metadata Info -->
+            <div style="margin-top: 0.75rem; display: flex; flex-direction: column; gap: 0.35rem;">
+              <!-- Pack Info with Code and Quantity -->
+              <div *ngIf="details.pack_name" style="font-size: 0.875rem; color: #94a3b8;">
+                <span [innerHTML]="getIcon('pack')"></span> {{details.pack_name}}
+                <span *ngIf="details.pack_code" style="font-family: 'JetBrains Mono', monospace; color: #64748b; margin-left: 0.5rem;">[{{details.pack_code}}]</span>
+                <span *ngIf="details.position"> #{{details.position}}</span>
+                <span *ngIf="details.quantity" style="margin-left: 0.5rem;">• {{details.quantity}}×</span>
               </div>
 
               <!-- Illustrator -->
-              <div class="illustrator-info" *ngIf="details.illustrator">
-                <span class="detail-label">Illustrator:</span>
-                <span class="detail-value">{{details.illustrator}}</span>
+              <div *ngIf="details.illustrator" style="font-size: 0.875rem; color: #94a3b8;">
+                <span [innerHTML]="getIcon('illustrator')"></span> {{details.illustrator}}
               </div>
 
-              <!-- Quantity -->
-              <div class="quantity-info" *ngIf="details.quantity">
-                <span class="detail-label">Quantity in Pack:</span>
-                <span class="detail-value">{{details.quantity}}</span>
+              <!-- Subtype -->
+              <div *ngIf="details.subtype" style="font-size: 0.875rem; color: #94a3b8;">
+                <span [innerHTML]="getIcon('subtype')"></span> {{details.subtype}}
               </div>
 
               <!-- Special Attributes -->
-              <div class="special-attrs" *ngIf="details.exceptional || details.permanent || details.double_sided">
-                <span class="detail-label">Special:</span>
-                <span class="detail-value">
-                  <span *ngIf="details.exceptional" class="badge">Exceptional</span>
-                  <span *ngIf="details.permanent" class="badge">Permanent</span>
-                  <span *ngIf="details.double_sided" class="badge">Double-Sided</span>
-                </span>
+              <div *ngIf="details.exceptional || details.permanent || details.double_sided" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.25rem;">
+                <span *ngIf="details.exceptional" class="badge">Exceptional</span>
+                <span *ngIf="details.permanent" class="badge">Permanent</span>
+                <span *ngIf="details.double_sided" class="badge">Double-Sided</span>
               </div>
 
-              <!-- ArkhamDB URL -->
-              <div class="url-info" *ngIf="details.url">
+              <!-- ArkhamDB Link -->
+              <div *ngIf="details.url" style="margin-top: 0.5rem;">
                 <a [href]="details.url" target="_blank" class="arkhamdb-link">View on ArkhamDB ↗</a>
               </div>
+            </div>
+          </div>
+        </div>
 
-              <!-- Traits -->
-              <div class="card-traits" *ngIf="details.traits">
-                <span class="detail-label">Traits:</span>
-                <span class="detail-value traits-text">{{formatTraits(details.traits)}}</span>
-              </div>
-
-              <!-- Real Name / Subname -->
-              <div class="real-name-info" *ngIf="details.real_name && details.real_name !== details.name">
-                <span class="detail-label">Real Name:</span>
-                <span class="detail-value">{{details.real_name}}</span>
-              </div>
-              <div class="subname-info" *ngIf="details.subname">
-                <span class="detail-label">Subname:</span>
-                <span class="detail-value">{{details.subname}}</span>
-              </div>
-
-              <!-- Skill Icons -->
-              <div class="skill-icons" *ngIf="details.skill_willpower || details.skill_intellect || details.skill_combat || details.skill_agility || details.skill_wild">
-                <span class="detail-label">Skills:</span>
-                <span class="skill-icon-display" *ngIf="details.skill_willpower">🔵×{{details.skill_willpower}}</span>
-                <span class="skill-icon-display" *ngIf="details.skill_intellect">🟢×{{details.skill_intellect}}</span>
-                <span class="skill-icon-display" *ngIf="details.skill_combat">⚔️×{{details.skill_combat}}</span>
-                <span class="skill-icon-display" *ngIf="details.skill_agility">🟡×{{details.skill_agility}}</span>
-                <span class="skill-icon-display" *ngIf="details.skill_wild">⭐×{{details.skill_wild}}</span>
-              </div>
-
-              <!-- Card Text -->
-              <div class="card-text" *ngIf="details.real_text || details.text">
-                <div class="detail-label">Card Text:</div>
-                <div class="detail-value text-content" [innerHTML]="(details.real_text || details.text) | arkhamIcons"></div>
-              </div>
-
-              <!-- Flavor Text -->
-              <div class="flavor-text" *ngIf="details.flavor">
-                <div class="detail-label">Flavor:</div>
-                <div class="detail-value flavor-content">{{details.flavor}}</div>
+        <!-- Usage Statistics Section - Below Card Details -->
+        <div class="usage-stats-section">
+          <!-- Top Investigators - Compact -->
+          <div class="stats-section-compact">
+            <div class="section-header-compact" (click)="toggleTopInvestigators()">
+              <span><span [innerHTML]="getIcon('investigator')"></span> Top Investigators</span>
+              <span class="expand-icon">{{ topInvestigatorsExpanded() ? '▼' : '▶' }}</span>
+            </div>
+            <div class="investigator-list-compact" *ngIf="topInvestigatorsExpanded()">
+              <div *ngFor="let inv of getTopInvestigators(stats.deck_stats.popularity.investigator_usage_rate); let i = index"
+                   class="investigator-item-compact">
+                <span class="inv-rank">{{i + 1}}</span>
+                <span class="inv-name">{{getInvestigatorName(inv.code)}}</span>
+                <div class="inv-bar-mini">
+                  <div class="inv-bar-fill" [style.width.%]="inv.rate * 100"></div>
+                </div>
+                <span class="inv-percent">{{ inv.rate * 100 | number:'1.0-0' }}%</span>
               </div>
             </div>
+          </div>
+
+          <!-- Usage Trend Chart - Compact -->
+          <div class="stats-section-compact">
+            <div class="section-header-compact" (click)="toggleUsageTrend()">
+              <span><span [innerHTML]="getIcon('trend')"></span> Trend ({{stats.deck_stats.trend.periods_analyzed}}mo)</span>
+              <span class="expand-icon">{{ usageTrendExpanded() ? '▼' : '▶' }}</span>
+            </div>
+            <div class="trend-chart-compact" *ngIf="usageTrendExpanded()">
+              <div *ngFor="let period of getTrendPeriods(stats.deck_stats.trend.trend_data)"
+                   class="trend-bar-compact">
+                <div class="trend-fill" [style.height.%]="getTrendBarHeight(period.value.usage_rate, stats.deck_stats.trend.trend_data)">
+                  <span class="trend-tooltip-compact">
+                    {{ period.value.usage_rate * 100 | number:'1.0-0' }}%
+                  </span>
+                </div>
+                <div class="trend-month">{{formatPeriod(period.key)}}</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Data Source Info - Compact -->
+          <div class="stats-footer-compact">
+            <span [innerHTML]="getIcon('data-source')"></span> {{stats.data_source.decks_analyzed.toLocaleString()}} decks • {{stats.data_source.days_covered}}d
+            <span *ngIf="stats.data_source.trend_period"> • {{stats.data_source.trend_period}}</span>
           </div>
         </div>
       </div>

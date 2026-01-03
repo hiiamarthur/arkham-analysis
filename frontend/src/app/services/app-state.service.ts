@@ -1,4 +1,5 @@
-import { Injectable, signal, computed, effect } from '@angular/core';
+import { Injectable, signal, computed, effect, inject, PLATFORM_ID } from '@angular/core';
+import { isPlatformBrowser } from '@angular/common';
 
 /**
  * Encounter Set metadata
@@ -39,6 +40,7 @@ export class AppStateService {
   private readonly STORAGE_KEY = 'arkham_app_state';
   private readonly CACHE_VERSION = 2; // Increment this to invalidate old cache
   private readonly CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
+  private platformId = inject(PLATFORM_ID);
 
   // Signals for reactive state
   private _traits = signal<string[]>([]);
@@ -86,6 +88,10 @@ export class AppStateService {
    * Load state from localStorage
    */
   private loadFromLocalStorage(): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return; // Skip localStorage access on server
+    }
+
     try {
       const stored = localStorage.getItem(this.STORAGE_KEY);
       if (stored) {
@@ -112,6 +118,10 @@ export class AppStateService {
    * Save state to localStorage
    */
   private saveToLocalStorage(metadata: AppMetadata): void {
+    if (!isPlatformBrowser(this.platformId)) {
+      return; // Skip localStorage access on server
+    }
+
     try {
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(metadata));
     } catch (error) {
@@ -174,7 +184,10 @@ export class AppStateService {
     this._encounterSets.set([]);
     this._investigators.set([]);
     this._lastUpdated.set(0);
-    localStorage.removeItem(this.STORAGE_KEY);
+
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.removeItem(this.STORAGE_KEY);
+    }
   }
 
   /**

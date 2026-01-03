@@ -85,11 +85,19 @@
         (click)="onRowClick(row)"
         [class.clickable]="true"
       >
-        <td 
+        <td
           *ngFor="let column of visibleColumns()"
           [class]="'column-' + column.type"
         >
-          {{renderCellValue(row, column)}}
+          <!-- Render card code link for card code columns -->
+          <app-card-code-link
+            *ngIf="isCardCodeColumn(column.key)"
+            [cardCode]="getCellValue(row, column.key)"
+          ></app-card-code-link>
+          <!-- Render normal cell value for other columns -->
+          <ng-container *ngIf="!isCardCodeColumn(column.key)">
+            {{renderCellValue(row, column)}}
+          </ng-container>
         </td>
       </tr>
     </tbody>
@@ -97,7 +105,7 @@
 
   <!-- Empty State -->
   <div class="empty-state" *ngIf="!loading && paginatedData().length === 0">
-    <div class="empty-icon">📊</div>
+    <div class="empty-icon" [innerHTML]="getIcon('empty')"></div>
     <h3>{{emptyMessage}}</h3>
     <p *ngIf="searchTerm() || Object.keys(filters()).length > 0">
       Try adjusting your search or filters

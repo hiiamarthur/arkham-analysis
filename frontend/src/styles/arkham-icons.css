@@ -40,6 +40,24 @@
   max-width: 2.5em;
 }
 
+/* Icons in containers with custom font-sizes should scale proportionally */
+.action-icon .arkham-svg-icon,
+.header-icon .arkham-svg-icon,
+.stat-icon .arkham-svg-icon,
+.stat-icon-compact .arkham-svg-icon,
+.nav-icon .arkham-svg-icon,
+.title-icon .arkham-svg-icon,
+.hero-icon .arkham-svg-icon,
+.brand-icon .arkham-svg-icon,
+.feature-icon .arkham-svg-icon,
+.recommendation-icon .arkham-svg-icon,
+.empty-icon .arkham-svg-icon {
+  height: 1em !important; /* Scale with parent's font-size */
+  max-width: 1.2em;
+  width: auto;
+  vertical-align: middle;
+}
+
 /* ============================================================================
  * ICON FONT STYLES (Legacy Method)
  * ============================================================================ */

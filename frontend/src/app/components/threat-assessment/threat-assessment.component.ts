@@ -1,8 +1,10 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
 import { AnalysisService, ThreatAssessment } from '../../services/analysis.service';
 import { ReplacePipe } from '../../pipes/replace.pipe';
+import { IconService } from '../../shared/services/icon.service';
+import { SafeHtml } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-threat-assessment',
@@ -30,6 +32,8 @@ export class ThreatAssessmentComponent {
     if (level < 0.8) return { level: 'Critical', color: '#dc3545', percentage: level * 100 };
     return { level: 'Extreme', color: '#6f42c1', percentage: level * 100 };
   });
+
+  private iconService = inject(IconService);
 
   constructor(
     private fb: FormBuilder,
@@ -105,16 +109,21 @@ export class ThreatAssessmentComponent {
     return 'factor-extreme';
   }
 
-  getRecommendationIcon(): string {
+  getRecommendationIcon(): SafeHtml {
     const level = this.threatLevel().level;
     switch (level) {
-      case 'Low': return '✅';
-      case 'Moderate': return '⚠️';
-      case 'High': return '🔥';
-      case 'Critical': return '🚨';
-      case 'Extreme': return '💀';
-      default: return '❓';
+      case 'Low': return this.iconService.getIcon('check');
+      case 'Moderate': return this.iconService.getIcon('threat');
+      case 'High': return this.iconService.getIcon('fire');
+      case 'Critical': return this.iconService.getIcon('alert');
+      case 'Extreme': return this.iconService.getIcon('skull');
+      default: return this.iconService.getIcon('question');
     }
+  }
+
+  // Get icon from IconService
+  getIcon(iconName: string): SafeHtml {
+    return this.iconService.getIcon(iconName);
   }
 
   getRecommendationTitle(): string {

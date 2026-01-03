@@ -1,4 +1,4 @@
-import { Component, signal, computed, OnInit } from '@angular/core';
+import { Component, signal, computed, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormArray } from '@angular/forms';
 import { AnalysisService, CardAnalysisRequest, AnalysisResponse } from '../../services/analysis.service';
@@ -6,6 +6,9 @@ import { DataTableComponent, TableColumn, TableConfig } from '../../shared/compo
 import { CardService, CardResponse, CardStatsResponse } from '../../services/card.service';
 import { AppStateService } from '../../services/app-state.service';
 import { ArkhamIconsPipe } from '../../shared/pipes/arkham-icons.pipe';
+import { ArkhamSvgIconsService } from '../../shared/services/arkham-svg-icons.service';
+import { IconService } from '../../shared/services/icon.service';
+import { SafeHtml, DomSanitizer } from '@angular/platform-browser';
 
 interface Card {
   code: string;
@@ -138,6 +141,10 @@ export class CardAnalysisComponent implements OnInit {
     { value: 'mythos', label: 'Mythos Phase' }
   ];
 
+  private arkhamIconsService = inject(ArkhamSvgIconsService);
+  private iconService = inject(IconService);
+  private sanitizer = inject(DomSanitizer);
+
   constructor(
     private fb: FormBuilder,
     private analysisService: AnalysisService,
@@ -145,6 +152,17 @@ export class CardAnalysisComponent implements OnInit {
     private appState: AppStateService
   ) {
     this.analysisForm = this.createForm();
+  }
+
+  // Get Arkham game icon
+  getArkhamIcon(iconName: string): SafeHtml {
+    const svg = this.arkhamIconsService.getIcon(iconName);
+    return this.sanitizer.bypassSecurityTrustHtml(svg);
+  }
+
+  // Get custom icon
+  getIcon(iconName: string): SafeHtml {
+    return this.iconService.getIcon(iconName);
   }
 
   // Access cached traits for dropdown
@@ -187,10 +205,6 @@ export class CardAnalysisComponent implements OnInit {
 
     this.cardService.searchCards(params).subscribe({
       next: (response) => {
-        console.log('API Response received:', response);
-        console.log('Cards count:', response.cards?.length);
-        console.log('Total results:', response.total_results);
-        
         // Convert API response to our Card interface - response.cards contains CardSummary[]
         const cards: Card[] = response.cards.map(apiCard => ({
           code: apiCard.code,
@@ -202,14 +216,11 @@ export class CardAnalysisComponent implements OnInit {
           pack: 'Unknown'  // Not in CardSummary, will need to fetch full details when clicked
         }));
 
-        console.log('Converted cards:', cards);
-        console.log('Setting cards signal with', cards.length, 'items');
         this.cards.set(cards);
         this.totalResults.set(response.total_results);
         this.hasNextPage.set(response.pagination.has_next);
         this.hasPrevPage.set(response.pagination.has_prev);
         this.cardsLoading.set(false);
-        console.log('Cards signal updated, current value:', this.cards().length);
       },
       error: (err) => {
         console.error('Error loading cards:', err);
@@ -536,13 +547,9 @@ export class CardAnalysisComponent implements OnInit {
   }
 
   onCardClick(card: Card): void {
-    console.log('Card clicked:', card.code, card.name);
-
     // Fetch both card details and stats from API
     this.statsLoading.set(true);
     this.showStatsModal.set(true);
-
-    console.log('Modal signals set - showStatsModal:', this.showStatsModal(), 'statsLoading:', this.statsLoading());
 
     // Fetch card details and stats in parallel
     const cardDetails$ = this.cardService.getCard(card.code);

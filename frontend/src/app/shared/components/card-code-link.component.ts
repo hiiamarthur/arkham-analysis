@@ -1,0 +1,52 @@
+import { Component, Input, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { CardModalService } from '../../services/card-modal.service';
+
+@Component({
+  selector: 'app-card-code-link',
+  standalone: true,
+  imports: [CommonModule],
+  template: `
+    <span
+      class="card-code-link"
+      (click)="onClick()"
+      [title]="'Click to view ' + cardCode + ' details'">
+      {{cardCode}}
+    </span>
+  `,
+  styles: [`
+    .card-code-link {
+      cursor: pointer;
+      color: #60a5fa;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      text-decoration: none;
+      border-bottom: 1px dashed rgba(96, 165, 250, 0.3);
+      transition: all 0.3s;
+      display: inline-block;
+      padding: 0.125rem 0.25rem;
+      border-radius: 0.25rem;
+    }
+
+    .card-code-link:hover {
+      background: rgba(96, 165, 250, 0.1);
+      border-bottom-color: #60a5fa;
+      transform: translateY(-1px);
+    }
+
+    .card-code-link:active {
+      transform: translateY(0);
+    }
+  `]
+})
+export class CardCodeLinkComponent {
+  @Input({ required: true }) cardCode!: string;
+
+  private cardModalService = inject(CardModalService);
+
+  onClick(): void {
+    if (this.cardCode) {
+      this.cardModalService.openCardModal(this.cardCode);
+    }
+  }
+}

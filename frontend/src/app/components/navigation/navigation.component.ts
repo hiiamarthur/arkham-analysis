@@ -1,6 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
+import { IconService } from '../../shared/services/icon.service';
+import { SafeHtml } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-navigation',
@@ -10,11 +12,17 @@ import { RouterModule } from '@angular/router';
   styleUrl: './navigation.component.css'
 })
 export class NavigationComponent {
+  private iconService = inject(IconService);
+
   menuItems = [
-    { path: '/dashboard', label: 'Dashboard', icon: '📊' },
-    { path: '/analysis', label: 'Card Analysis', icon: '🃏' },
-    { path: '/investigators', label: 'Investigators', icon: '🕵️' },
-    { path: '/threat-assessment', label: 'Threat Assessment', icon: '⚠️' },
-    { path: '/about', label: 'About', icon: 'ℹ️' }
+    { path: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
+    { path: '/analysis', label: 'Card Analysis', icon: 'card' },
+    { path: '/investigators', label: 'Investigators', icon: 'investigator' },
+    { path: '/threat-assessment', label: 'Threat Assessment', icon: 'threat' },
+    { path: '/about', label: 'About', icon: 'info' }
   ];
+
+  getIcon(iconName: string): SafeHtml {
+    return this.iconService.getIcon(iconName);
+  }
 }

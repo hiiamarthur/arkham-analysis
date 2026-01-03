@@ -2,29 +2,29 @@
   <div class="nav-container">
     <div class="nav-brand">
       <a routerLink="/" class="brand-link">
-        <span class="brand-icon">🎴</span>
+        <span class="brand-icon" [innerHTML]="getIcon('card')"></span>
         <span class="brand-text">Arkham Analysis</span>
       </a>
     </div>
-    
+
     <div class="nav-menu">
-      <a 
-        *ngFor="let item of menuItems" 
+      <a
+        *ngFor="let item of menuItems"
         [routerLink]="item.path"
         routerLinkActive="active"
         class="nav-link">
-        <span class="nav-icon">{{item.icon}}</span>
+        <span class="nav-icon" [innerHTML]="getIcon(item.icon)"></span>
         <span class="nav-label">{{item.label}}</span>
       </a>
     </div>
-    
+
     <div class="nav-actions">
-      <a 
-        href="https://github.com/your-repo/arkham-analysis" 
-        target="_blank" 
+      <a
+        href="https://github.com/your-repo/arkham-analysis"
+        target="_blank"
         class="github-link"
         title="View on GitHub">
-        <span class="github-icon">⚡</span>
+        <span class="github-icon" [innerHTML]="getIcon('github')"></span>
       </a>
     </div>
   </div>

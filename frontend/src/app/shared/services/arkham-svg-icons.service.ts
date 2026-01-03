@@ -29,7 +29,6 @@ export class ArkhamSvgIconsService {
     if (svg) {
       return svg;
     }
-    console.warn(`Icon "${iconName}" not found`);
     return this.getDefaultIcon(iconName);
   }
 

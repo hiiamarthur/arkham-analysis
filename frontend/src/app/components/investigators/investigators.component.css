@@ -113,8 +113,7 @@
 }
 
 .investigator-portrait {
-  width: 150px;
-  height: 150px;
+  
   border-radius: 0.75rem;
   display: flex;
   align-items: center;
@@ -122,10 +121,18 @@
   font-size: 4rem;
   flex-shrink: 0;
   border: 2px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
 }
 
 .portrait-icon {
   color: rgba(255, 255, 255, 0.8);
+}
+
+.portrait-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0.75rem;
 }
 
 .investigator-info h1 {
@@ -230,7 +237,7 @@
 
 .performance-cards {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 1.5rem;
   margin-bottom: 3rem;
 }
@@ -391,14 +398,334 @@
   text-align: right;
 }
 
-/* Favorite Cards Section */
-.favorite-cards-section h3 {
+/* Section Card Containers */
+.section-card {
+  background: rgba(15, 15, 27, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.03);
+  border-radius: 0.5rem;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.section-card h3 {
   font-family: 'Grenze Gotisch', serif;
   font-size: 1.5rem;
   color: #60a5fa;
   margin: 0 0 1.5rem 0;
   text-transform: uppercase;
   letter-spacing: 0.025em;
+}
+
+.section-card h4 {
+  font-family: 'Grenze Gotisch', serif;
+  font-size: 1.25rem;
+  color: #94a3b8;
+  margin: 1.5rem 0 1rem 0;
+  text-transform: uppercase;
+  letter-spacing: 0.025em;
+}
+
+/* Stats Grid Horizontal */
+.stats-grid-horizontal {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1rem;
+  background: rgba(15, 15, 27, 0.3);
+  border-radius: 0.5rem;
+}
+
+.stat-label {
+  font-size: 0.75rem;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.stat-value-inline {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #e2e8f0;
+}
+
+/* Trending Cards */
+.trending-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.trending-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.trending-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem;
+  background: rgba(15, 15, 27, 0.3);
+  border-radius: 0.5rem;
+}
+
+.card-code {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 600;
+  color: #e2e8f0;
+  min-width: 100px;
+}
+
+.trend-arrow {
+  font-size: 1.5rem;
+}
+
+.trend-change {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  min-width: 70px;
+}
+
+.trend-change.positive {
+  color: #10b981;
+}
+
+.trend-change.negative {
+  color: #ef4444;
+}
+
+.usage-rate {
+  font-size: 0.875rem;
+  color: #94a3b8;
+  margin-left: auto;
+}
+
+/* Archetype Adjustments */
+.archetype-item {
+  display: grid;
+  grid-template-columns: 200px 1fr 100px 120px;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: rgba(15, 15, 27, 0.3);
+  border-radius: 0.5rem;
+}
+
+.archetype-count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  color: #64748b;
+  text-align: right;
+}
+
+/* Gems List */
+.gems-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.gem-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(15, 15, 27, 0.3);
+  border: 1px solid rgba(16, 185, 129, 0.1);
+  border-radius: 0.5rem;
+  transition: all 0.3s;
+}
+
+.gem-item:hover {
+  background: rgba(15, 15, 27, 0.5);
+  border-color: rgba(16, 185, 129, 0.3);
+}
+
+.gem-icon {
+  font-size: 1.5rem;
+}
+
+.gem-stats {
+  font-size: 0.875rem;
+  color: #94a3b8;
+}
+
+.gem-potential {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  color: #10b981;
+  margin-left: auto;
+}
+
+/* Build Recommendations */
+.recommendation-section {
+  margin-bottom: 2rem;
+}
+
+.card-codes-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.card-badge {
+  padding: 0.5rem 1rem;
+  background: rgba(96, 165, 250, 0.1);
+  border: 1px solid rgba(96, 165, 250, 0.3);
+  border-radius: 0.5rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #60a5fa;
+  transition: all 0.3s;
+  display: inline-block;
+}
+
+.card-badge:hover {
+  background: rgba(96, 165, 250, 0.2);
+  transform: translateY(-2px);
+}
+
+.card-badge.gem {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: rgba(16, 185, 129, 0.3);
+  color: #10b981;
+}
+
+.card-badge.trending {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.3);
+  color: #f59e0b;
+}
+
+/* Override card-code-link styles within card-badge */
+.card-badge ::ng-deep .card-code-link {
+  color: inherit;
+  border: none;
+  padding: 0;
+  background: transparent;
+}
+
+.card-badge ::ng-deep .card-code-link:hover {
+  background: transparent;
+  border: none;
+  transform: none;
+}
+
+.advice-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.advice-list li {
+  padding: 0.75rem 1rem;
+  background: rgba(15, 15, 27, 0.3);
+  border-left: 3px solid #60a5fa;
+  border-radius: 0.5rem;
+  margin-bottom: 0.75rem;
+  color: #e2e8f0;
+}
+
+.meta-considerations {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.consideration-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: rgba(15, 15, 27, 0.3);
+  border-radius: 0.5rem;
+}
+
+.consideration-label {
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.consideration-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.25rem;
+  background: rgba(100, 116, 139, 0.2);
+  color: #cbd5e1;
+}
+
+.consideration-value.high {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+/* Loading States */
+.stats-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  color: #94a3b8;
+  text-align: center;
+}
+
+.loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid rgba(148, 163, 184, 0.2);
+  border-top: 4px solid #60a5fa;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.stats-loading p {
+  font-size: 0.875rem;
+  margin: 0;
+  color: #64748b;
+}
+
+/* Investigator Details Container */
+.investigator-details {
+  background: rgba(22, 33, 62, 0.8);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 0.75rem;
+  padding: 2rem;
+  animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 /* Responsive Design */
@@ -417,13 +744,8 @@
     gap: 1.5rem;
   }
 
-  .investigator-portrait {
-    width: 120px;
-    height: 120px;
-  }
-
   .performance-cards {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, 1fr);
   }
 
   .stats-grid {
@@ -442,11 +764,21 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .archetype-item,
-  .scenario-item {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.75rem;
+  .performance-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-grid-horizontal {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .trending-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .archetype-item {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
   }
 
   .archetype-name,
@@ -460,10 +792,36 @@
     text-align: center;
     min-width: auto;
   }
+
+  .archetype-count {
+    text-align: center;
+  }
+
+  .trending-item {
+    flex-wrap: wrap;
+    gap: 0.5rem;
+  }
+
+  .gem-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .gem-potential {
+    margin-left: 0;
+  }
+
+  .meta-considerations {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 480px) {
   .stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-grid-horizontal {
     grid-template-columns: 1fr;
   }
 
@@ -475,5 +833,14 @@
 
   .investigator-info h1 {
     font-size: 1.875rem;
+  }
+
+  .trending-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .usage-rate {
+    margin-left: 0;
   }
 }

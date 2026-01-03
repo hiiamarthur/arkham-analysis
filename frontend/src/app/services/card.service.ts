@@ -8,6 +8,7 @@ export interface CardResponse {
   name: string;
   real_name?: string;
   subname?: string;
+  subtype?: string;
   cost?: number;
   text?: string;
   real_text?: string;

@@ -1,11 +1,18 @@
-import { Component, signal, computed } from '@angular/core';
+import { Component, signal, computed, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DataTableComponent, TableColumn, TableConfig } from '../../shared/components/data-table.component';
+import { InvestigatorService, InvestigatorStatsResponse, CardRanking, StapleCard, TrendingCard, CardSynergy, DeckArchetype, UnderusedGem } from '../../services/investigator.service';
+import { CardService, CardResponse } from '../../services/card.service';
+import { CardCodeLinkComponent } from '../../shared/components/card-code-link.component';
+import { CardModalComponent } from '../../shared/components/card-modal.component';
+import { ArkhamSvgIconsService } from '../../shared/services/arkham-svg-icons.service';
+import { IconService } from '../../shared/services/icon.service';
+import { SafeHtml } from '@angular/platform-browser';
 
 interface Investigator {
-  id: string;
+  code: string;
   name: string;
-  class: string;
+  faction: string;
   willpower: number;
   intellect: number;
   combat: number;
@@ -15,221 +22,137 @@ interface Investigator {
   deckSize: number;
   expansion: string;
   popularity: number;
-}
-
-interface InvestigatorCard {
-  code: string;
-  name: string;
-  type: string;
-  cost: number;
-  usageCount: number;
-  winRate: number;
-}
-
-interface InvestigatorStats {
-  totalGames: number;
-  winRate: number;
-  averageXP: number;
-  favoriteCards: InvestigatorCard[];
-  deckArchetypes: { name: string; percentage: number }[];
-  scenarioPerformance: { scenario: string; winRate: number }[];
+  imageUrl?: string;
 }
 
 @Component({
   selector: 'app-investigators',
   standalone: true,
-  imports: [CommonModule, DataTableComponent],
+  imports: [CommonModule, DataTableComponent, CardCodeLinkComponent, CardModalComponent],
   templateUrl: './investigators.component.html',
   styleUrl: './investigators.component.css'
 })
-export class InvestigatorsComponent {
+export class InvestigatorsComponent implements OnInit {
+  private investigatorService = inject(InvestigatorService);
+  private cardService = inject(CardService);
+  private arkhamIconsService = inject(ArkhamSvgIconsService);
+  private iconService = inject(IconService);
+
   // Expose Math to template
   Math = Math;
-  
+
+  // Loading states
+  investigatorsLoading = signal<boolean>(true);
+  statsLoading = signal<boolean>(false);
+
   // Selected investigator
   selectedInvestigator = signal<Investigator | null>(null);
+  selectedInvestigatorCode = signal<string | null>(null);
 
   // All investigators data
-  investigators = signal<Investigator[]>([
-    {
-      id: '01001',
-      name: 'Roland Banks',
-      class: 'Guardian',
-      willpower: 3,
-      intellect: 3,
-      combat: 4,
-      agility: 2,
-      health: 9,
-      sanity: 5,
-      deckSize: 30,
-      expansion: 'Core Set',
-      popularity: 92
-    },
-    {
-      id: '01002',
-      name: 'Daisy Walker',
-      class: 'Seeker',
-      willpower: 3,
-      intellect: 5,
-      combat: 2,
-      agility: 2,
-      health: 5,
-      sanity: 9,
-      deckSize: 30,
-      expansion: 'Core Set',
-      popularity: 88
-    },
-    {
-      id: '01003',
-      name: '"Skids" O\'Toole',
-      class: 'Rogue',
-      willpower: 2,
-      intellect: 3,
-      combat: 3,
-      agility: 4,
-      health: 8,
-      sanity: 6,
-      deckSize: 30,
-      expansion: 'Core Set',
-      popularity: 75
-    },
-    {
-      id: '01004',
-      name: 'Agnes Baker',
-      class: 'Mystic',
-      willpower: 5,
-      intellect: 2,
-      combat: 2,
-      agility: 3,
-      health: 6,
-      sanity: 8,
-      deckSize: 30,
-      expansion: 'Core Set',
-      popularity: 85
-    },
-    {
-      id: '01005',
-      name: 'Wendy Adams',
-      class: 'Survivor',
-      willpower: 4,
-      intellect: 3,
-      combat: 1,
-      agility: 4,
-      health: 7,
-      sanity: 7,
-      deckSize: 30,
-      expansion: 'Core Set',
-      popularity: 80
-    },
-    {
-      id: '02001',
-      name: 'Zoey Samaras',
-      class: 'Guardian',
-      willpower: 4,
-      intellect: 2,
-      combat: 4,
-      agility: 2,
-      health: 9,
-      sanity: 6,
-      deckSize: 30,
-      expansion: 'The Dunwich Legacy',
-      popularity: 90
-    },
-    {
-      id: '02002',
-      name: 'Rex Murphy',
-      class: 'Seeker',
-      willpower: 3,
-      intellect: 4,
-      combat: 1,
-      agility: 3,
-      health: 6,
-      sanity: 9,
-      deckSize: 30,
-      expansion: 'The Dunwich Legacy',
-      popularity: 87
-    },
-    {
-      id: '02003',
-      name: 'Jenny Barnes',
-      class: 'Rogue',
-      willpower: 3,
-      intellect: 3,
-      combat: 3,
-      agility: 3,
-      health: 8,
-      sanity: 7,
-      deckSize: 30,
-      expansion: 'The Dunwich Legacy',
-      popularity: 82
-    },
-    {
-      id: '02004',
-      name: 'Jim Culver',
-      class: 'Mystic',
-      willpower: 4,
-      intellect: 3,
-      combat: 3,
-      agility: 2,
-      health: 7,
-      sanity: 8,
-      deckSize: 30,
-      expansion: 'The Dunwich Legacy',
-      popularity: 78
-    },
-    {
-      id: '02005',
-      name: '"Ashcan" Pete',
-      class: 'Survivor',
-      willpower: 4,
-      intellect: 2,
-      combat: 2,
-      agility: 3,
-      health: 6,
-      sanity: 5,
-      deckSize: 30,
-      expansion: 'The Dunwich Legacy',
-      popularity: 83
+  investigators = signal<Investigator[]>([]);
+
+  // Raw stats response
+  investigatorStats = signal<InvestigatorStatsResponse | null>(null);
+
+  ngOnInit() {
+    this.loadInvestigators();
+  }
+
+  async loadInvestigators() {
+    this.investigatorsLoading.set(true);
+    try {
+      const metadata = await this.investigatorService.getAllInvestigators().toPromise();
+
+      if (metadata) {
+        // Fetch full card details for each investigator
+        const investigatorPromises = metadata.map(async (meta) => {
+          try {
+            const cardDetails = await this.cardService.getCard(meta.code).toPromise();
+            return this.mapCardToInvestigator(cardDetails!, meta.faction_code || 'Neutral');
+          } catch (error) {
+            console.error(`Error loading investigator ${meta.code}:`, error);
+            return null;
+          }
+        });
+
+        const investigatorsData = await Promise.all(investigatorPromises);
+        this.investigators.set(investigatorsData.filter(inv => inv !== null) as Investigator[]);
+      }
+    } catch (error) {
+      console.error('Error loading investigators:', error);
+    } finally {
+      this.investigatorsLoading.set(false);
     }
-  ]);
+  }
 
-  // Investigator stats (mock data for selected investigator)
-  investigatorStats = computed<InvestigatorStats | null>(() => {
-    const selected = this.selectedInvestigator();
-    if (!selected) return null;
-
-    // Generate mock stats based on investigator
+  private mapCardToInvestigator(card: CardResponse, faction: string): Investigator {
     return {
-      totalGames: Math.floor(Math.random() * 100) + 50,
-      winRate: Math.floor(Math.random() * 40) + 50,
-      averageXP: Math.floor(Math.random() * 20) + 10,
-      favoriteCards: this.getFavoriteCardsForInvestigator(selected),
-      deckArchetypes: this.getDeckArchetypesForInvestigator(selected),
-      scenarioPerformance: this.getScenarioPerformanceForInvestigator(selected)
+      code: card.code,
+      name: card.name,
+      faction: this.normalizeFactionName(card.faction_name || faction),
+      willpower: card.skill_willpower || 0,
+      intellect: card.skill_intellect || 0,
+      combat: card.skill_combat || 0,
+      agility: card.skill_agility || 0,
+      health: card.health || 0,
+      sanity: card.sanity || 0,
+      deckSize: card.deck_limit || 30,
+      expansion: card.pack_name || 'Unknown',
+      popularity: 0, // Will be populated from stats if available
+      imageUrl: card.imagesrc ? `https://arkhamdb.com${card.imagesrc}` : undefined
     };
-  });
+  }
+
+  private normalizeFactionName(faction: string): string {
+    const factionMap: Record<string, string> = {
+      'guardian': 'Guardian',
+      'seeker': 'Seeker',
+      'rogue': 'Rogue',
+      'mystic': 'Mystic',
+      'survivor': 'Survivor',
+      'neutral': 'Neutral'
+    };
+    return factionMap[faction.toLowerCase()] || faction;
+  }
+
 
   // Table columns for investigators list
   investigatorColumns: TableColumn[] = [
     { key: 'name', label: 'Name', sortable: true, searchable: true, width: '200px' },
-    { key: 'class', label: 'Class', sortable: true, filterable: true, width: '120px' },
+    { key: 'faction', label: 'Class', sortable: true, filterable: true, width: '120px' },
     { key: 'willpower', label: 'Willpower', sortable: true, type: 'number', width: '100px' },
     { key: 'intellect', label: 'Intellect', sortable: true, type: 'number', width: '100px' },
     { key: 'combat', label: 'Combat', sortable: true, type: 'number', width: '100px' },
     { key: 'agility', label: 'Agility', sortable: true, type: 'number', width: '100px' },
     { key: 'health', label: 'Health', sortable: true, type: 'number', width: '80px' },
     { key: 'sanity', label: 'Sanity', sortable: true, type: 'number', width: '80px' },
-    { key: 'expansion', label: 'Expansion', sortable: true, filterable: true },
-    { key: 'popularity', label: 'Popularity', sortable: true, type: 'number', width: '100px', render: (value: number) => `${value}%` }
+    { key: 'expansion', label: 'Expansion', sortable: true, filterable: true }
   ];
 
-  // Table columns for favorite cards
-  cardColumns: TableColumn[] = [
-    { key: 'name', label: 'Card Name', sortable: true, searchable: true },
-    { key: 'type', label: 'Type', sortable: true, filterable: true, width: '120px' },
-    { key: 'cost', label: 'Cost', sortable: true, type: 'number', width: '80px' },
-    { key: 'usageCount', label: 'Times Used', sortable: true, type: 'number', width: '120px' },
-    { key: 'winRate', label: 'Win Rate', sortable: true, type: 'number', width: '100px', render: (value: number) => `${value}%` }
+  // Table columns for card rankings
+  cardRankingColumns: TableColumn[] = [
+    { key: 'card_code', label: 'Card Code', sortable: true, searchable: true, width: '120px' },
+    { key: 'usage_count', label: 'Usage Count', sortable: true, type: 'number', width: '120px' },
+    { key: 'usage_rate', label: 'Usage Rate', sortable: true, type: 'number', width: '120px', render: (value: number) => `${(value * 100).toFixed(1)}%` },
+    { key: 'average_quantity', label: 'Avg Qty', sortable: true, type: 'number', width: '100px' },
+    { key: 'consistency_score', label: 'Consistency', sortable: true, type: 'number', width: '120px', render: (value: number) => `${(value * 100).toFixed(1)}%` }
+  ];
+
+  // Table columns for staple cards
+  stapleCardColumns: TableColumn[] = [
+    { key: 'card_code', label: 'Card Code', sortable: true, searchable: true, width: '120px' },
+    { key: 'usage_rate', label: 'Usage Rate', sortable: true, type: 'number', width: '120px', render: (value: number) => `${(value * 100).toFixed(1)}%` },
+    { key: 'staple_confidence', label: 'Confidence', sortable: true, type: 'number', width: '120px', render: (value: number) => `${(value * 100).toFixed(1)}%` },
+    { key: 'average_quantity', label: 'Avg Qty', sortable: true, type: 'number', width: '100px' }
+  ];
+
+  // Table columns for card synergies
+  synergyColumns: TableColumn[] = [
+    { key: 'card1', label: 'Card 1', sortable: true, searchable: true, width: '150px' },
+    { key: 'card2', label: 'Card 2', sortable: true, searchable: true, width: '150px' },
+    { key: 'co_occurrence_count', label: 'Times Together', sortable: true, type: 'number', width: '140px' },
+    { key: 'synergy_strength', label: 'Synergy Strength', sortable: true, type: 'number', width: '150px', render: (value: number) => `${(value * 100).toFixed(1)}%` }
   ];
 
   // Table config
@@ -246,7 +169,7 @@ export class InvestigatorsComponent {
     responsive: true
   };
 
-  cardTableConfig: TableConfig = {
+  smallTableConfig: TableConfig = {
     pageSize: 10,
     pageSizeOptions: [10, 25, 50],
     showPagination: true,
@@ -260,8 +183,22 @@ export class InvestigatorsComponent {
   };
 
   // Event handlers
-  onInvestigatorClick(investigator: Investigator) {
+  async onInvestigatorClick(investigator: Investigator) {
     this.selectedInvestigator.set(investigator);
+    this.selectedInvestigatorCode.set(investigator.code);
+
+    // Load stats for this investigator
+    this.statsLoading.set(true);
+    try {
+      const stats = await this.investigatorService.getInvestigatorStats(investigator.code).toPromise();
+      this.investigatorStats.set(stats || null);
+    } catch (error) {
+      console.error('Error loading investigator stats:', error);
+      this.investigatorStats.set(null);
+    } finally {
+      this.statsLoading.set(false);
+    }
+
     // Scroll to details section
     setTimeout(() => {
       document.getElementById('investigator-details')?.scrollIntoView({ behavior: 'smooth' });
@@ -270,91 +207,8 @@ export class InvestigatorsComponent {
 
   backToList() {
     this.selectedInvestigator.set(null);
-  }
-
-  // Helper methods to generate mock data
-  private getFavoriteCardsForInvestigator(investigator: Investigator): InvestigatorCard[] {
-    const cardsByClass: Record<string, InvestigatorCard[]> = {
-      'Guardian': [
-        { code: '01020', name: 'Machete', type: 'Asset', cost: 3, usageCount: 45, winRate: 72 },
-        { code: '01030', name: 'Emergency Cache', type: 'Asset', cost: 0, usageCount: 52, winRate: 65 },
-        { code: '01076', name: 'Beat Cop', type: 'Asset', cost: 4, usageCount: 38, winRate: 68 },
-        { code: '01088', name: 'Guard Dog', type: 'Asset', cost: 3, usageCount: 33, winRate: 64 },
-        { code: '01017', name: 'Physical Training', type: 'Asset', cost: 2, usageCount: 41, winRate: 70 }
-      ],
-      'Seeker': [
-        { code: '01022', name: 'Magnifying Glass', type: 'Asset', cost: 1, usageCount: 58, winRate: 75 },
-        { code: '01039', name: 'Working a Hunch', type: 'Event', cost: 2, usageCount: 43, winRate: 71 },
-        { code: '01024', name: 'Dr. Milan Christopher', type: 'Asset', cost: 4, usageCount: 40, winRate: 78 },
-        { code: '01040', name: 'Barricade', type: 'Event', cost: 0, usageCount: 35, winRate: 66 },
-        { code: '01025', name: 'Hyperawareness', type: 'Asset', cost: 2, usageCount: 38, winRate: 69 }
-      ],
-      'Rogue': [
-        { code: '01027', name: 'Lockpicks', type: 'Asset', cost: 3, usageCount: 47, winRate: 73 },
-        { code: '01030', name: 'Emergency Cache', type: 'Asset', cost: 0, usageCount: 55, winRate: 68 },
-        { code: '01047', name: 'Elusive', type: 'Event', cost: 2, usageCount: 42, winRate: 70 },
-        { code: '01028', name: 'Burglary', type: 'Skill', cost: 0, usageCount: 39, winRate: 67 },
-        { code: '01048', name: 'Backstab', type: 'Event', cost: 3, usageCount: 36, winRate: 72 }
-      ],
-      'Mystic': [
-        { code: '01032', name: 'Shrivelling', type: 'Asset', cost: 3, usageCount: 50, winRate: 76 },
-        { code: '01053', name: 'Ward of Protection', type: 'Event', cost: 1, usageCount: 48, winRate: 74 },
-        { code: '01031', name: 'Forbidden Knowledge', type: 'Asset', cost: 0, usageCount: 44, winRate: 69 },
-        { code: '01033', name: 'Scrying', type: 'Asset', cost: 1, usageCount: 37, winRate: 68 },
-        { code: '01034', name: 'Arcane Studies', type: 'Asset', cost: 2, usageCount: 41, winRate: 71 }
-      ],
-      'Survivor': [
-        { code: '01036', name: 'Baseball Bat', type: 'Asset', cost: 2, usageCount: 46, winRate: 70 },
-        { code: '01060', name: 'Lucky!', type: 'Event', cost: 1, usageCount: 53, winRate: 77 },
-        { code: '01061', name: 'Survival Instinct', type: 'Skill', cost: 0, usageCount: 40, winRate: 65 },
-        { code: '01037', name: 'Rabbit\'s Foot', type: 'Asset', cost: 1, usageCount: 42, winRate: 72 },
-        { code: '01080', name: 'Leather Coat', type: 'Asset', cost: 0, usageCount: 38, winRate: 68 }
-      ]
-    };
-
-    return cardsByClass[investigator.class] || [];
-  }
-
-  private getDeckArchetypesForInvestigator(investigator: Investigator): { name: string; percentage: number }[] {
-    const archetypesByClass: Record<string, { name: string; percentage: number }[]> = {
-      'Guardian': [
-        { name: 'Monster Hunter', percentage: 45 },
-        { name: 'Tank/Protector', percentage: 30 },
-        { name: 'Hybrid Fighter-Cluer', percentage: 25 }
-      ],
-      'Seeker': [
-        { name: 'Clue Vacuum', percentage: 50 },
-        { name: 'Big Hand Combo', percentage: 35 },
-        { name: 'Support/Tutor', percentage: 15 }
-      ],
-      'Rogue': [
-        { name: 'Money Engine', percentage: 40 },
-        { name: 'Evade Master', percentage: 35 },
-        { name: 'Damage Dealer', percentage: 25 }
-      ],
-      'Mystic': [
-        { name: 'Spell Slinger', percentage: 45 },
-        { name: 'Curse Manipulator', percentage: 30 },
-        { name: 'Mystic Cluer', percentage: 25 }
-      ],
-      'Survivor': [
-        { name: 'Recursion Engine', percentage: 40 },
-        { name: 'Will to Survive', percentage: 35 },
-        { name: 'Exile Build', percentage: 25 }
-      ]
-    };
-
-    return archetypesByClass[investigator.class] || [];
-  }
-
-  private getScenarioPerformanceForInvestigator(investigator: Investigator): { scenario: string; winRate: number }[] {
-    return [
-      { scenario: 'The Gathering', winRate: Math.floor(Math.random() * 30) + 60 },
-      { scenario: 'The Midnight Masks', winRate: Math.floor(Math.random() * 30) + 55 },
-      { scenario: 'The Devourer Below', winRate: Math.floor(Math.random() * 30) + 50 },
-      { scenario: 'Extracurricular Activity', winRate: Math.floor(Math.random() * 30) + 55 },
-      { scenario: 'The House Always Wins', winRate: Math.floor(Math.random() * 30) + 52 }
-    ];
+    this.selectedInvestigatorCode.set(null);
+    this.investigatorStats.set(null);
   }
 
   getClassColor(className: string): string {
@@ -367,5 +221,16 @@ export class InvestigatorsComponent {
       'Neutral': '#5a5a5a'
     };
     return colors[className] || '#5a5a5a';
+  }
+
+  // Get Arkham game icon as SafeHtml for template
+  getIcon(iconName: string): SafeHtml {
+    const svg = this.arkhamIconsService.getIcon(iconName);
+    return svg as unknown as SafeHtml; // ArkhamSvgIconsService returns string, need to cast
+  }
+
+  // Custom SVG icons for non-game-specific stats
+  getCustomIcon(iconType: string): SafeHtml {
+    return this.iconService.getIcon(iconType);
   }
 }

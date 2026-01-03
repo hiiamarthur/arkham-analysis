@@ -196,10 +196,10 @@
         <div class="recommendations">
           <h3>Strategic Recommendations</h3>
           <div class="recommendation-list">
-            <div 
+            <div
               class="recommendation-item"
               [class]="threatLevel().level.toLowerCase()">
-              <div class="recommendation-icon">{{getRecommendationIcon()}}</div>
+              <div class="recommendation-icon" [innerHTML]="getRecommendationIcon()"></div>
               <div class="recommendation-content">
                 <h4>{{getRecommendationTitle()}}</h4>
                 <p>{{getRecommendationText()}}</p>

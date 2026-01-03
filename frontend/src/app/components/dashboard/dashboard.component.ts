@@ -1,5 +1,5 @@
-import { Component, signal, computed, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, signal, computed, OnInit, OnDestroy, ViewChild, ElementRef, AfterViewInit, inject, PLATFORM_ID } from '@angular/core';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { Chart, ChartConfiguration, ChartType, registerables } from 'chart.js';
@@ -8,6 +8,8 @@ import { DataTableComponent, TableColumn, TableConfig } from '../../shared/compo
 import { SharedModule } from '../../shared/shared.module';
 import { TableExampleComponent } from '../table-example/table-example.component';
 import { AppStateService } from '../../services/app-state.service';
+import { IconService } from '../../shared/services/icon.service';
+import { SafeHtml } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-dashboard',
@@ -32,8 +34,13 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   // Quick action state
   quickCardCode = signal('');
 
+  private iconService = inject(IconService);
+  private platformId = inject(PLATFORM_ID);
+
   constructor(private appState: AppStateService) {
-    Chart.register(...registerables);
+    if (isPlatformBrowser(this.platformId)) {
+      Chart.register(...registerables);
+    }
   }
 
   // Global app state - traits and encounter sets (accessed after constructor)
@@ -179,9 +186,11 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   ngAfterViewInit(): void {
-    setTimeout(() => {
-      this.createCharts();
-    }, 100);
+    if (isPlatformBrowser(this.platformId)) {
+      setTimeout(() => {
+        this.createCharts();
+      }, 100);
+    }
   }
 
   ngOnDestroy(): void {
@@ -421,13 +430,18 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
-  getAnalysisTypeIcon(type: string): string {
+  getAnalysisTypeIcon(type: string): SafeHtml {
     switch (type) {
-      case 'strength': return '💪';
-      case 'synergy': return '🔗';
-      case 'timing': return '⏰';
-      default: return '📊';
+      case 'strength': return this.iconService.getIcon('strength');
+      case 'synergy': return this.iconService.getIcon('synergy');
+      case 'timing': return this.iconService.getIcon('timing');
+      default: return this.iconService.getIcon('analysis');
     }
+  }
+
+  // Get icon from IconService
+  getIcon(iconName: string): SafeHtml {
+    return this.iconService.getIcon(iconName);
   }
 
   getDifficultyColor(difficulty: string): string {

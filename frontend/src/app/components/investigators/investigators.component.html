@@ -2,7 +2,7 @@
   <!-- Header -->
   <div class="page-header">
     <h1>
-      <span class="header-icon">🕵️</span>
+      <span class="header-icon" [innerHTML]="getCustomIcon('investigator')"></span>
       Investigators
     </h1>
     <p class="page-subtitle">Browse all investigators and view detailed statistics</p>
@@ -19,7 +19,7 @@
       [data]="investigators()"
       [columns]="investigatorColumns"
       [config]="tableConfig"
-      [loading]="false"
+      [loading]="investigatorsLoading()"
       (rowClick)="onInvestigatorClick($event)"
     ></app-data-table>
   </div>
@@ -34,13 +34,20 @@
     <!-- Investigator Header -->
     <div class="detail-header">
       <div class="investigator-card">
-        <div class="investigator-portrait" [style.background-color]="getClassColor(investigator.class)">
-          <span class="portrait-icon">🕵️</span>
+        <div class="investigator-portrait" [style.background-color]="getClassColor(investigator.faction)">
+          <img
+            *ngIf="investigator.imageUrl"
+            [src]="investigator.imageUrl"
+            [alt]="investigator.name"
+            class="portrait-image"
+            (error)="$any($event.target).style.display='none'"
+          >
+          <span *ngIf="!investigator.imageUrl" class="portrait-icon" [innerHTML]="getCustomIcon('investigator')"></span>
         </div>
         <div class="investigator-info">
           <h1>{{investigator.name}}</h1>
-          <div class="class-badge" [style.background-color]="getClassColor(investigator.class)">
-            {{investigator.class}}
+          <div class="class-badge" [style.background-color]="getClassColor(investigator.faction)">
+            {{investigator.faction}}
           </div>
           <p class="expansion-info">{{investigator.expansion}}</p>
         </div>
@@ -49,42 +56,42 @@
       <!-- Stats Grid -->
       <div class="stats-grid">
         <div class="stat-box">
-          <div class="stat-icon willpower">💪</div>
+          <div class="stat-icon willpower" [innerHTML]="getIcon('willpower')"></div>
           <div class="stat-value">{{investigator.willpower}}</div>
           <div class="stat-label">Willpower</div>
         </div>
         <div class="stat-box">
-          <div class="stat-icon intellect">🧠</div>
+          <div class="stat-icon intellect" [innerHTML]="getIcon('intellect')"></div>
           <div class="stat-value">{{investigator.intellect}}</div>
           <div class="stat-label">Intellect</div>
         </div>
         <div class="stat-box">
-          <div class="stat-icon combat">⚔️</div>
+          <div class="stat-icon combat" [innerHTML]="getIcon('combat')"></div>
           <div class="stat-value">{{investigator.combat}}</div>
           <div class="stat-label">Combat</div>
         </div>
         <div class="stat-box">
-          <div class="stat-icon agility">🏃</div>
+          <div class="stat-icon agility" [innerHTML]="getIcon('agility')"></div>
           <div class="stat-value">{{investigator.agility}}</div>
           <div class="stat-label">Agility</div>
         </div>
         <div class="stat-box">
-          <div class="stat-icon health">❤️</div>
+          <div class="stat-icon health" [innerHTML]="getCustomIcon('health')"></div>
           <div class="stat-value">{{investigator.health}}</div>
           <div class="stat-label">Health</div>
         </div>
         <div class="stat-box">
-          <div class="stat-icon sanity">🧘</div>
+          <div class="stat-icon sanity" [innerHTML]="getCustomIcon('sanity')"></div>
           <div class="stat-value">{{investigator.sanity}}</div>
           <div class="stat-label">Sanity</div>
         </div>
         <div class="stat-box">
-          <div class="stat-icon deck">🃏</div>
+          <div class="stat-icon deck" [innerHTML]="getCustomIcon('deck')"></div>
           <div class="stat-value">{{investigator.deckSize}}</div>
           <div class="stat-label">Deck Size</div>
         </div>
         <div class="stat-box">
-          <div class="stat-icon popularity">📊</div>
+          <div class="stat-icon popularity" [innerHTML]="getCustomIcon('popularity')"></div>
           <div class="stat-value">{{investigator.popularity}}%</div>
           <div class="stat-label">Popularity</div>
         </div>
@@ -92,68 +99,201 @@
     </div>
 
     <!-- Performance Stats -->
-    <div class="performance-section" *ngIf="investigatorStats() as stats">
-      <h2>Performance Statistics</h2>
+    <div class="performance-section" *ngIf="!statsLoading() && investigatorStats() as stats">
+      <h2>Investigator Analysis</h2>
 
+      <!-- Overview Cards -->
       <div class="performance-cards">
         <div class="perf-card">
-          <div class="perf-icon">🎮</div>
-          <div class="perf-value">{{stats.totalGames}}</div>
-          <div class="perf-label">Total Games</div>
+          <div class="perf-icon" [innerHTML]="getCustomIcon('total-decks')"></div>
+          <div class="perf-value">{{stats.investigator_info.total_decks.toLocaleString()}}</div>
+          <div class="perf-label">Total Decks</div>
         </div>
         <div class="perf-card">
-          <div class="perf-icon">🏆</div>
-          <div class="perf-value">{{stats.winRate}}%</div>
-          <div class="perf-label">Win Rate</div>
+          <div class="perf-icon" [innerHTML]="getCustomIcon('optimization')"></div>
+          <div class="perf-value">{{(stats.optimization_score * 100) | number:'1.0-0'}}%</div>
+          <div class="perf-label">Optimization</div>
         </div>
         <div class="perf-card">
-          <div class="perf-icon">⭐</div>
-          <div class="perf-value">{{stats.averageXP}}</div>
-          <div class="perf-label">Avg XP Earned</div>
+          <div class="perf-icon" [innerHTML]="getCustomIcon('diversity')"></div>
+          <div class="perf-value">{{stats.deck_diversity.diversity_score | number:'1.2-2'}}</div>
+          <div class="perf-label">Diversity</div>
+        </div>
+        <div class="perf-card">
+          <div class="perf-icon" [innerHTML]="getCustomIcon('innovation')"></div>
+          <div class="perf-value">{{(stats.meta_position.deck_innovation_score * 100) | number:'1.0-0'}}%</div>
+          <div class="perf-label">Innovation</div>
         </div>
       </div>
 
-      <!-- Deck Archetypes -->
-      <div class="archetypes-section">
-        <h3>Popular Deck Archetypes</h3>
-        <div class="archetype-list">
-          <div class="archetype-item" *ngFor="let archetype of stats.deckArchetypes">
-            <div class="archetype-name">{{archetype.name}}</div>
-            <div class="archetype-bar">
-              <div class="archetype-fill" [style.width.%]="archetype.percentage"></div>
-            </div>
-            <div class="archetype-percentage">{{archetype.percentage}}%</div>
+      <!-- Deck Composition -->
+      <div class="section-card" *ngIf="stats.deck_composition">
+        <h3><span [innerHTML]="getCustomIcon('deck-composition')"></span> Deck Composition</h3>
+        <div class="stats-grid-horizontal">
+          <div class="stat-item">
+            <span class="stat-label">Average Deck Size</span>
+            <span class="stat-value-inline">{{stats.deck_composition.average_deck_size}}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Most Common Size</span>
+            <span class="stat-value-inline">{{stats.deck_composition.most_common_size}}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Size Range</span>
+            <span class="stat-value-inline">{{stats.deck_composition.deck_size_range[0]}} - {{stats.deck_composition.deck_size_range[1]}}</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-label">Size Consistency</span>
+            <span class="stat-value-inline">{{(stats.deck_composition.deck_size_consistency * 100) | number:'1.0-0'}}%</span>
           </div>
         </div>
       </div>
 
-      <!-- Scenario Performance -->
-      <div class="scenario-performance">
-        <h3>Scenario Performance</h3>
-        <div class="scenario-list">
-          <div class="scenario-item" *ngFor="let scenario of stats.scenarioPerformance">
-            <div class="scenario-name">{{scenario.scenario}}</div>
-            <div class="scenario-bar">
-              <div class="scenario-fill"
-                   [style.width.%]="scenario.winRate"
-                   [style.background-color]="scenario.winRate > 70 ? '#28a745' : scenario.winRate > 50 ? '#ffc107' : '#dc3545'">
-              </div>
-            </div>
-            <div class="scenario-winrate">{{scenario.winRate}}%</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Favorite Cards Table -->
-      <div class="favorite-cards-section">
-        <h3>Most Used Cards</h3>
+      <!-- Card Rankings -->
+      <div class="section-card" *ngIf="stats.card_rankings.length > 0">
+        <h3><span [innerHTML]="getCustomIcon('trophy')"></span> Top Cards (by Usage)</h3>
         <app-data-table
-          [data]="stats.favoriteCards"
-          [columns]="cardColumns"
-          [config]="cardTableConfig"
+          [data]="stats.card_rankings"
+          [columns]="cardRankingColumns"
+          [config]="smallTableConfig"
           [loading]="false"
         ></app-data-table>
       </div>
+
+      <!-- Staple Cards -->
+      <div class="section-card" *ngIf="stats.staple_cards.length > 0">
+        <h3><span [innerHTML]="getCustomIcon('innovation')"></span> Staple Cards (Essential Picks)</h3>
+        <app-data-table
+          [data]="stats.staple_cards"
+          [columns]="stapleCardColumns"
+          [config]="smallTableConfig"
+          [loading]="false"
+        ></app-data-table>
+      </div>
+
+      <!-- Rising & Falling Cards -->
+      <div class="trending-cards-grid" *ngIf="stats.rising_cards.length > 0 || stats.falling_cards.length > 0">
+        <div class="section-card" *ngIf="stats.rising_cards.length > 0">
+          <h3><span [innerHTML]="getCustomIcon('rising')"></span> Rising Cards (Trending Up)</h3>
+          <div class="trending-list">
+            <div class="trending-item" *ngFor="let card of stats.rising_cards">
+              <app-card-code-link [cardCode]="card.card_code"></app-card-code-link>
+              <span class="trend-change positive">+{{(card.change_rate * 100) | number:'1.0-0'}}%</span>
+              <span class="usage-rate">{{(card.new_usage_rate * 100) | number:'1.0-0'}}% usage</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-card" *ngIf="stats.falling_cards.length > 0">
+          <h3><span [innerHTML]="getCustomIcon('falling')"></span> Falling Cards (Trending Down)</h3>
+          <div class="trending-list">
+            <div class="trending-item" *ngFor="let card of stats.falling_cards">
+              <app-card-code-link [cardCode]="card.card_code"></app-card-code-link>
+              <span class="trend-change negative">{{(card.change_rate * 100) | number:'1.0-0'}}%</span>
+              <span class="usage-rate">{{(card.new_usage_rate * 100) | number:'1.0-0'}}% usage</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card Synergies -->
+      <div class="section-card" *ngIf="stats.card_synergies.length > 0">
+        <h3><span [innerHTML]="getCustomIcon('synergy')"></span> Card Synergies (Cards That Work Well Together)</h3>
+        <app-data-table
+          [data]="stats.card_synergies"
+          [columns]="synergyColumns"
+          [config]="smallTableConfig"
+          [loading]="false"
+        ></app-data-table>
+      </div>
+
+      <!-- Deck Archetypes -->
+      <div class="section-card" *ngIf="stats.deck_archetypes.length > 0">
+        <h3><span [innerHTML]="getCustomIcon('archetype')"></span> Deck Archetypes (Common Build Patterns)</h3>
+        <div class="archetype-list">
+          <div class="archetype-item" *ngFor="let archetype of stats.deck_archetypes">
+            <div class="archetype-name">{{archetype.archetype_id}}</div>
+            <div class="archetype-bar">
+              <div class="archetype-fill" [style.width.%]="archetype.percentage"></div>
+            </div>
+            <div class="archetype-percentage">{{archetype.percentage | number:'1.0-0'}}%</div>
+            <div class="archetype-count">({{archetype.deck_count}} decks)</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Underused Gems -->
+      <div class="section-card" *ngIf="stats.underused_gems.length > 0">
+        <h3><span [innerHTML]="getCustomIcon('gem')"></span> Hidden Gems (Underused but Consistent)</h3>
+        <div class="gems-list">
+          <div class="gem-item" *ngFor="let gem of stats.underused_gems">
+            <span class="gem-icon" [innerHTML]="getCustomIcon('gem')"></span>
+            <app-card-code-link [cardCode]="gem.card_code"></app-card-code-link>
+            <span class="gem-stats">
+              {{(gem.usage_rate * 100) | number:'1.0-0'}}% usage,
+              {{(gem.consistency_score * 100) | number:'1.0-0'}}% consistency
+            </span>
+            <span class="gem-potential">Potential: {{gem.gem_potential | number:'1.1-1'}}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Build Recommendations -->
+      <div class="section-card" *ngIf="stats.build_recommendations">
+        <h3><span [innerHTML]="getCustomIcon('recommendation')"></span> Build Recommendations</h3>
+
+        <div class="recommendation-section">
+          <h4>Core Recommendations</h4>
+          <div class="card-codes-list">
+            <app-card-code-link class="card-badge" *ngFor="let code of stats.build_recommendations.core_recommendations" [cardCode]="code"></app-card-code-link>
+          </div>
+        </div>
+
+        <div class="recommendation-section" *ngIf="stats.build_recommendations.hidden_gems.length > 0">
+          <h4>Hidden Gems to Consider</h4>
+          <div class="card-codes-list">
+            <app-card-code-link class="card-badge gem" *ngFor="let code of stats.build_recommendations.hidden_gems" [cardCode]="code"></app-card-code-link>
+          </div>
+        </div>
+
+        <div class="recommendation-section" *ngIf="stats.build_recommendations.trending_picks.length > 0">
+          <h4>Trending Picks</h4>
+          <div class="card-codes-list">
+            <app-card-code-link class="card-badge trending" *ngFor="let code of stats.build_recommendations.trending_picks" [cardCode]="code"></app-card-code-link>
+          </div>
+        </div>
+
+        <div class="recommendation-section" *ngIf="stats.build_recommendations.build_advice.length > 0">
+          <h4>Build Advice</h4>
+          <ul class="advice-list">
+            <li *ngFor="let advice of stats.build_recommendations.build_advice">{{advice}}</li>
+          </ul>
+        </div>
+
+        <div class="meta-considerations">
+          <div class="consideration-item">
+            <span class="consideration-label">Optimization Priority:</span>
+            <span class="consideration-value" [class.high]="stats.build_recommendations.meta_considerations.optimization_priority === 'high'">
+              {{stats.build_recommendations.meta_considerations.optimization_priority}}
+            </span>
+          </div>
+          <div class="consideration-item">
+            <span class="consideration-label">Innovation Opportunity:</span>
+            <span class="consideration-value" [class.high]="stats.build_recommendations.meta_considerations.innovation_opportunity === 'high'">
+              {{stats.build_recommendations.meta_considerations.innovation_opportunity}}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Loading State for Stats -->
+    <div class="stats-loading" *ngIf="statsLoading()">
+      <div class="loading-spinner"></div>
+      <p>Loading investigator statistics...</p>
     </div>
   </div>
+
+  <!-- Card Modal -->
+  <app-card-modal></app-card-modal>
 </div>

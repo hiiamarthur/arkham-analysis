@@ -2,7 +2,7 @@
   <div class="hero-section">
     <div class="hero-content">
       <h1 class="hero-title">
-        <span class="hero-icon">🎴</span>
+        <span class="hero-icon" [innerHTML]="getIcon('card')"></span>
         Arkham Horror Card Analysis
       </h1>
       <p class="hero-subtitle">
@@ -27,7 +27,7 @@
     
     <div class="features-grid">
       <div *ngFor="let feature of features" class="feature-card">
-        <div class="feature-icon">{{feature.icon}}</div>
+        <div class="feature-icon" [innerHTML]="getIcon(feature.icon)"></div>
         <h3 class="feature-title">{{feature.title}}</h3>
         <p class="feature-description">{{feature.description}}</p>
       </div>

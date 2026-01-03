@@ -1,0 +1,150 @@
+import { Injectable } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
+
+export interface InvestigatorMetadata {
+  code: string;
+  name: string;
+  faction_code: string | null;
+}
+
+export interface CardRanking {
+  card_code: string;
+  usage_count: number;
+  usage_rate: number;
+  average_quantity: number;
+  min_quantity: number;
+  max_quantity: number;
+  consistency_score: number;
+}
+
+export interface StapleCard extends CardRanking {
+  staple_confidence: number;
+}
+
+export interface TrendingCard {
+  card_code: string;
+  old_usage_rate: number;
+  new_usage_rate: number;
+  change_rate: number;
+  trend_strength: number;
+}
+
+export interface CardSynergy {
+  card1: string;
+  card2: string;
+  co_occurrence_count: number;
+  synergy_strength: number;
+  card1_usage_rate: number;
+  card2_usage_rate: number;
+}
+
+export interface DeckArchetype {
+  archetype_signature: string[];
+  deck_count: number;
+  percentage: number;
+  archetype_id: string;
+}
+
+export interface UnderusedGem {
+  card_code: string;
+  usage_rate: number;
+  consistency_score: number;
+  gem_potential: number;
+}
+
+export interface OverusedCard {
+  card_code: string;
+  usage_rate: number;
+  consistency_score: number;
+  overuse_indicator: number;
+}
+
+export interface CardEfficiency {
+  card_code: string;
+  efficiency_score: number;
+  usage_rate: number;
+  consistency_score: number;
+  average_quantity: number;
+}
+
+export interface InvestigatorStatsResponse {
+  investigator_info: {
+    code: string;
+    name: string;
+    total_decks: number;
+    deck_activity_period?: {
+      earliest_deck: string;
+      latest_deck: string;
+      active_months: number;
+    };
+  };
+  card_rankings: CardRanking[];
+  staple_cards: StapleCard[];
+  rising_cards: TrendingCard[];
+  falling_cards: TrendingCard[];
+  deck_composition: {
+    average_deck_size: number;
+    deck_size_range: [number, number];
+    most_common_size: number;
+    deck_size_consistency: number;
+  };
+  card_synergies: CardSynergy[];
+  deck_archetypes: DeckArchetype[];
+  optimization_score: number;
+  underused_gems: UnderusedGem[];
+  overused_cards: OverusedCard[];
+  meta_position: {
+    total_decks: number;
+    meta_share: number;
+    activity_level: string;
+    deck_innovation_score: number;
+  };
+  popularity_trends: {
+    insufficient_data?: boolean;
+    quarterly_deck_counts?: number[];
+    trend_direction?: string;
+    peak_period?: number;
+  };
+  deck_diversity: {
+    diversity_score: number;
+    unique_deck_ratio: number;
+    card_variety_score: number;
+    total_unique_cards: number;
+  };
+  card_efficiency_ratings: CardEfficiency[];
+  build_recommendations: {
+    core_recommendations: string[];
+    hidden_gems: string[];
+    trending_picks: string[];
+    build_advice: string[];
+    meta_considerations: {
+      optimization_priority: string;
+      innovation_opportunity: string;
+    };
+  };
+}
+
+@Injectable({
+  providedIn: 'root'
+})
+export class InvestigatorService {
+  private apiUrl = `${environment.apiUrl}/cards`;
+
+  constructor(private http: HttpClient) {}
+
+  /**
+   * Get all investigators with their codes and names
+   */
+  getAllInvestigators(): Observable<InvestigatorMetadata[]> {
+    return this.http.get<InvestigatorMetadata[]>(`${this.apiUrl}/metadata/investigators`);
+  }
+
+  /**
+   * Get detailed stats for a specific investigator
+   */
+  getInvestigatorStats(investigatorCode: string): Observable<InvestigatorStatsResponse> {
+    return this.http.get<InvestigatorStatsResponse>(`${this.apiUrl}/investigator/${investigatorCode}/stats`);
+  }
+}

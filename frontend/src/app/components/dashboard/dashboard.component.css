@@ -19,7 +19,7 @@
   font-size: 3rem;
   font-weight: 700;
   letter-spacing: 0.05em;
-  color: #e2e8f0;
+  color: #c8d3d5;
   margin: 0 0 0.5rem 0;
   display: flex;
   align-items: center;
@@ -75,7 +75,7 @@
   flex: 1;
   background: transparent;
   border: none;
-  color: #e2e8f0;
+  color: #c8d3d5;
   font-size: 1.125rem;
   font-style: italic;
   padding: 1rem 0;
@@ -87,7 +87,7 @@
 }
 
 .quick-button {
-  background: #4f46e5;
+  background: #1a4d3d;
   color: white;
   padding: 0.75rem 1.5rem;
   border: none;
@@ -101,7 +101,7 @@
 }
 
 .quick-button:hover:not(:disabled) {
-  background: #4338ca;
+  background: #0a3a2a;
 }
 
 .quick-button:disabled {
@@ -164,7 +164,7 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #e2e8f0;
+  color: #c8d3d5;
 }
 
 /* Charts Section */
@@ -179,16 +179,17 @@
 }
 
 .chart-card {
-  background: rgba(22, 33, 62, 0.8);
+  background: rgba(10, 15, 20, 0.85);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(58, 90, 74, 0.2);
   padding: 1.5rem;
   border-radius: 0.75rem;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .chart-card:hover {
-  box-shadow: 0 0 20px rgba(79, 70, 229, 0.1);
+  box-shadow: 0 0 20px rgba(58, 90, 74, 0.3);
+  border-color: rgba(58, 90, 74, 0.4);
 }
 
 .chart-header {
@@ -198,7 +199,7 @@
 .chart-header h3 {
   font-family: 'Grenze Gotisch', serif;
   font-size: 1.25rem;
-  color: #60a5fa;
+  color: #3a5a4a;
   margin: 0 0 0.25rem 0;
   text-transform: uppercase;
   letter-spacing: 0.025em;
@@ -206,15 +207,20 @@
 
 .chart-subtitle {
   font-size: 0.75rem;
-  color: #64748b;
+  color: #7a8a8c;
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
 
 .chart-container {
   position: relative;
-  height: 200px;
+  height: 300px;
   width: 100%;
+  display: block;
+}
+
+.chart-container canvas {
+  display: block;
 }
 
 /* Main Content */
@@ -224,9 +230,9 @@
 }
 
 .section {
-  background: rgba(22, 33, 62, 0.8);
+  background: rgba(10, 15, 20, 0.85);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(58, 90, 74, 0.15);
   border-radius: 0.75rem;
   padding: 1.5rem;
 }
@@ -243,14 +249,14 @@
 .section-header h2 {
   font-family: 'Grenze Gotisch', serif;
   font-size: 1.5rem;
-  color: #60a5fa;
+  color: #3a5a4a;
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.025em;
 }
 
 .section-link {
-  color: #60a5fa;
+  color: #3a5a4a;
   text-decoration: none;
   font-size: 0.875rem;
   font-weight: 500;
@@ -304,7 +310,7 @@
 
 .activity-content {
   flex: 1;
-  color: #e2e8f0;
+  color: #c8d3d5;
 }
 
 .activity-main {
@@ -315,7 +321,7 @@
 
 .activity-type {
   font-weight: 600;
-  color: #60a5fa;
+  color: #3a5a4a;
   font-size: 0.875rem;
   text-transform: uppercase;
   letter-spacing: 0.025em;
@@ -355,7 +361,7 @@
 }
 
 .cta-link {
-  color: #60a5fa;
+  color: #3a5a4a;
   text-decoration: none;
   font-weight: 500;
 }
@@ -383,7 +389,7 @@
 
 .action-card:hover:not(.disabled) {
   background: rgba(15, 15, 27, 0.5);
-  border-color: #4f46e5;
+  border-color: #1a4d3d;
   transform: translateY(-2px);
   box-shadow: 0 0 20px rgba(79, 70, 229, 0.2);
 }
@@ -401,7 +407,7 @@
 .action-content h3 {
   font-family: 'Grenze Gotisch', serif;
   margin: 0 0 0.5rem 0;
-  color: #e2e8f0;
+  color: #c8d3d5;
   font-size: 1.25rem;
   text-transform: uppercase;
   letter-spacing: 0.025em;
@@ -449,7 +455,7 @@
 
 .scenario-header h3 {
   margin: 0;
-  color: #e2e8f0;
+  color: #c8d3d5;
   font-size: 1.125rem;
 }
 
@@ -464,7 +470,7 @@
 }
 
 .scenario-campaign {
-  color: #60a5fa;
+  color: #3a5a4a;
   font-weight: 500;
   margin-bottom: 0.75rem;
   font-size: 0.875rem;
@@ -483,7 +489,7 @@
   width: 100%;
   padding: 0.75rem;
   background: rgba(79, 70, 229, 0.1);
-  color: #60a5fa;
+  color: #3a5a4a;
   border: 1px solid rgba(79, 70, 229, 0.3);
   border-radius: 0.5rem;
   font-weight: 500;
@@ -496,7 +502,7 @@
 
 .scenario-button:hover {
   background: rgba(79, 70, 229, 0.2);
-  border-color: #4f46e5;
+  border-color: #1a4d3d;
 }
 
 /* Suggestion Cards */
@@ -515,7 +521,7 @@
 
 .suggestion-card h3 {
   margin: 0 0 1rem 0;
-  color: #e2e8f0;
+  color: #c8d3d5;
   font-size: 1.125rem;
 }
 
@@ -533,7 +539,7 @@
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 500;
-  color: #60a5fa;
+  color: #3a5a4a;
   font-family: 'JetBrains Mono', monospace;
 }
 
@@ -547,7 +553,7 @@
 .suggestion-button {
   width: 100%;
   padding: 0.75rem;
-  background: #4f46e5;
+  background: #1a4d3d;
   color: white;
   border: none;
   border-radius: 0.5rem;
@@ -560,7 +566,7 @@
 }
 
 .suggestion-button:hover {
-  background: #4338ca;
+  background: #0a3a2a;
   transform: translateY(-1px);
 }
 

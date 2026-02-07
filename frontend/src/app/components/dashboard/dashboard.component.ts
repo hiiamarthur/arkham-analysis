@@ -187,9 +187,22 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
 
   ngAfterViewInit(): void {
     if (isPlatformBrowser(this.platformId)) {
+      // Wait for view to be fully initialized
       setTimeout(() => {
+        console.log('=== Starting Chart Initialization ===');
+        console.log('analysisChart element:', this.analysisChart?.nativeElement);
+        console.log('threatLevelChart element:', this.threatLevelChart?.nativeElement);
+        console.log('cardPopularityChart element:', this.cardPopularityChart?.nativeElement);
+        console.log('performanceChart element:', this.performanceChart?.nativeElement);
+
         this.createCharts();
-      }, 100);
+
+        console.log('=== Charts Created ===');
+        console.log('Total charts:', this.charts.length);
+        this.charts.forEach((chart, index) => {
+          console.log(`Chart ${index}:`, 'canvas:', chart.canvas.width, 'x', chart.canvas.height);
+        });
+      }, 500);
     }
   }
 
@@ -206,8 +219,12 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
 
   private createAnalysisTrendChart(): void {
     const ctx = this.analysisChart.nativeElement.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+      console.error('Analysis Trend Chart: Canvas context not available');
+      return;
+    }
 
+    console.log('Creating Analysis Trend Chart...');
     const chart = new Chart(ctx, {
       type: 'line',
       data: {
@@ -215,17 +232,29 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
         datasets: [{
           label: 'Card Analyses',
           data: [12, 19, 8, 15, 22, 18, 25],
-          borderColor: '#8B4513',
-          backgroundColor: 'rgba(139, 69, 19, 0.1)',
+          borderColor: '#3a5a4a',
+          backgroundColor: 'rgba(58, 90, 74, 0.2)',
+          borderWidth: 3,
           tension: 0.4,
-          fill: true
+          fill: true,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointBackgroundColor: '#3a5a4a',
+          pointBorderColor: '#c8d3d5',
+          pointBorderWidth: 2
         }, {
           label: 'Threat Assessments',
           data: [8, 12, 6, 10, 15, 12, 18],
-          borderColor: '#FFD700',
-          backgroundColor: 'rgba(255, 215, 0, 0.1)',
+          borderColor: '#6a8a7a',
+          backgroundColor: 'rgba(106, 138, 122, 0.2)',
+          borderWidth: 3,
           tension: 0.4,
-          fill: true
+          fill: true,
+          pointRadius: 5,
+          pointHoverRadius: 7,
+          pointBackgroundColor: '#6a8a7a',
+          pointBorderColor: '#c8d3d5',
+          pointBorderWidth: 2
         }]
       },
       options: {
@@ -234,28 +263,65 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
         plugins: {
           legend: {
             position: 'top',
+            labels: {
+              color: '#c8d3d5',
+              font: {
+                size: 12
+              },
+              usePointStyle: true,
+              padding: 15
+            }
           },
           title: {
             display: true,
-            text: 'Analysis Activity This Week'
+            text: 'Analysis Activity This Week',
+            color: '#c8d3d5',
+            font: {
+              size: 14,
+              weight: 'bold'
+            },
+            padding: {
+              bottom: 20
+            }
           }
         },
         scales: {
           y: {
             beginAtZero: true,
+            suggestedMax: 30,
+            ticks: {
+              color: '#7a8a8c',
+              stepSize: 5,
+              font: {
+                size: 11
+              }
+            },
             grid: {
-              color: 'rgba(0, 0, 0, 0.1)'
+              color: 'rgba(58, 90, 74, 0.3)',
+              lineWidth: 1
             }
           },
           x: {
+            ticks: {
+              color: '#7a8a8c',
+              font: {
+                size: 11
+              }
+            },
             grid: {
-              color: 'rgba(0, 0, 0, 0.1)'
+              color: 'rgba(58, 90, 74, 0.2)',
+              lineWidth: 1
             }
           }
+        },
+        interaction: {
+          intersect: false,
+          mode: 'index'
         }
       }
     });
 
+    console.log('Analysis Trend Chart created with data:', chart.data.datasets.map(d => d.data));
     this.charts.push(chart);
   }
 
@@ -270,14 +336,14 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
         datasets: [{
           data: [25, 20, 18, 15, 22],
           backgroundColor: [
-            '#8B4513',
-            '#FFD700',
-            '#4A2C1A',
-            '#CD853F',
-            '#DEB887'
+            '#3a5a4a',
+            '#2d4d3d',
+            '#4a6a5a',
+            '#5a7a6a',
+            '#1a4d3d'
           ],
           borderWidth: 2,
-          borderColor: '#fff'
+          borderColor: '#0a0a0f'
         }]
       },
       options: {
@@ -286,10 +352,21 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
         plugins: {
           legend: {
             position: 'bottom',
+            labels: {
+              color: '#c8d3d5',
+              font: {
+                size: 11
+              },
+              padding: 10
+            }
           },
           title: {
             display: true,
-            text: 'Most Analyzed Cards'
+            text: 'Most Analyzed Cards',
+            color: '#c8d3d5',
+            font: {
+              size: 14
+            }
           }
         }
       }
@@ -299,8 +376,20 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   }
 
   private createThreatLevelChart(): void {
-    const ctx = this.threatLevelChart.nativeElement.getContext('2d');
-    if (!ctx) return;
+    console.log('--- Creating Threat Level Chart ---');
+    const canvas = this.threatLevelChart.nativeElement;
+    console.log('Canvas element:', canvas);
+    console.log('Canvas dimensions:', canvas.width, 'x', canvas.height);
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) {
+      console.error('Threat Level Chart: Canvas context not available');
+      return;
+    }
+    console.log('Canvas context obtained:', ctx);
+
+    const data = [35, 45, 25, 15];
+    console.log('Bar chart data:', data);
 
     const chart = new Chart(ctx, {
       type: 'bar',
@@ -308,20 +397,20 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
         labels: ['Low', 'Medium', 'High', 'Critical'],
         datasets: [{
           label: 'Threat Assessments',
-          data: [35, 45, 25, 15],
+          data: data,
           backgroundColor: [
-            '#28a745',
-            '#ffc107',
-            '#fd7e14',
-            '#dc3545'
+            '#2d5d4d',
+            '#5a7a4a',
+            '#7a6a3a',
+            '#7a4a3a'
           ],
           borderColor: [
-            '#28a745',
-            '#ffc107',
-            '#fd7e14',
-            '#dc3545'
+            '#3a6a5a',
+            '#6a8a5a',
+            '#8a7a4a',
+            '#8a5a4a'
           ],
-          borderWidth: 1
+          borderWidth: 2
         }]
       },
       options: {
@@ -333,25 +422,51 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
           },
           title: {
             display: true,
-            text: 'Threat Level Distribution'
+            text: 'Threat Level Distribution',
+            color: '#c8d3d5',
+            font: {
+              size: 16,
+              weight: 'bold'
+            },
+            padding: {
+              bottom: 10
+            }
           }
         },
         scales: {
           y: {
             beginAtZero: true,
+            max: 50,
+            ticks: {
+              color: '#7a8a8c',
+              stepSize: 10,
+              font: {
+                size: 12
+              }
+            },
             grid: {
-              color: 'rgba(0, 0, 0, 0.1)'
+              color: 'rgba(58, 90, 74, 0.4)',
+              lineWidth: 1
             }
           },
           x: {
+            ticks: {
+              color: '#7a8a8c',
+              font: {
+                size: 12
+              }
+            },
             grid: {
-              color: 'rgba(0, 0, 0, 0.1)'
+              display: false
             }
           }
         }
       }
     });
 
+    console.log('Threat Level Chart created successfully');
+    console.log('Chart instance:', chart);
+    console.log('Chart canvas after creation:', chart.canvas.width, 'x', chart.canvas.height);
     this.charts.push(chart);
   }
 
@@ -366,13 +481,13 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
         datasets: [{
           label: 'System Performance',
           data: [85, 92, 88, 90, 86, 91],
-          borderColor: '#8B4513',
-          backgroundColor: 'rgba(139, 69, 19, 0.2)',
+          borderColor: '#3a5a4a',
+          backgroundColor: 'rgba(58, 90, 74, 0.3)',
           borderWidth: 2,
-          pointBackgroundColor: '#8B4513',
-          pointBorderColor: '#fff',
-          pointHoverBackgroundColor: '#fff',
-          pointHoverBorderColor: '#8B4513'
+          pointBackgroundColor: '#3a5a4a',
+          pointBorderColor: '#c8d3d5',
+          pointHoverBackgroundColor: '#c8d3d5',
+          pointHoverBorderColor: '#3a5a4a'
         }]
       },
       options: {
@@ -381,7 +496,11 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
         plugins: {
           title: {
             display: true,
-            text: 'Analysis System Performance'
+            text: 'Analysis System Performance',
+            color: '#c8d3d5',
+            font: {
+              size: 14
+            }
           },
           legend: {
             display: false
@@ -391,11 +510,21 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
           r: {
             beginAtZero: true,
             max: 100,
+            ticks: {
+              color: '#7a8a8c',
+              backdropColor: 'transparent'
+            },
+            pointLabels: {
+              color: '#7a8a8c',
+              font: {
+                size: 10
+              }
+            },
             grid: {
-              color: 'rgba(0, 0, 0, 0.1)'
+              color: 'rgba(58, 90, 74, 0.3)'
             },
             angleLines: {
-              color: 'rgba(0, 0, 0, 0.1)'
+              color: 'rgba(58, 90, 74, 0.3)'
             }
           }
         }

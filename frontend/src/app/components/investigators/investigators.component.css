@@ -15,7 +15,7 @@
   font-size: 3rem;
   font-weight: 700;
   letter-spacing: 0.05em;
-  color: #e2e8f0;
+  color: #c8d3d5;
   margin: 0 0 0.5rem 0;
   display: flex;
   align-items: center;
@@ -47,7 +47,7 @@
 .section-header h2 {
   font-family: 'Grenze Gotisch', serif;
   font-size: 1.875rem;
-  color: #60a5fa;
+  color: #3a5a4a;
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.025em;
@@ -73,7 +73,7 @@
 /* Back Button */
 .back-button {
   background: rgba(79, 70, 229, 0.1);
-  color: #60a5fa;
+  color: #3a5a4a;
   border: 1px solid rgba(79, 70, 229, 0.3);
   padding: 0.75rem 1.5rem;
   border-radius: 0.5rem;
@@ -91,7 +91,7 @@
 
 .back-button:hover {
   background: rgba(79, 70, 229, 0.2);
-  border-color: #4f46e5;
+  border-color: #1a4d3d;
   transform: translateX(-2px);
 }
 
@@ -138,7 +138,7 @@
 .investigator-info h1 {
   font-family: 'Grenze Gotisch', serif;
   margin: 0 0 1rem 0;
-  color: #e2e8f0;
+  color: #c8d3d5;
   font-size: 2.5rem;
   text-transform: uppercase;
   letter-spacing: 0.025em;
@@ -191,7 +191,7 @@
   margin-bottom: 0.75rem;
 }
 
-.stat-icon.willpower { color: #60a5fa; }
+.stat-icon.willpower { color: #3a5a4a; }
 .stat-icon.intellect { color: #10b981; }
 .stat-icon.combat { color: #ef4444; }
 .stat-icon.agility { color: #f59e0b; }
@@ -204,7 +204,7 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #e2e8f0;
+  color: #c8d3d5;
   margin-bottom: 0.5rem;
 }
 
@@ -228,7 +228,7 @@
 .performance-section h2 {
   font-family: 'Grenze Gotisch', serif;
   font-size: 1.875rem;
-  color: #60a5fa;
+  color: #3a5a4a;
   margin: 0 0 2rem 0;
   text-transform: uppercase;
   letter-spacing: 0.025em;
@@ -266,7 +266,7 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 2rem;
   font-weight: 700;
-  color: #e2e8f0;
+  color: #c8d3d5;
   margin-bottom: 0.5rem;
 }
 
@@ -286,7 +286,7 @@
 .archetypes-section h3 {
   font-family: 'Grenze Gotisch', serif;
   font-size: 1.5rem;
-  color: #60a5fa;
+  color: #3a5a4a;
   margin: 0 0 1.5rem 0;
   text-transform: uppercase;
   letter-spacing: 0.025em;
@@ -310,7 +310,7 @@
 
 .archetype-name {
   flex: 1;
-  color: #e2e8f0;
+  color: #c8d3d5;
   font-weight: 500;
   min-width: 200px;
 }
@@ -326,7 +326,7 @@
 
 .archetype-fill {
   height: 100%;
-  background: linear-gradient(90deg, #60a5fa, #3b82f6);
+  background: linear-gradient(90deg, #3a5a4a, #2d4d3d);
   border-radius: 9999px;
   transition: width 0.3s ease;
 }
@@ -347,7 +347,7 @@
 .scenario-performance h3 {
   font-family: 'Grenze Gotisch', serif;
   font-size: 1.5rem;
-  color: #60a5fa;
+  color: #3a5a4a;
   margin: 0 0 1.5rem 0;
   text-transform: uppercase;
   letter-spacing: 0.025em;
@@ -371,7 +371,7 @@
 
 .scenario-name {
   flex: 1;
-  color: #e2e8f0;
+  color: #c8d3d5;
   font-weight: 500;
   min-width: 200px;
 }
@@ -410,7 +410,7 @@
 .section-card h3 {
   font-family: 'Grenze Gotisch', serif;
   font-size: 1.5rem;
-  color: #60a5fa;
+  color: #3a5a4a;
   margin: 0 0 1.5rem 0;
   text-transform: uppercase;
   letter-spacing: 0.025em;
@@ -453,7 +453,7 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 1.25rem;
   font-weight: 700;
-  color: #e2e8f0;
+  color: #c8d3d5;
 }
 
 /* Trending Cards */
@@ -482,7 +482,7 @@
 .card-code {
   font-family: 'JetBrains Mono', monospace;
   font-weight: 600;
-  color: #e2e8f0;
+  color: #c8d3d5;
   min-width: 100px;
 }
 
@@ -586,7 +586,7 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #60a5fa;
+  color: #3a5a4a;
   transition: all 0.3s;
   display: inline-block;
 }
@@ -631,10 +631,10 @@
 .advice-list li {
   padding: 0.75rem 1rem;
   background: rgba(15, 15, 27, 0.3);
-  border-left: 3px solid #60a5fa;
+  border-left: 3px solid #3a5a4a;
   border-radius: 0.5rem;
   margin-bottom: 0.75rem;
-  color: #e2e8f0;
+  color: #c8d3d5;
 }
 
 .meta-considerations {
@@ -690,7 +690,7 @@
   width: 50px;
   height: 50px;
   border: 4px solid rgba(148, 163, 184, 0.2);
-  border-top: 4px solid #60a5fa;
+  border-top: 4px solid #3a5a4a;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin-bottom: 1rem;

@@ -155,6 +155,9 @@ class CardSummary(BaseModel):
     type_code: str
     xp: Optional[int] = 0
     cost: Optional[int]
+    traits: Optional[List[str]]
+    pack_code: Optional[str]
+    illustrator: Optional[str]
 
 
 class PaginatedCardResponse(BaseModel):

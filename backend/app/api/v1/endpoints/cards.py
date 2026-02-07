@@ -38,11 +38,14 @@ async def get_all_traits(
         traits = await card_service.get_all_traits()
 
         response.headers.update(ARKHAM_HEADERS)
-        response.headers["Cache-Control"] = "public, max-age=86400"  # Cache for 24 hours
+        response.headers["Cache-Control"] = (
+            "public, max-age=86400"  # Cache for 24 hours
+        )
 
         return traits
     except Exception as e:
         import logging
+
         logger = logging.getLogger(__name__)
         logger.error(f"Error getting traits: {e}")
         raise HTTPException(status_code=500, detail=f"Error getting traits: {str(e)}")
@@ -61,14 +64,19 @@ async def get_all_investigators(
         investigators = await card_service.get_all_investigators()
 
         response.headers.update(ARKHAM_HEADERS)
-        response.headers["Cache-Control"] = "public, max-age=86400"  # Cache for 24 hours
+        response.headers["Cache-Control"] = (
+            "public, max-age=86400"  # Cache for 24 hours
+        )
 
         return investigators
     except Exception as e:
         import logging
+
         logger = logging.getLogger(__name__)
         logger.error(f"Error getting investigators: {e}")
-        raise HTTPException(status_code=500, detail=f"Error getting investigators: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error getting investigators: {str(e)}"
+        )
 
 
 @router.get("/metadata/encounter_sets", response_model=List[dict])
@@ -85,14 +93,19 @@ async def get_all_encounter_sets(
         encounter_sets = await card_service.get_all_encounter_sets()
 
         response.headers.update(ARKHAM_HEADERS)
-        response.headers["Cache-Control"] = "public, max-age=86400"  # Cache for 24 hours
+        response.headers["Cache-Control"] = (
+            "public, max-age=86400"  # Cache for 24 hours
+        )
 
         return encounter_sets
     except Exception as e:
         import logging
+
         logger = logging.getLogger(__name__)
         logger.error(f"Error getting encounter sets: {e}")
-        raise HTTPException(status_code=500, detail=f"Error getting encounter sets: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error getting encounter sets: {str(e)}"
+        )
 
 
 @router.post("/fetch_cards", response_model=List[CardSchema])
@@ -135,10 +148,8 @@ async def search_cards(
     q: Optional[str] = None,
     text: Optional[str] = None,
     flavor: Optional[str] = None,
-
     # Class/Faction
     faction: Optional[str] = None,
-
     # Card attributes
     card_type: Optional[str] = None,
     subtype: Optional[str] = None,
@@ -146,12 +157,10 @@ async def search_cards(
     slot: Optional[str] = None,
     pack_code: Optional[str] = None,
     illustrator: Optional[str] = None,
-
     # Boolean filters
     is_unique: Optional[bool] = None,
     permanent: Optional[bool] = None,
     exceptional: Optional[bool] = None,
-
     # Numeric filters
     min_xp: Optional[int] = None,
     max_xp: Optional[int] = None,
@@ -169,7 +178,6 @@ async def search_cards(
     max_health: Optional[int] = None,
     min_sanity: Optional[int] = None,
     max_sanity: Optional[int] = None,
-
     pagination=Depends(get_pagination_params),
     card_service: CardService = Depends(get_card_service),
 ):
@@ -247,6 +255,9 @@ async def search_cards(
                 type_code=card.type_code,
                 xp=0,  # XP not available in CardSchema
                 cost=card.cost,
+                pack_code=card.pack_code,
+                traits=[trait.name for trait in card.traits],
+                illustrator=card.illustrator,
             )
             for card in cards
         ]

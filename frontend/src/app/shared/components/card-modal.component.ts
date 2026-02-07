@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { CardModalService } from '../../services/card-modal.service';
 import { ArkhamIconsPipe } from '../pipes/arkham-icons.pipe';
 import { IconService } from '../services/icon.service';
+import { ArkhamSvgIconsService } from '../services/arkham-svg-icons.service';
 import { SafeHtml } from '@angular/platform-browser';
 
 @Component({
@@ -102,19 +103,19 @@ import { SafeHtml } from '@angular/platform-browser';
                 <!-- Skill Icons -->
                 <div class="skill-icons-row" *ngIf="details.skill_willpower || details.skill_intellect || details.skill_combat || details.skill_agility">
                   <div class="skill-icon-item" *ngIf="details.skill_willpower">
-                    <span class="arkham-icon arkham-willpower">W</span>
+                    <span class="skill-icon-svg" [innerHTML]="getSkillIcon('willpower')"></span>
                     <span class="skill-value">{{details.skill_willpower}}</span>
                   </div>
                   <div class="skill-icon-item" *ngIf="details.skill_intellect">
-                    <span class="arkham-icon arkham-intellect">I</span>
+                    <span class="skill-icon-svg" [innerHTML]="getSkillIcon('intellect')"></span>
                     <span class="skill-value">{{details.skill_intellect}}</span>
                   </div>
                   <div class="skill-icon-item" *ngIf="details.skill_combat">
-                    <span class="arkham-icon arkham-combat">C</span>
+                    <span class="skill-icon-svg" [innerHTML]="getSkillIcon('combat')"></span>
                     <span class="skill-value">{{details.skill_combat}}</span>
                   </div>
                   <div class="skill-icon-item" *ngIf="details.skill_agility">
-                    <span class="arkham-icon arkham-agility">A</span>
+                    <span class="skill-icon-svg" [innerHTML]="getSkillIcon('agility')"></span>
                     <span class="skill-value">{{details.skill_agility}}</span>
                   </div>
                 </div>
@@ -140,9 +141,15 @@ import { SafeHtml } from '@angular/platform-browser';
 export class CardModalComponent {
   cardModalService = inject(CardModalService);
   private iconService = inject(IconService);
+  private arkhamSvgIconsService = inject(ArkhamSvgIconsService);
 
   getIcon(iconName: string): SafeHtml {
     return this.iconService.getIcon(iconName);
+  }
+
+  getSkillIcon(skillName: string): SafeHtml {
+    // Use colored version for skill icons
+    return this.arkhamSvgIconsService.getIcon(`${skillName}-color`);
   }
 
   getTrendIcon(trendDirection: string): SafeHtml {

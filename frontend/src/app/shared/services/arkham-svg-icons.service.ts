@@ -63,7 +63,16 @@ export class ArkhamSvgIconsService {
   private createSVG(name: string, data: IconData): string {
     const title = name.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
 
-    return `<svg height="1.2em" viewBox="${data.viewBox}" class="arkham-svg-icon" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
+    // Check if path contains HTML elements (for colored icons with backgrounds)
+    if (data.path.includes('<')) {
+      return `<svg width="1.2em" height="1.2em" viewBox="${data.viewBox}" class="arkham-svg-icon" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle;">
+        <title>${title}</title>
+        ${data.path}
+      </svg>`;
+    }
+
+    // Regular single-path icon
+    return `<svg width="1.2em" height="1.2em" viewBox="${data.viewBox}" class="arkham-svg-icon" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle;">
       <title>${title}</title>
       <path d="${data.path}" fill="${data.color}"/>
     </svg>`;

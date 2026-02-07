@@ -91,6 +91,9 @@ export interface CardSummary {
   type_code: string;
   xp: number;
   cost: number | null;
+  pack_code: string;
+  traits: string[];
+  illustrator: string;
 }
 
 export interface PaginatedCardResponse {

@@ -371,6 +371,7 @@
               <!-- Game Stats Ribbon -->
               <div class="game-stats-ribbon" [style.--faction-color]="getFactionColor(card.faction)">
                 <div class="stat-pill" title="Resource Cost">
+                  <span class="value" [innerHTML]="getArkhamIcon(card.faction.toLowerCase())" *ngIf="card.faction" style="margin-right: 4px;"></span>
                   <span class="value cost">{{card.cost !== null ? card.cost : '–'}}</span>
                   <span class="label">Cost</span>
                 </div>
@@ -379,7 +380,8 @@
                   <span class="label">XP</span>
                 </div>
                 <div class="stat-pill" *ngIf="card.slot">
-                  <span class="value">{{card.slot}}</span>
+                  <span class="slot-icon" [innerHTML]="getSlotIconSvg(card.slot)"></span>
+  
                   <span class="label">Slot</span>
                 </div>
                 <div class="stat-pill" *ngIf="card.pack">
@@ -391,23 +393,23 @@
                 <div class="skill-symbols-row" *ngIf="card.skillWillpower || card.skillIntellect || card.skillCombat || card.skillAgility || card.skillWild" style="margin-left: auto; border-left: 1px solid rgba(100, 116, 139, 0.3); padding-left: 1rem;">
                   <div style="display: flex; gap: 0.75rem; align-items: center;">
                     <div class="skill-icon-item" *ngIf="card.skillWillpower" [title]="'Willpower: ' + card.skillWillpower">
-                      <span class="arkham-icon arkham-willpower"></span>
+                      <span [innerHTML]="getArkhamIcon('willpower')"></span>
                       <span class="skill-count">{{card.skillWillpower}}</span>
                     </div>
                     <div class="skill-icon-item" *ngIf="card.skillIntellect" [title]="'Intellect: ' + card.skillIntellect">
-                      <span class="arkham-icon arkham-intellect"></span>
+                      <span [innerHTML]="getArkhamIcon('intellect')"></span>
                       <span class="skill-count">{{card.skillIntellect}}</span>
                     </div>
                     <div class="skill-icon-item" *ngIf="card.skillCombat" [title]="'Combat: ' + card.skillCombat">
-                      <span class="arkham-icon arkham-combat"></span>
+                      <span [innerHTML]="getArkhamIcon('combat')"></span>
                       <span class="skill-count">{{card.skillCombat}}</span>
                     </div>
                     <div class="skill-icon-item" *ngIf="card.skillAgility" [title]="'Agility: ' + card.skillAgility">
-                      <span class="arkham-icon arkham-agility"></span>
+                      <span [innerHTML]="getArkhamIcon('agility')"></span>
                       <span class="skill-count">{{card.skillAgility}}</span>
                     </div>
                     <div class="skill-icon-item" *ngIf="card.skillWild" [title]="'Wild: ' + card.skillWild">
-                      <span class="arkham-icon arkham-wild"></span>
+                      <span [innerHTML]="getArkhamIcon('wild')"></span>
                       <span class="skill-count">{{card.skillWild}}</span>
                     </div>
                   </div>
@@ -662,7 +664,7 @@
                 <span class="label">XP</span>
               </div>
               <div class="stat-pill" *ngIf="details.real_slot">
-                <span class="value">{{details.real_slot}}</span>
+                <span class="value" [innerHTML]="getSlotIconSvg(details.real_slot)"></span>
                 <span class="label">Slot</span>
               </div>
               <div class="stat-pill" *ngIf="details.health">

@@ -11,8 +11,8 @@
 
 /* Global styles */
 body {
-  background: radial-gradient(circle at center, #1a1a2e 0%, #0f0f1b 100%);
-  color: #e2e8f0;
+  background: radial-gradient(circle at center, #0a0a0f 0%, #000000 100%);
+  color: #c8d3d5;
   font-family: 'Inter', sans-serif;
   min-height: 100vh;
   margin: 0;
@@ -36,10 +36,10 @@ body {
 
 /* Glass morphism card */
 .glass-card {
-  background: rgba(22, 33, 62, 0.8);
+  background: rgba(10, 15, 20, 0.85);
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(58, 90, 74, 0.15);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -95,16 +95,16 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(15, 15, 27, 0.5);
+  background: rgba(0, 0, 0, 0.8);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(100, 116, 139, 0.3);
+  background: rgba(58, 90, 74, 0.4);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(100, 116, 139, 0.5);
+  background: rgba(58, 90, 74, 0.6);
 }
 
 /* Icon classes for Arkham Horror symbols */
@@ -160,8 +160,8 @@ body {
 
 /* Button styles */
 .btn-primary {
-  background: #4f46e5;
-  color: white;
+  background: #1a4d3d;
+  color: #c8d3d5;
   padding: 0.5rem 1.5rem;
   border-radius: 9999px;
   font-weight: 600;
@@ -169,20 +169,21 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   transition: all 0.3s;
-  border: none;
+  border: 1px solid rgba(58, 90, 74, 0.3);
   cursor: pointer;
 }
 
 .btn-primary:hover {
-  background: #4338ca;
-  box-shadow: 0 0 15px rgba(79, 70, 229, 0.3);
+  background: #0a3a2a;
+  box-shadow: 0 0 15px rgba(26, 77, 61, 0.5);
+  border-color: rgba(58, 90, 74, 0.6);
 }
 
 .btn-secondary {
   background: transparent;
-  color: #94a3b8;
+  color: #7a8a8c;
   padding: 0.5rem 1.5rem;
-  border: 1px solid rgba(148, 163, 184, 0.3);
+  border: 1px solid rgba(58, 90, 74, 0.3);
   border-radius: 0.5rem;
   font-weight: 500;
   font-size: 0.875rem;
@@ -191,16 +192,16 @@ body {
 }
 
 .btn-secondary:hover {
-  color: #e2e8f0;
-  border-color: rgba(226, 232, 240, 0.5);
-  background: rgba(255, 255, 255, 0.05);
+  color: #c8d3d5;
+  border-color: rgba(58, 90, 74, 0.6);
+  background: rgba(26, 77, 61, 0.15);
 }
 
 /* Input styles */
 .input-dark {
-  background: rgba(15, 15, 27, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
+  background: rgba(10, 10, 15, 0.7);
+  border: 1px solid rgba(58, 90, 74, 0.2);
+  color: #c8d3d5;
   padding: 0.75rem 1rem;
   border-radius: 0.5rem;
   font-size: 0.875rem;
@@ -210,19 +211,19 @@ body {
 
 .input-dark:focus {
   outline: none;
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  border-color: #1a4d3d;
+  box-shadow: 0 0 0 3px rgba(26, 77, 61, 0.2);
 }
 
 .input-dark::placeholder {
-  color: #64748b;
+  color: #4a5a5c;
 }
 
 /* Select styles */
 .select-dark {
-  background: rgba(15, 15, 27, 0.5);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
+  background: rgba(10, 10, 15, 0.7);
+  border: 1px solid rgba(58, 90, 74, 0.2);
+  color: #c8d3d5;
   padding: 0.75rem 1rem;
   border-radius: 0.5rem;
   font-size: 0.875rem;
@@ -232,8 +233,8 @@ body {
 
 .select-dark:focus {
   outline: none;
-  border-color: #4f46e5;
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  border-color: #1a4d3d;
+  box-shadow: 0 0 0 3px rgba(26, 77, 61, 0.2);
 }
 
 /* Progress bar */

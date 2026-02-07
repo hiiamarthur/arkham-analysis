@@ -15,7 +15,7 @@
   font-size: 3rem;
   font-weight: 700;
   letter-spacing: 0.05em;
-  color: #e2e8f0;
+  color: #c8d3d5;
   margin: 0 0 0.5rem 0;
   display: flex;
   align-items: center;
@@ -61,14 +61,14 @@
 }
 
 .tab-button:hover {
-  color: #e2e8f0;
+  color: #c8d3d5;
   background: rgba(22, 33, 62, 0.8);
 }
 
 .tab-button.active {
-  color: #60a5fa;
+  color: #3a5a4a;
   background: rgba(22, 33, 62, 0.8);
-  border-bottom: 2px solid #60a5fa;
+  border-bottom: 2px solid #3a5a4a;
 }
 
 .tab-content {
@@ -101,7 +101,7 @@
 .section-header h2 {
   font-family: 'Grenze Gotisch', serif;
   font-size: 1.875rem;
-  color: #60a5fa;
+  color: #3a5a4a;
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.025em;
@@ -149,7 +149,7 @@
 .filter-input-small {
   background: rgba(15, 15, 27, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
+  color: #c8d3d5;
   padding: 0.75rem 1rem;
   border-radius: 0.5rem;
   font-size: 0.875rem;
@@ -160,7 +160,7 @@
 .filter-select:focus,
 .filter-input-small:focus {
   outline: none;
-  border-color: #4f46e5;
+  border-color: #1a4d3d;
   box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
 }
 
@@ -195,12 +195,12 @@
 }
 
 .search-button.primary {
-  background: #4f46e5;
+  background: #1a4d3d;
   color: white;
 }
 
 .search-button.primary:hover {
-  background: #4338ca;
+  background: #0a3a2a;
   transform: translateY(-2px);
   box-shadow: 0 0 20px rgba(79, 70, 229, 0.3);
 }
@@ -213,7 +213,7 @@
 
 .search-button.secondary:hover {
   background: rgba(148, 163, 184, 0.2);
-  color: #e2e8f0;
+  color: #c8d3d5;
 }
 
 .search-button.advanced {
@@ -225,7 +225,7 @@
 
 .search-button.advanced:hover {
   background: rgba(148, 163, 184, 0.1);
-  color: #e2e8f0;
+  color: #c8d3d5;
 }
 
 /* Advanced Filters */
@@ -240,7 +240,7 @@
 .advanced-title {
   font-family: 'Grenze Gotisch', serif;
   font-size: 1.125rem;
-  color: #60a5fa;
+  color: #3a5a4a;
   margin: 0 0 1rem 0;
   text-transform: uppercase;
   letter-spacing: 0.025em;
@@ -402,7 +402,7 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #e2e8f0;
+  color: #c8d3d5;
   margin-bottom: 0.25rem;
 }
 
@@ -438,7 +438,7 @@
 .info-section h3 {
   font-family: 'Grenze Gotisch', serif;
   font-size: 1.25rem;
-  color: #60a5fa;
+  color: #3a5a4a;
   margin: 0 0 1rem 0;
   text-transform: uppercase;
   letter-spacing: 0.025em;
@@ -469,7 +469,7 @@
 .detail-value {
   font-family: 'JetBrains Mono', monospace;
   font-weight: 600;
-  color: #e2e8f0;
+  color: #c8d3d5;
 }
 
 /* Skill Icons */
@@ -497,7 +497,7 @@
 .skill-icon-large .value {
   font-family: 'JetBrains Mono', monospace;
   font-weight: 700;
-  color: #e2e8f0;
+  color: #c8d3d5;
 }
 
 .skill-icon-large .label {
@@ -515,7 +515,7 @@
   line-height: 1.5;
   border-radius: 6px;
   position: relative;
-  color: #e2e8f0;
+  color: #c8d3d5;
 }
 
 .card-text-box::before {
@@ -524,7 +524,7 @@
   top: -10px;
   left: 10px;
   font-size: 2rem;
-  color: var(--faction-color, #60a5fa);
+  color: var(--faction-color, #3a5a4a);
   opacity: 0.3;
 }
 
@@ -532,12 +532,14 @@
 .game-stats-ribbon {
   display: flex;
   gap: 1rem;
-  background: rgba(0, 0, 0, 0.3);
-  padding: 0.5rem 1rem;
-  border-radius: 4px;
-  border-left: 4px solid var(--faction-color, #60a5fa);
+  background: rgba(240, 245, 247, 0.95);
+  padding: 0.75rem 1.25rem;
+  border-radius: 6px;
+  border: 2px solid rgba(200, 211, 213, 0.4);
+  border-left: 5px solid var(--faction-color, #3a5a4a);
   margin: 0.5rem 0;
   flex-wrap: wrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
 }
 
 .stat-pill {
@@ -545,29 +547,48 @@
   flex-direction: column;
   align-items: center;
   min-width: 60px;
+  padding: 0.25rem 0.5rem;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 4px;
+  border: 1px solid rgba(58, 90, 74, 0.15);
 }
 
 .stat-pill .label {
   font-size: 0.65rem;
   text-transform: uppercase;
-  color: #64748b;
+  color: #2a3a3c;
   letter-spacing: 0.05em;
   margin-top: 0.25rem;
+  font-weight: 600;
 }
 
 .stat-pill .value {
   font-family: 'JetBrains Mono', monospace;
   font-size: 1.2rem;
   font-weight: bold;
-  color: #e2e8f0;
+  color: #0a0a0f;
 }
 
 .stat-pill .value.cost {
-  color: #fbbf24;
+  color: #8b6914;
 }
 
 .stat-pill .value.xp {
-  color: #a78bfa;
+  color: #4a2a5a;
+}
+
+/* Slot icon styling */
+.stat-pill .slot-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  margin-bottom: 0.25rem;
+}
+
+.stat-pill .slot-icon svg,
+.stat-pill .slot-icon image {
+  width: 100%;
+  height: 100%;
 }
 
 /* Traits as Tags */
@@ -608,11 +629,29 @@
   margin: 0;
 }
 
+.skill-icon-item .arkham-svg-icon,
+.skill-icon-item svg,
+.skill-icon-svg svg,
+.skill-icon-svg {
+  width: 1.5em;
+  height: 1.5em;
+  margin: 0;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.skill-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #c8d3d5;
+}
+
 .skill-count {
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #e2e8f0;
+  color: #c8d3d5;
   min-width: 1ch;
 }
 
@@ -645,7 +684,7 @@
 
 .rating-mini-card .mini-bar-bg .fill {
   height: 100%;
-  background: linear-gradient(90deg, #60a5fa, #3b82f6);
+  background: linear-gradient(90deg, #3a5a4a, #2d4d3d);
   border-radius: 9999px;
   transition: width 0.3s ease;
 }
@@ -662,7 +701,7 @@
 .section-mini-header {
   font-size: 0.875rem;
   font-weight: 600;
-  color: #60a5fa;
+  color: #3a5a4a;
   margin-bottom: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -714,7 +753,7 @@
 .rating-value {
   font-family: 'JetBrains Mono', monospace;
   font-weight: 600;
-  color: #e2e8f0;
+  color: #c8d3d5;
 }
 
 .rating-bar {
@@ -773,7 +812,7 @@
 
 .pagination-button {
   background: rgba(79, 70, 229, 0.1);
-  color: #60a5fa;
+  color: #3a5a4a;
   border: 1px solid rgba(79, 70, 229, 0.3);
   padding: 0.5rem 1rem;
   border-radius: 0.5rem;
@@ -790,12 +829,12 @@
 
 .pagination-button:not(:disabled):hover {
   background: rgba(79, 70, 229, 0.2);
-  border-color: #4f46e5;
+  border-color: #1a4d3d;
 }
 
 .page-indicator {
   font-family: 'JetBrains Mono', monospace;
-  color: #e2e8f0;
+  color: #c8d3d5;
   font-weight: 600;
 }
 
@@ -810,7 +849,7 @@
 .page-size-select {
   background: rgba(15, 15, 27, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.1);
-  color: #e2e8f0;
+  color: #c8d3d5;
   padding: 0.5rem;
   border-radius: 0.25rem;
   font-size: 0.875rem;
@@ -842,12 +881,12 @@
 }
 
 .action-button.primary {
-  background: #4f46e5;
+  background: #1a4d3d;
   color: white;
 }
 
 .action-button.primary:hover {
-  background: #4338ca;
+  background: #0a3a2a;
   transform: translateY(-2px);
 }
 
@@ -859,7 +898,7 @@
 
 .action-button.secondary:hover {
   background: rgba(148, 163, 184, 0.2);
-  color: #e2e8f0;
+  color: #c8d3d5;
 }
 
 /* Responsive Design */
@@ -957,6 +996,14 @@
 
   .skill-icon-item .arkham-icon {
     font-size: 1.25em;
+  }
+
+  .skill-icon-item .arkham-svg-icon,
+  .skill-icon-item svg,
+  .skill-icon-svg svg,
+  .skill-icon-svg {
+    width: 1.25em;
+    height: 1.25em;
   }
 
   .skill-count {
@@ -1076,7 +1123,7 @@
   width: 50px;
   height: 50px;
   border: 4px solid rgba(148, 163, 184, 0.2);
-  border-top: 4px solid #60a5fa;
+  border-top: 4px solid #3a5a4a;
   border-radius: 50%;
   animation: spin 1s linear infinite;
 }
@@ -1115,7 +1162,7 @@
 .stats-header h2 {
   font-family: 'Grenze Gotisch', serif;
   font-size: 1.5rem;
-  color: #60a5fa;
+  color: #3a5a4a;
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.025em;
@@ -1331,19 +1378,19 @@
 }
 
 .arkhamdb-link {
-  color: #60a5fa;
+  color: #3a5a4a;
   text-decoration: none;
   font-weight: 500;
   transition: color 0.3s;
 }
 
 .arkhamdb-link:hover {
-  color: #3b82f6;
+  color: #2d4d3d;
   text-decoration: underline;
 }
 
 .traits-text {
-  color: #e2e8f0;
+  color: #c8d3d5;
   font-style: italic;
 }
 
@@ -1355,7 +1402,7 @@
 
 .text-content,
 .flavor-content {
-  color: #e2e8f0;
+  color: #c8d3d5;
   line-height: 1.6;
 }
 
@@ -1394,7 +1441,7 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 1.25rem;
   font-weight: 700;
-  color: #e2e8f0;
+  color: #c8d3d5;
   margin-bottom: 0.25rem;
 }
 
@@ -1447,7 +1494,7 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 1.1rem;
   font-weight: 700;
-  color: #e2e8f0;
+  color: #c8d3d5;
   line-height: 1.2;
 }
 
@@ -1483,7 +1530,7 @@
   cursor: pointer;
   font-size: 0.875rem;
   font-weight: 600;
-  color: #60a5fa;
+  color: #3a5a4a;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid rgba(96, 165, 250, 0.1);
   margin-bottom: 0.5rem;
@@ -1519,7 +1566,7 @@
 }
 
 .inv-name {
-  color: #e2e8f0;
+  color: #c8d3d5;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1534,7 +1581,7 @@
 
 .inv-bar-fill {
   height: 100%;
-  background: linear-gradient(90deg, #60a5fa, #3b82f6);
+  background: linear-gradient(90deg, #3a5a4a, #2d4d3d);
   border-radius: 9999px;
 }
 
@@ -1542,33 +1589,49 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #60a5fa;
+  color: #3a5a4a;
   text-align: right;
 }
 
 /* Compact Trend Chart */
 .trend-chart-compact {
   display: flex;
-  gap: 0.25rem;
+  gap: 0.5rem;
   align-items: flex-end;
-  height: 80px;
-  padding: 0.5rem 0;
+  height: 100px;
+  padding: 0.75rem;
+  background: rgba(200, 211, 213, 0.05);
+  border-radius: 4px;
+  border: 1px solid rgba(58, 90, 74, 0.2);
 }
 
 .trend-bar-compact {
   flex: 1;
   display: flex;
-  flex-direction: column;
+  flex-direction: column-reverse;
   align-items: center;
   gap: 0.25rem;
+  height: 100%;
+  min-width: 20px;
+  justify-content: flex-start;
 }
 
 .trend-fill {
   width: 100%;
-  background: linear-gradient(to top, #60a5fa, #3b82f6);
-  border-radius: 2px 2px 0 0;
-  min-height: 2px;
+  max-height: 80px;
+  background: linear-gradient(to top, #3a5a4a, #5a7a6a);
+  border-radius: 3px 3px 0 0;
+  min-height: 4px;
   position: relative;
+  border: 1px solid rgba(58, 90, 74, 0.5);
+  box-shadow: 0 0 8px rgba(58, 90, 74, 0.4);
+  transition: all 0.3s ease;
+}
+
+.trend-fill:hover {
+  background: linear-gradient(to top, #4a6a5a, #6a8a7a);
+  box-shadow: 0 0 12px rgba(58, 90, 74, 0.7);
+  transform: scaleY(1.05);
 }
 
 .trend-tooltip-compact {
@@ -1577,13 +1640,15 @@
   bottom: 100%;
   left: 50%;
   transform: translateX(-50%);
-  background: rgba(15, 15, 27, 0.95);
-  padding: 0.25rem 0.5rem;
+  background: rgba(10, 15, 20, 0.95);
+  padding: 0.35rem 0.6rem;
   border-radius: 0.25rem;
-  font-size: 0.7rem;
+  font-size: 0.75rem;
   white-space: nowrap;
-  color: #e2e8f0;
-  border: 1px solid rgba(96, 165, 250, 0.3);
+  color: #c8d3d5;
+  border: 1px solid rgba(58, 90, 74, 0.5);
+  margin-bottom: 4px;
+  font-weight: 600;
 }
 
 .trend-fill:hover .trend-tooltip-compact {
@@ -1591,9 +1656,10 @@
 }
 
 .trend-month {
-  font-size: 0.65rem;
-  color: #64748b;
+  font-size: 0.7rem;
+  color: #7a8a8c;
   writing-mode: horizontal-tb;
+  font-weight: 500;
   text-align: center;
 }
 
@@ -1619,7 +1685,7 @@
 .stats-section h3 {
   font-family: 'Grenze Gotisch', serif;
   font-size: 1.125rem;
-  color: #60a5fa;
+  color: #3a5a4a;
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.025em;
@@ -1643,7 +1709,7 @@
 
 .expand-icon {
   font-size: 0.875rem;
-  color: #60a5fa;
+  color: #3a5a4a;
   transition: transform 0.2s;
 }
 
@@ -1665,7 +1731,7 @@
 .investigator-rank {
   font-family: 'JetBrains Mono', monospace;
   font-weight: 700;
-  color: #60a5fa;
+  color: #3a5a4a;
   font-size: 1.25rem;
   min-width: 2rem;
   text-align: center;
@@ -1677,7 +1743,7 @@
 
 .investigator-name {
   font-weight: 600;
-  color: #e2e8f0;
+  color: #c8d3d5;
   margin-bottom: 0.5rem;
 }
 
@@ -1689,7 +1755,7 @@
 }
 
 .usage-bar {
-  background: #60a5fa;
+  background: #3a5a4a;
   height: 100%;
   border-radius: 9999px;
   transition: width 0.3s ease;
@@ -1725,7 +1791,7 @@
 
 .trend-bar {
   width: 100%;
-  background: #60a5fa;
+  background: #3a5a4a;
   border-radius: 0.25rem 0.25rem 0 0;
   transition: height 0.3s ease;
   position: relative;
@@ -1733,7 +1799,7 @@
 }
 
 .trend-bar:hover {
-  background: #3b82f6;
+  background: #2d4d3d;
 }
 
 .trend-bar:hover .trend-tooltip {
@@ -1751,7 +1817,7 @@
   border-radius: 0.25rem;
   padding: 0.5rem;
   font-size: 0.75rem;
-  color: #e2e8f0;
+  color: #c8d3d5;
   white-space: nowrap;
   margin-bottom: 0.5rem;
   opacity: 0;

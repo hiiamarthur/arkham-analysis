@@ -43,6 +43,8 @@ interface Card {
   economyRating?: number;
   impactRating?: number;
   consistencyRating?: number;
+  illustrator?: string;
+  pack_code?: string;
 }
 
 @Component({
@@ -156,7 +158,10 @@ export class CardAnalysisComponent implements OnInit {
 
   // Get Arkham game icon
   getArkhamIcon(iconName: string): SafeHtml {
-    const svg = this.arkhamIconsService.getIcon(iconName);
+    // For neutral faction, use 'neutral' without -color suffix
+    // For all other factions and icons, use colored version
+    const iconKey = iconName.toLowerCase() === 'neutral' ? 'neutral' : `${iconName}-color`;
+    const svg = this.arkhamIconsService.getIcon(iconKey);
     return this.sanitizer.bypassSecurityTrustHtml(svg);
   }
 
@@ -210,10 +215,12 @@ export class CardAnalysisComponent implements OnInit {
           code: apiCard.code,
           name: apiCard.name,
           type: apiCard.type_code,
-          class: apiCard.faction_code,
+          class: apiCard.faction_code, // Using faction_code as class for now
           cost: apiCard.cost,
           faction: apiCard.faction_code,
-          pack: 'Unknown'  // Not in CardSummary, will need to fetch full details when clicked
+          pack: apiCard.pack_code || '',
+          illustrator: apiCard.illustrator,
+          traits: apiCard.traits ? apiCard.traits.join(', ') : undefined,
         }));
 
         this.cards.set(cards);
@@ -606,8 +613,9 @@ export class CardAnalysisComponent implements OnInit {
   }
 
   getTrendBarHeight(rate: number, allData: any): number {
-    const maxRate = Math.max(...Object.values(allData).map((d: any) => d.usage_rate));
-    return maxRate > 0 ? (rate / maxRate) * 100 : 0;
+    // Return height directly proportional to usage_rate (0-100%)
+    // usage_rate is already a decimal (0-1), so multiply by 100 to get percentage
+    return rate * 100;
   }
 
   formatPeriod(period: string): string {
@@ -994,5 +1002,54 @@ export class CardAnalysisComponent implements OnInit {
         text: 'Fast. Play only during your turn. Disengage from each enemy engaged with you, move to a revealed location with no enemies, and evade each enemy at that location.'
       }
     ];
+  }
+
+  // Helper method to get slot icon name
+  getSlotIconName(slotType: string | undefined): string {
+    if (!slotType) return '';
+
+    const normalized = slotType.toLowerCase().trim();
+
+    const slotMap: { [key: string]: string } = {
+      'accessory': 'accessory-slot',
+      'body': 'body-slot',
+      'ally': 'ally-slot',
+      'hand': 'hand-slot',
+      'hand x2': 'double-hand-slot',
+      'hand x 2': 'double-hand-slot',
+      'two-handed': 'double-hand-slot',
+      'arcane': 'arcane-slot',
+      'tarot': 'tarot-slot',
+      'arcane x2': 'double-arcane-slot',
+
+    };
+
+    const iconName = slotMap[normalized] || '';
+    console.log(`getSlotIconName: "${slotType}" -> normalized: "${normalized}" -> icon: "${iconName}"`);
+    return iconName;
+  }
+
+  // Helper method to get slot icon SVG
+  getSlotIconSvg(slotType: string | undefined): SafeHtml {
+    const iconName = this.getSlotIconName(slotType);
+    console.log('Slot type:', slotType, '-> Icon name:', iconName);
+
+    if (!iconName) {
+      return this.sanitizer.bypassSecurityTrustHtml('');
+    }
+
+    // Check if icon exists
+    const availableIcons = this.arkhamIconsService.getAvailableIcons();
+    const hasIcon = availableIcons.includes(iconName);
+    console.log('Icon exists in service:', hasIcon);
+
+    if (!hasIcon) {
+      console.log('Available slot icons:', availableIcons.filter(i => i.includes('slot')));
+    }
+
+    const svg = this.arkhamIconsService.getIcon(iconName);
+    console.log('SVG result:', svg ? 'Got SVG' : 'No SVG', svg.substring(0, 150));
+
+    return this.sanitizer.bypassSecurityTrustHtml(svg);
   }
 }

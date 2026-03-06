@@ -7,7 +7,7 @@ import { CardCodeLinkComponent } from '../../shared/components/card-code-link.co
 import { CardModalComponent } from '../../shared/components/card-modal.component';
 import { ArkhamSvgIconsService } from '../../shared/services/arkham-svg-icons.service';
 import { IconService } from '../../shared/services/icon.service';
-import { SafeHtml } from '@angular/platform-browser';
+import { SafeHtml, DomSanitizer } from '@angular/platform-browser';
 
 interface Investigator {
   code: string;
@@ -37,6 +37,7 @@ export class InvestigatorsComponent implements OnInit {
   private cardService = inject(CardService);
   private arkhamIconsService = inject(ArkhamSvgIconsService);
   private iconService = inject(IconService);
+  private sanitizer = inject(DomSanitizer);
 
   // Expose Math to template
   Math = Math;
@@ -226,7 +227,7 @@ export class InvestigatorsComponent implements OnInit {
   // Get Arkham game icon as SafeHtml for template
   getIcon(iconName: string): SafeHtml {
     const svg = this.arkhamIconsService.getIcon(iconName);
-    return svg as unknown as SafeHtml; // ArkhamSvgIconsService returns string, need to cast
+    return this.sanitizer.bypassSecurityTrustHtml(svg);
   }
 
   // Custom SVG icons for non-game-specific stats

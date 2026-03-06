@@ -150,7 +150,7 @@ async def get_all_campaigns(response: Response):
 
     campaigns = []
     for campaign in CampaignType:
-        scenario_count = len(ScenarioType.from_campaign(campaign))
+        scenario_count = len(get_scenarios_by_campaign(campaign))
         campaigns.append(
             {
                 "code": campaign.value,

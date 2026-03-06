@@ -4,6 +4,26 @@
   padding: 1.5rem;
 }
 
+/* Table stat cells with icons */
+::ng-deep .stat-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-weight: 500;
+}
+
+::ng-deep .stat-cell svg,
+::ng-deep .stat-cell .arkham-icon {
+  width: 1.125rem;
+  height: 1.125rem;
+  flex-shrink: 0;
+}
+
+/* Color the icons based on stat type */
+::ng-deep .stat-cell svg path {
+  fill: currentColor;
+}
+
 /* Page Header */
 .page-header {
   text-align: center;

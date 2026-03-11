@@ -11,6 +11,7 @@ export interface InvestigatorMetadata {
 
 export interface CardRanking {
   card_code: string;
+  card_name?: string;
   usage_count: number;
   usage_rate: number;
   average_quantity: number;
@@ -25,6 +26,7 @@ export interface StapleCard extends CardRanking {
 
 export interface TrendingCard {
   card_code: string;
+  card_name?: string;
   old_usage_rate: number;
   new_usage_rate: number;
   change_rate: number;
@@ -33,7 +35,9 @@ export interface TrendingCard {
 
 export interface CardSynergy {
   card1: string;
+  card1_name?: string;
   card2: string;
+  card2_name?: string;
   co_occurrence_count: number;
   synergy_strength: number;
   card1_usage_rate: number;
@@ -42,6 +46,7 @@ export interface CardSynergy {
 
 export interface DeckArchetype {
   archetype_signature: string[];
+  archetype_signature_names?: string[];
   deck_count: number;
   percentage: number;
   archetype_id: string;
@@ -49,6 +54,7 @@ export interface DeckArchetype {
 
 export interface UnderusedGem {
   card_code: string;
+  card_name?: string;
   usage_rate: number;
   consistency_score: number;
   gem_potential: number;
@@ -56,6 +62,7 @@ export interface UnderusedGem {
 
 export interface OverusedCard {
   card_code: string;
+  card_name?: string;
   usage_rate: number;
   consistency_score: number;
   overuse_indicator: number;
@@ -63,6 +70,7 @@ export interface OverusedCard {
 
 export interface CardEfficiency {
   card_code: string;
+  card_name?: string;
   efficiency_score: number;
   usage_rate: number;
   consistency_score: number;
@@ -98,6 +106,7 @@ export interface InvestigatorStatsResponse {
   meta_position: {
     total_decks: number;
     meta_share: number;
+    total_decks_analyzed: number;
     activity_level: string;
     deck_innovation_score: number;
   };
@@ -116,8 +125,11 @@ export interface InvestigatorStatsResponse {
   card_efficiency_ratings: CardEfficiency[];
   build_recommendations: {
     core_recommendations: string[];
+    core_recommendations_names?: string[];
     hidden_gems: string[];
+    hidden_gems_names?: string[];
     trending_picks: string[];
+    trending_picks_names?: string[];
     build_advice: string[];
     meta_considerations: {
       optimization_priority: string;

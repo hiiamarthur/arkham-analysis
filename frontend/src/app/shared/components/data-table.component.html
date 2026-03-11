@@ -32,13 +32,17 @@
   <!-- Filters -->
   <div class="filters" *ngIf="config.showFilters">
     <div class="filter-item" *ngFor="let column of columns">
-      <app-custom-input
+      <select
         *ngIf="column.filterable"
-        type="text"
-        [placeholder]="'Filter ' + column.label"
-        (ngModelChange)="onFilterChange(column.key, $event)"
+        class="filter-select"
         [ngModel]="filters()[column.key] || ''"
-      ></app-custom-input>
+        (ngModelChange)="onFilterChange(column.key, $event)"
+      >
+        <option value="">All {{column.label}}</option>
+        <option *ngFor="let option of getFilterOptions(column.key)" [value]="option">
+          {{option}}
+        </option>
+      </select>
     </div>
     <button class="btn btn-outline" (click)="clearFilters()">Clear Filters</button>
   </div>
@@ -70,9 +74,7 @@
         >
           <div class="header-content">
             <span>{{column.label}}</span>
-            <span class="sort-icon" *ngIf="column.sortable">
-              {{getSortIcon(column.key)}}
-            </span>
+            <span class="sort-icon" *ngIf="column.sortable" [innerHTML]="getSortIcon(column.key)"></span>
           </div>
         </th>
       </tr>
@@ -89,13 +91,31 @@
           *ngFor="let column of visibleColumns()"
           [class]="'column-' + column.type"
         >
-          <!-- Render card code link for card code columns -->
+          <!-- Render card name as link (using card_code from row) -->
           <app-card-code-link
-            *ngIf="isCardCodeColumn(column.key)"
+            *ngIf="column.key === 'card_name' && row.card_code"
+            [cardCode]="row.card_code">
+            {{getCellValue(row, column.key) || row.card_code}}
+          </app-card-code-link>
+          <!-- Render card1 with name -->
+          <app-card-code-link
+            *ngIf="column.key === 'card1'"
+            [cardCode]="row.card1">
+            {{row.card1_name || row.card1}}
+          </app-card-code-link>
+          <!-- Render card2 with name -->
+          <app-card-code-link
+            *ngIf="column.key === 'card2'"
+            [cardCode]="row.card2">
+            {{row.card2_name || row.card2}}
+          </app-card-code-link>
+          <!-- Render card code link for other card code columns -->
+          <app-card-code-link
+            *ngIf="column.key !== 'card1' && column.key !== 'card2' && isCardCodeColumn(column.key)"
             [cardCode]="getCellValue(row, column.key)"
           ></app-card-code-link>
           <!-- Render normal cell value for other columns -->
-          <ng-container *ngIf="!isCardCodeColumn(column.key)">
+          <ng-container *ngIf="column.key !== 'card_name' && column.key !== 'card1' && column.key !== 'card2' && !isCardCodeColumn(column.key)">
             {{renderCellValue(row, column)}}
           </ng-container>
         </td>

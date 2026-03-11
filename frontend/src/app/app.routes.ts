@@ -15,6 +15,10 @@ export const routes: Routes = [
     loadComponent: () => import('./components/card-analysis/card-analysis.component').then(m => m.CardAnalysisComponent)
   },
   {
+    path: 'analysis/:code',
+    loadComponent: () => import('./components/card-analysis/card-analysis.component').then(m => m.CardAnalysisComponent)
+  },
+  {
     path: 'threat-assessment',
     loadComponent: () => import('./components/threat-assessment/threat-assessment.component').then(m => m.ThreatAssessmentComponent)
   },

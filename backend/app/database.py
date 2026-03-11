@@ -17,6 +17,9 @@ DB_PASS = settings.POSTGRES_PASSWORD
 DB_HOST = settings.POSTGRES_HOST
 DB_PORT = settings.POSTGRES_PORT
 DB_NAME = settings.POSTGRES_DB
+DB_POOL_SIZE=settings.DB_POOL_SIZE
+DB_MAX_OVERFLOW=settings.DB_MAX_OVERFLOW
+DB_POOL_RECYCLE=settings.DB_POOL_RECYCLE
 
 # Construct database URL
 DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
@@ -28,6 +31,9 @@ engine = create_async_engine(
     echo=True,  # Set to False in production
     pool_pre_ping=True,  # Enable connection health checks
     future=True,
+    pool_size=DB_POOL_SIZE,
+    max_overflow=DB_MAX_OVERFLOW,
+    pool_recycle=DB_POOL_RECYCLE,
 )
 
 AsyncSessionLocal = async_sessionmaker(

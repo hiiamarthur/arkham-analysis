@@ -1,5 +1,6 @@
 import { Injectable, inject } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { ArkhamSvgIconsService } from './arkham-svg-icons.service';
 
 /**
  * Centralized icon service for all custom SVG icons across the application
@@ -10,6 +11,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 })
 export class IconService {
   private sanitizer = inject(DomSanitizer);
+  private arkhamSvgService = inject(ArkhamSvgIconsService);
 
   // Cache for sanitized HTML to avoid re-sanitizing on every call
   private cache = new Map<string, SafeHtml>();
@@ -19,15 +21,9 @@ export class IconService {
     'dashboard': `<svg class="arkham-svg-icon" height="1.2em" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
       <path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/>
     </svg>`,
-    'card': `<svg class="arkham-svg-icon" height="1.2em" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-      <path d="M21 5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5zm-2 14H5V5h14v14zm-9-1h5c.55 0 1-.45 1-1v-5c0-.55-.45-1-1-1h-5c-.55 0-1 .45-1 1v5c0 .55.45 1 1 1z"/>
-    </svg>`,
-    'investigator': `<svg class="arkham-svg-icon" height="1.2em" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
-    </svg>`,
-    'threat': `<svg class="arkham-svg-icon" height="1.2em" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-      <path d="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"/>
-    </svg>`,
+    'card': this.arkhamSvgService.getIcon('elder_sign'),
+    'investigator': this.arkhamSvgService.getIcon('investigator'),
+    'threat': this.arkhamSvgService.getIcon('auto_fail'),
     'info': `<svg class="arkham-svg-icon" height="1.2em" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
     </svg>`,
@@ -175,8 +171,15 @@ export class IconService {
       return this.cache.get(iconName)!;
     }
 
-    // Get SVG string and sanitize
-    const svg = this.iconMap[iconName] || this.iconMap['empty'];
+    // Get SVG string - try iconMap first, then arkhamSvgService, then fallback to empty
+    let svg: string;
+    if (this.iconMap[iconName]) {
+      svg = this.iconMap[iconName];
+    } else {
+      // Try to get from arkhamSvgService for any Arkham Horror icon
+      svg = this.arkhamSvgService.getIcon(iconName) || this.iconMap['empty'];
+    }
+
     const safeHtml = this.sanitizer.bypassSecurityTrustHtml(svg);
 
     // Cache the result
@@ -186,7 +189,7 @@ export class IconService {
   }
 
   hasIcon(iconName: string): boolean {
-    return iconName in this.iconMap;
+    return iconName in this.iconMap || this.arkhamSvgService.hasIcon(iconName);
   }
 
   getAvailableIcons(): string[] {

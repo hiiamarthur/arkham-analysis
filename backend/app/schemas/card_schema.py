@@ -76,6 +76,14 @@ class CardSchema(BaseSchema):
     real_slot: str | None = None
     illustrator: str | None = None
 
+    # Investigator-specific stats (populated dynamically for investigator cards)
+    average_deck_size: float | None = None
+    deck_size_min: int | None = None
+    deck_size_max: int | None = None
+    meta_share: float | None = None
+    total_decks: int | None = None  # Total decks for this investigator
+    total_decks_analyzed: int | None = None  # Total decks in meta
+
     # relationships
     # deck_requirements = relationship(
     #     "DeckRequirement", back_populates="card", uselist=False

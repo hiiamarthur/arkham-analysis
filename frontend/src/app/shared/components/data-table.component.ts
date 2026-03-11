@@ -4,7 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { CustomInputComponent } from './text-field.component';
 import { CardCodeLinkComponent } from './card-code-link.component';
 import { IconService } from '../services/icon.service';
-import { SafeHtml } from '@angular/platform-browser';
+import { SafeHtml, DomSanitizer } from '@angular/platform-browser';
 
 export interface TableColumn {
   key: string;
@@ -58,6 +58,7 @@ export class DataTableComponent implements OnInit, OnDestroy, OnChanges {
   @Output() filterChange = new EventEmitter<{column: string, value: any}>();
 
   private iconService = inject(IconService);
+  private sanitizer = inject(DomSanitizer);
 
   // Signals for reactive state
   dataSignal = signal<any[]>([]);
@@ -77,7 +78,7 @@ export class DataTableComponent implements OnInit, OnDestroy, OnChanges {
     // Apply search
     const search = this.searchTerm();
     if (search) {
-      result = result.filter(row => 
+      result = result.filter(row =>
         this.columns.some(col => {
           if (!col.searchable) return false;
           const value = this.getCellValue(row, col.key);
@@ -92,7 +93,7 @@ export class DataTableComponent implements OnInit, OnDestroy, OnChanges {
       if (value !== null && value !== undefined && value !== '') {
         result = result.filter(row => {
           const cellValue = this.getCellValue(row, column);
-          return String(cellValue).toLowerCase().includes(String(value).toLowerCase());
+          return String(cellValue).toLowerCase() === String(value).toLowerCase();
         });
       }
     });
@@ -104,7 +105,7 @@ export class DataTableComponent implements OnInit, OnDestroy, OnChanges {
       result.sort((a, b) => {
         const aVal = this.getCellValue(a, sortCol);
         const bVal = this.getCellValue(b, sortCol);
-        
+
         if (aVal < bVal) return sortDir === 'asc' ? -1 : 1;
         if (aVal > bVal) return sortDir === 'asc' ? 1 : -1;
         return 0;
@@ -244,10 +245,34 @@ export class DataTableComponent implements OnInit, OnDestroy, OnChanges {
     this.currentPage.set(1);
   }
 
+  // Get unique filter options for a column
+  getFilterOptions(columnKey: string): string[] {
+    const uniqueValues = new Set<string>();
+    this.dataSignal().forEach(row => {
+      const value = this.getCellValue(row, columnKey);
+      if (value !== null && value !== undefined && value !== '') {
+        uniqueValues.add(String(value));
+      }
+    });
+    return Array.from(uniqueValues).sort();
+  }
+
   // Utility methods
-  getSortIcon(column: string): string {
-    if (this.sortColumn() !== column) return '↕️';
-    return this.sortDirection() === 'asc' ? '↑' : '↓';
+  getSortIcon(column: string): SafeHtml {
+    const unsorted = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="14" viewBox="0 0 12 14" fill="none">
+      <path d="M6 1L6 13M6 1L3 4M6 1L9 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.35"/>
+      <path d="M6 13L3 10M6 13L9 10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.35"/>
+    </svg>`;
+    const asc = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="14" viewBox="0 0 12 14" fill="none">
+      <path d="M6 2L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M3 5L6 2L9 5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+    const desc = `<svg xmlns="http://www.w3.org/2000/svg" width="12" height="14" viewBox="0 0 12 14" fill="none">
+      <path d="M6 2L6 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <path d="M3 9L6 12L9 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>`;
+    if (this.sortColumn() !== column) return this.sanitizer.bypassSecurityTrustHtml(unsorted);
+    return this.sanitizer.bypassSecurityTrustHtml(this.sortDirection() === 'asc' ? asc : desc);
   }
 
   getPageNumbers(): number[] {

@@ -20,8 +20,12 @@ interface Investigator {
   health: number;
   sanity: number;
   deckSize: number;
+  deckSizeMin?: number;
+  deckSizeMax?: number;
   expansion: string;
   popularity: number;
+  totalDecks?: number;
+  totalDecksAnalyzed?: number;
   imageUrl?: string;
 }
 
@@ -98,9 +102,13 @@ export class InvestigatorsComponent implements OnInit {
       agility: card.skill_agility || 0,
       health: card.health || 0,
       sanity: card.sanity || 0,
-      deckSize: card.deck_limit || 30,
+      deckSize: Math.round(card.average_deck_size || card.deck_limit || 30),
+      deckSizeMin: card.deck_size_min,
+      deckSizeMax: card.deck_size_max,
       expansion: card.pack_name || 'Unknown',
-      popularity: 0, // Will be populated from stats if available
+      popularity: card.meta_share ? Math.round(card.meta_share * 100) : 0,
+      totalDecks: card.total_decks,
+      totalDecksAnalyzed: card.total_decks_analyzed,
       imageUrl: card.imagesrc ? `https://arkhamdb.com${card.imagesrc}` : undefined
     };
   }
@@ -133,7 +141,7 @@ export class InvestigatorsComponent implements OnInit {
 
   // Table columns for card rankings
   cardRankingColumns: TableColumn[] = [
-    { key: 'card_code', label: 'Card Code', sortable: true, searchable: true, width: '120px' },
+    { key: 'card_name', label: 'Card Name', sortable: true, searchable: true, width: '200px' },
     { key: 'usage_count', label: 'Usage Count', sortable: true, type: 'number', width: '120px' },
     { key: 'usage_rate', label: 'Usage Rate', sortable: true, type: 'number', width: '120px', render: (value: number) => `${(value * 100).toFixed(1)}%` },
     { key: 'average_quantity', label: 'Avg Qty', sortable: true, type: 'number', width: '100px' },
@@ -142,7 +150,7 @@ export class InvestigatorsComponent implements OnInit {
 
   // Table columns for staple cards
   stapleCardColumns: TableColumn[] = [
-    { key: 'card_code', label: 'Card Code', sortable: true, searchable: true, width: '120px' },
+    { key: 'card_name', label: 'Card Name', sortable: true, searchable: true, width: '200px' },
     { key: 'usage_rate', label: 'Usage Rate', sortable: true, type: 'number', width: '120px', render: (value: number) => `${(value * 100).toFixed(1)}%` },
     { key: 'staple_confidence', label: 'Confidence', sortable: true, type: 'number', width: '120px', render: (value: number) => `${(value * 100).toFixed(1)}%` },
     { key: 'average_quantity', label: 'Avg Qty', sortable: true, type: 'number', width: '100px' }
@@ -233,5 +241,16 @@ export class InvestigatorsComponent implements OnInit {
   // Custom SVG icons for non-game-specific stats
   getCustomIcon(iconType: string): SafeHtml {
     return this.iconService.getIcon(iconType);
+  }
+
+  // Get meta share tooltip text
+  getMetaShareTooltip(): string {
+    const stats = this.investigatorStats();
+    if (!stats) {
+      return 'Percentage of all competitive decks using this investigator';
+    }
+    const totalDecks = stats.meta_position.total_decks;
+    const totalAnalyzed = stats.meta_position.total_decks_analyzed;
+    return `Percentage of all competitive decks using this investigator (${totalDecks} out of ${totalAnalyzed} total decks)`;
   }
 }

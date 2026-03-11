@@ -1152,8 +1152,8 @@
 
 .stats-header {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  /* justify-content: space-around; */
+  align-items: start;
   margin-bottom: 1rem;
   padding-bottom: 1rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
@@ -1355,7 +1355,6 @@
 .real-name-info,
 .subname-info,
 .skill-icons,
-.card-text,
 .flavor-text {
   display: flex;
   flex-direction: column;
@@ -1364,6 +1363,22 @@
   background: rgba(15, 15, 27, 0.2);
   border-radius: 0.5rem;
   font-size: 0.875rem;
+}
+
+.card-text {
+  padding: 0.75rem;
+  background: rgba(15, 15, 27, 0.2);
+  border-radius: 0.5rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+/* Ensure SVG icons display inline within card text */
+.card-text ::ng-deep .arkham-svg-icon,
+.card-text ::ng-deep svg {
+  display: inline-block;
+  vertical-align: middle;
+  margin: 0 0.15em;
 }
 
 .badge {
@@ -1591,6 +1606,17 @@
   font-weight: 600;
   color: #3a5a4a;
   text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.125rem;
+}
+
+.inv-hint {
+  font-size: 0.625rem;
+  font-weight: 400;
+  color: #64748b;
+  font-family: system-ui, -apple-system, sans-serif;
 }
 
 /* Compact Trend Chart */
@@ -1842,6 +1868,43 @@
   font-size: 0.875rem;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
   margin-top: 2rem;
+}
+
+/* Modal Actions */
+.modal-actions {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  display: flex;
+  justify-content: center;
+}
+
+.btn-analysis {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #3a5a4a, #2d4d3d);
+  color: #c8d3d5;
+  text-decoration: none;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(58, 90, 74, 0.5);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-analysis:hover {
+  background: linear-gradient(135deg, #4a6a5a, #3d5d4d);
+  color: #ffffff;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(58, 90, 74, 0.3);
+}
+
+.btn-analysis:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Responsive for Stats Modal */

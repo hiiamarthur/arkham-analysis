@@ -39,6 +39,13 @@ export interface CardResponse {
   illustrator?: string;
   xp?: number;
   traits?: Array<{ name: string }> | string;
+  // Investigator stats (only for investigator cards)
+  average_deck_size?: number;
+  deck_size_min?: number;
+  deck_size_max?: number;
+  meta_share?: number;
+  total_decks?: number;  // Total decks for this investigator
+  total_decks_analyzed?: number;  // Total decks in meta
 }
 
 export interface CardSearchParams {
@@ -118,6 +125,12 @@ export interface PaginatedCardResponse {
   total_results: number;
 }
 
+export interface InvestigatorUsageData {
+  rate: number;
+  decks_with_card: number;
+  total_decks: number;
+}
+
 export interface CardStatsResponse {
   card_info: {
     code: string;
@@ -127,7 +140,7 @@ export interface CardStatsResponse {
   deck_stats: {
     popularity: {
       overall_usage_rate: number;
-      investigator_usage_rate: { [key: string]: number };
+      investigator_usage_rate: { [key: string]: number | InvestigatorUsageData };
       investigator_spread: number;
     };
     trend: {

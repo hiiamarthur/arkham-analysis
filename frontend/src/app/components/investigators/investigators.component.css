@@ -298,6 +298,19 @@
   font-weight: 500;
 }
 
+.perf-help {
+  font-size: 0.7rem;
+  color: #475569;
+  margin-top: 0.5rem;
+  line-height: 1.4;
+  font-style: italic;
+  min-height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
 /* Archetypes Section */
 .archetypes-section {
   margin-bottom: 3rem;
@@ -328,35 +341,11 @@
   gap: 1rem;
 }
 
-.archetype-name {
-  flex: 1;
-  color: #c8d3d5;
-  font-weight: 500;
-  min-width: 200px;
-}
-
-.archetype-bar {
-  flex: 2;
-  background: rgba(30, 41, 59, 0.5);
-  height: 0.5rem;
-  border-radius: 9999px;
-  overflow: hidden;
-  position: relative;
-}
-
 .archetype-fill {
   height: 100%;
   background: linear-gradient(90deg, #3a5a4a, #2d4d3d);
   border-radius: 9999px;
   transition: width 0.3s ease;
-}
-
-.archetype-percentage {
-  font-family: 'JetBrains Mono', monospace;
-  color: #94a3b8;
-  font-weight: 600;
-  min-width: 60px;
-  text-align: right;
 }
 
 /* Scenario Performance */
@@ -532,20 +521,54 @@
 
 /* Archetype Adjustments */
 .archetype-item {
-  display: grid;
-  grid-template-columns: 200px 1fr 100px 120px;
-  align-items: center;
-  gap: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
   padding: 0.75rem;
   background: rgba(15, 15, 27, 0.3);
   border-radius: 0.5rem;
 }
 
+.archetype-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.archetype-signature-cards {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  flex: 1;
+}
+
+.archetype-meta {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
 .archetype-count {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 0.875rem;
+  font-size: 0.8rem;
   color: #64748b;
-  text-align: right;
+}
+
+.archetype-percentage {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.875rem;
+  color: #94a3b8;
+  font-weight: 600;
+}
+
+.archetype-bar {
+  width: 100%;
+  background: rgba(30, 41, 59, 0.5);
+  height: 0.35rem;
+  border-radius: 9999px;
 }
 
 /* Gems List */
@@ -668,11 +691,23 @@
 
 .consideration-item {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 0.5rem;
   padding: 1rem;
   background: rgba(15, 15, 27, 0.3);
   border-radius: 0.5rem;
+}
+
+.consideration-item > .consideration-label,
+.consideration-item > .consideration-value {
+  display: block;
+}
+
+.consideration-desc {
+  font-size: 0.8rem;
+  color: #64748b;
+  line-height: 1.5;
+  font-style: italic;
 }
 
 .consideration-label {

@@ -17,6 +17,7 @@ class InvestigatorStats:
     ):
         self.investigator_code = investigator.code
         self.investigator_name = self._get_investigator_name(decks)
+        self.all_decks = decks  # Store all decks for meta calculations
         self.decks = [
             deck for deck in decks if deck.investigator_code == investigator.code
         ]
@@ -331,10 +332,13 @@ class InvestigatorStats:
 
     def _get_meta_position(self) -> Dict:
         """Analyze investigator's position in the current meta"""
+        total_decks_in_meta = len(self.all_decks) if self.all_decks else 1
+        meta_share = (len(self.decks) / total_decks_in_meta) if total_decks_in_meta > 0 else 0.0
+
         return {
             "total_decks": len(self.decks),
-            "meta_share": len(self.decks)
-            / 1000,  # Simplified - would need total deck data
+            "meta_share": meta_share,
+            "total_decks_analyzed": total_decks_in_meta,
             "activity_level": (
                 "active"
                 if len(self.decks) > 10

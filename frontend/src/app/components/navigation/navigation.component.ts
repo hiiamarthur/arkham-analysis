@@ -16,7 +16,7 @@ export class NavigationComponent {
 
   menuItems = [
     { path: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
-    { path: '/analysis', label: 'Card Analysis', icon: 'card' },
+    { path: '/analysis', label: 'Card Analysis', icon: 'level_2_bullet_point' },
     { path: '/investigators', label: 'Investigators', icon: 'investigator' },
     { path: '/threat-assessment', label: 'Threat Assessment', icon: 'threat' },
     { path: '/about', label: 'About', icon: 'info' }

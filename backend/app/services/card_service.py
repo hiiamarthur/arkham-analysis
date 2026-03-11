@@ -1,11 +1,13 @@
 from typing import Any, Dict, Optional, List, Tuple, cast
 from sqlalchemy.ext.asyncio import AsyncSession
+from datetime import datetime, timedelta
 
 from app.models.arkham_model import CardModel
 from app.repositories.base_repositories import BaseRepository
 from app.services.deck_service import DeckService
 from app.adapters.card_adapters import UnifiedCardAdapter
 from app.schemas.card_schema import CardSchema
+from app.core.redis_client import get_redis_client
 from domain.card.investigator_card import InvestigatorCard
 from domain.card.context import InvestigatorStats
 from domain.card.card_type import CardType
@@ -29,6 +31,18 @@ class CardService:
         self, card_id: str, days: int = 365, trend_period: str = "month"
     ):
         """Get comprehensive card statistics including popularity and trends"""
+        # Try to get from cache first
+        redis_client = await get_redis_client()
+        cache_key = f"card_stats:{card_id}"
+
+        if redis_client.is_connected:
+            cached_stats = await redis_client.get(cache_key)
+            if cached_stats:
+                print(f"Cache hit for card {card_id}")
+                return cached_stats
+
+        print(f"Cache miss for card {card_id}, calculating stats...")
+
         # Get card from database
         card = await self.card_repo.get_first(
             filters={"filter_by[code][equals]": card_id}
@@ -99,15 +113,25 @@ class CardService:
             converted_decks,
         )
 
-        return {
+        # Build response with cache metadata
+        result = {
             "card_info": {"code": card.code, "name": card.name, "type": card.type_name},
             "deck_stats": card_stats.get_deck_stats(trend_period=trend_period),
             "data_source": {
                 "decks_analyzed": len(decks),
                 "days_covered": days,
                 "trend_period": trend_period,
+                "last_updated": datetime.now().isoformat(),
+                "next_update": (datetime.now() + timedelta(days=7)).isoformat(),
             },
         }
+
+        # Cache the result (7 days TTL)
+        if redis_client.is_connected:
+            cache_ttl = 60 * 60 * 24 * 7  # 7 days
+            await redis_client.set(cache_key, result, expire=cache_ttl)
+
+        return result
 
     async def get_investigator_stats(self, investigator_code: str, days: int = 365):
         """Get stats for an investigator"""
@@ -183,7 +207,131 @@ class CardService:
             ),
             converted_decks,
         )
-        return investigator_stats.get_stats()
+        stats = investigator_stats.get_stats()
+
+        # Enrich stats with card names
+        await self._enrich_stats_with_card_names(stats)
+
+        return stats
+
+    async def _enrich_stats_with_card_names(self, stats: dict):
+        """Add card names to all card_code fields in stats"""
+        # Collect all unique card codes
+        card_codes = set()
+
+        # From card rankings
+        if "card_rankings" in stats:
+            for card in stats["card_rankings"]:
+                if "card_code" in card:
+                    card_codes.add(card["card_code"])
+
+        # From staple cards
+        if "staple_cards" in stats:
+            for card in stats["staple_cards"]:
+                if "card_code" in card:
+                    card_codes.add(card["card_code"])
+
+        # From rising/falling cards
+        for key in ["rising_cards", "falling_cards"]:
+            if key in stats:
+                for card in stats[key]:
+                    if "card_code" in card:
+                        card_codes.add(card["card_code"])
+
+        # From underused gems and overused cards
+        for key in ["underused_gems", "overused_cards"]:
+            if key in stats:
+                for card in stats[key]:
+                    if "card_code" in card:
+                        card_codes.add(card["card_code"])
+
+        # From card synergies
+        if "card_synergies" in stats:
+            for synergy in stats["card_synergies"]:
+                if "card1" in synergy:
+                    card_codes.add(synergy["card1"])
+                if "card2" in synergy:
+                    card_codes.add(synergy["card2"])
+
+        # From card efficiency ratings
+        if "card_efficiency_ratings" in stats:
+            for card in stats["card_efficiency_ratings"]:
+                if "card_code" in card:
+                    card_codes.add(card["card_code"])
+
+        # From deck archetypes
+        if "deck_archetypes" in stats:
+            for archetype in stats["deck_archetypes"]:
+                for code in archetype.get("archetype_signature", []):
+                    card_codes.add(code)
+
+        # From build recommendations
+        if "build_recommendations" in stats:
+            rec = stats["build_recommendations"]
+            for key in ["core_recommendations", "hidden_gems", "trending_picks"]:
+                for code in rec.get(key, []):
+                    card_codes.add(code)
+
+        # Fetch card names
+        card_name_map = {}
+        for code in card_codes:
+            try:
+                card = await self.card_repo.get_first(
+                    filters={"filter_by[code][equals]": code}
+                )
+                if card:
+                    card_name_map[code] = card.name
+            except Exception:
+                card_name_map[code] = code  # Fallback to code if lookup fails
+
+        # Add card names to stats
+        if "card_rankings" in stats:
+            for card in stats["card_rankings"]:
+                if "card_code" in card:
+                    card["card_name"] = card_name_map.get(card["card_code"], card["card_code"])
+
+        if "staple_cards" in stats:
+            for card in stats["staple_cards"]:
+                if "card_code" in card:
+                    card["card_name"] = card_name_map.get(card["card_code"], card["card_code"])
+
+        for key in ["rising_cards", "falling_cards"]:
+            if key in stats:
+                for card in stats[key]:
+                    if "card_code" in card:
+                        card["card_name"] = card_name_map.get(card["card_code"], card["card_code"])
+
+        for key in ["underused_gems", "overused_cards"]:
+            if key in stats:
+                for card in stats[key]:
+                    if "card_code" in card:
+                        card["card_name"] = card_name_map.get(card["card_code"], card["card_code"])
+
+        if "card_synergies" in stats:
+            for synergy in stats["card_synergies"]:
+                if "card1" in synergy:
+                    synergy["card1_name"] = card_name_map.get(synergy["card1"], synergy["card1"])
+                if "card2" in synergy:
+                    synergy["card2_name"] = card_name_map.get(synergy["card2"], synergy["card2"])
+
+        if "card_efficiency_ratings" in stats:
+            for card in stats["card_efficiency_ratings"]:
+                if "card_code" in card:
+                    card["card_name"] = card_name_map.get(card["card_code"], card["card_code"])
+
+        if "deck_archetypes" in stats:
+            for archetype in stats["deck_archetypes"]:
+                archetype["archetype_signature_names"] = [
+                    card_name_map.get(code, code)
+                    for code in archetype.get("archetype_signature", [])
+                ]
+
+        if "build_recommendations" in stats:
+            rec = stats["build_recommendations"]
+            for key in ["core_recommendations", "hidden_gems", "trending_picks"]:
+                rec[f"{key}_names"] = [
+                    card_name_map.get(code, code) for code in rec.get(key, [])
+                ]
 
     async def search_all_cards(
         self,

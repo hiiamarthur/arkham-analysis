@@ -1,14 +1,15 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, ViewEncapsulation } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CardModalService } from '../../services/card-modal.service';
 import { ArkhamIconsPipe } from '../pipes/arkham-icons.pipe';
 import { IconService } from '../services/icon.service';
 import { ArkhamSvgIconsService } from '../services/arkham-svg-icons.service';
-import { SafeHtml } from '@angular/platform-browser';
+import { SafeHtml, DomSanitizer } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-card-modal',
   standalone: true,
+  encapsulation: ViewEncapsulation.None,
   imports: [CommonModule, ArkhamIconsPipe],
   template: `
     <!-- Card Stats Modal -->
@@ -23,47 +24,15 @@ import { SafeHtml } from '@angular/platform-browser';
         </div>
 
         <!-- Card Content -->
-        <div *ngIf="!cardModalService.loading() && cardModalService.selectedCardStats() as stats" class="stats-content">
+        <div *ngIf="!cardModalService.loading() && cardModalService.selectedCardDetails() as details" class="stats-content">
           <!-- Header -->
           <div class="stats-header">
-            <h2>{{stats.card_info.name}}</h2>
-            <span class="card-type-badge">{{stats.card_info.type}}</span>
-          </div>
-
-          <!-- Overview Stats -->
-          <div class="stats-overview-compact">
-            <div class="stat-card-compact">
-              <span class="stat-icon-compact" [innerHTML]="getIcon('popularity')"></span>
-              <div class="stat-content-compact">
-                <div class="stat-value-compact">{{ stats.deck_stats.popularity.overall_usage_rate * 100 | number:'1.1-1' }}%</div>
-                <div class="stat-label-compact">Usage Rate</div>
-              </div>
-            </div>
-            <div class="stat-card-compact">
-              <span class="stat-icon-compact" [innerHTML]="getTrendIcon(stats.deck_stats.trend.trend_direction)"></span>
-              <div class="stat-content-compact">
-                <div class="stat-value-compact">{{ stats.deck_stats.trend.change_rate * 100 | number:'1.1-1' }}%</div>
-                <div class="stat-label-compact">Trend</div>
-              </div>
-            </div>
-            <div class="stat-card-compact">
-              <span class="stat-icon-compact" [innerHTML]="getIcon('target')"></span>
-              <div class="stat-content-compact">
-                <div class="stat-value-compact">{{ stats.deck_stats.popularity.investigator_spread | number:'1.0-0' }}</div>
-                <div class="stat-label-compact">Investigator Spread</div>
-              </div>
-            </div>
-            <div class="stat-card-compact">
-              <span class="stat-icon-compact" [innerHTML]="getIcon('total-decks')"></span>
-              <div class="stat-content-compact">
-                <div class="stat-value-compact">{{ stats.data_source.decks_analyzed.toLocaleString() }}</div>
-                <div class="stat-label-compact">Decks Analyzed</div>
-              </div>
-            </div>
+            <h2>{{details.name}}</h2>
+            <span class="card-type-badge">{{details.type_name}}</span>
           </div>
 
           <!-- Card Details -->
-          <div *ngIf="cardModalService.selectedCardDetails() as details" class="card-details-section-top">
+          <div class="card-details-section-top">
             <div class="card-details-layout-horizontal">
               <!-- Card Image -->
               <div class="card-image-container">
@@ -129,6 +98,14 @@ import { SafeHtml } from '@angular/platform-browser';
                 <div class="traits-row" *ngIf="details.traits">
                   <span class="trait-badge" *ngFor="let trait of getTraitsArray(details.traits)">{{trait}}</span>
                 </div>
+
+                <!-- View Full Analysis Button -->
+                <div class="modal-actions">
+                  <a [href]="'/analysis/' + details.code" target="_blank" class="btn-analysis">
+                    <span [innerHTML]="getIcon('analysis')"></span>
+                    View Full Analysis
+                  </a>
+                </div>
               </div>
             </div>
           </div>
@@ -142,14 +119,15 @@ export class CardModalComponent {
   cardModalService = inject(CardModalService);
   private iconService = inject(IconService);
   private arkhamSvgIconsService = inject(ArkhamSvgIconsService);
+  private sanitizer = inject(DomSanitizer);
 
   getIcon(iconName: string): SafeHtml {
     return this.iconService.getIcon(iconName);
   }
 
   getSkillIcon(skillName: string): SafeHtml {
-    // Use colored version for skill icons
-    return this.arkhamSvgIconsService.getIcon(`${skillName}-color`);
+    const svg = this.arkhamSvgIconsService.getIcon(`${skillName}-color`);
+    return this.sanitizer.bypassSecurityTrustHtml(svg);
   }
 
   getTrendIcon(trendDirection: string): SafeHtml {

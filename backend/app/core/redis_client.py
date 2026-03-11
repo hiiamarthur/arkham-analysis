@@ -173,3 +173,10 @@ class RedisClient:
 
 # Global Redis client instance
 redis_client = RedisClient()
+
+
+async def get_redis_client() -> RedisClient:
+    """Get Redis client instance (for dependency injection)"""
+    if not redis_client.is_connected:
+        await redis_client.connect()
+    return redis_client

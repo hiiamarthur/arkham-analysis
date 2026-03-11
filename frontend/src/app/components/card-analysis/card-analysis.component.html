@@ -602,7 +602,7 @@
             <span class="stat-icon-compact" [innerHTML]="getIcon('popularity')"></span>
             <div class="stat-content-compact">
               <div class="stat-value-compact">{{ stats.deck_stats.popularity.overall_usage_rate * 100 | number:'1.1-1' }}%</div>
-              <div class="stat-label-compact">Usage</div>
+              <div class="stat-label-compact">{{getDecksWithCard(stats).toLocaleString()}} out of {{stats.data_source.decks_analyzed.toLocaleString()}} decks</div>
             </div>
           </div>
           <div class="stat-card-compact">
@@ -612,23 +612,28 @@
                                       [class.negative]="stats.deck_stats.trend.trend_direction === 'decreasing'">
                 {{stats.deck_stats.trend.change_rate > 0 ? '+' : ''}}{{ stats.deck_stats.trend.change_rate | number:'1.1-1' }}%
               </div>
-              <div class="stat-label-compact">Trend</div>
+              <div class="stat-label-compact">{{getTrendDateRange(stats)}}</div>
             </div>
           </div>
           <div class="stat-card-compact">
             <span class="stat-icon-compact" [innerHTML]="getIcon('target')"></span>
             <div class="stat-content-compact">
               <div class="stat-value-compact">{{ stats.deck_stats.popularity.investigator_spread * 100 | number:'1.1-1' }}%</div>
-              <div class="stat-label-compact">Spread</div>
+              <div class="stat-label-compact">{{getInvestigatorsUsingCard(stats)}} out of {{getTotalInvestigators(stats)}} investigators</div>
             </div>
           </div>
           <div class="stat-card-compact">
-            <span class="stat-icon-compact" [innerHTML]="getIcon('total-decks')"></span>
+            <span class="stat-icon-compact" [innerHTML]="getIcon('data-source')"></span>
             <div class="stat-content-compact">
-              <div class="stat-value-compact">{{stats.data_source.decks_analyzed.toLocaleString()}}</div>
-              <div class="stat-label-compact">Decks</div>
+              <div class="stat-value-compact">{{stats.data_source.days_covered}}</div>
+              <div class="stat-label-compact">Days Covered</div>
             </div>
           </div>
+        </div>
+
+        <!-- Last Updated Info -->
+        <div class="stats-footer-compact" *ngIf="getLastUpdatedText(stats)">
+          {{getLastUpdatedText(stats)}}
         </div>
 
         <!-- Card Details Section - Full Width Below Overview -->
@@ -770,7 +775,7 @@
           <!-- Top Investigators - Compact -->
           <div class="stats-section-compact">
             <div class="section-header-compact" (click)="toggleTopInvestigators()">
-              <span><span [innerHTML]="getIcon('investigator')"></span> Top Investigators</span>
+              <span><span [innerHTML]="getIcon('investigator')"></span> Top Investigators <span style="font-weight: 400; color: #64748b;">(% of their decks)</span></span>
               <span class="expand-icon">{{ topInvestigatorsExpanded() ? '▼' : '▶' }}</span>
             </div>
             <div class="investigator-list-compact" *ngIf="topInvestigatorsExpanded()">
@@ -797,7 +802,8 @@
                    class="trend-bar-compact">
                 <div class="trend-fill" [style.height.%]="getTrendBarHeight(period.value.usage_rate, stats.deck_stats.trend.trend_data)">
                   <span class="trend-tooltip-compact">
-                    {{ period.value.usage_rate * 100 | number:'1.0-0' }}%
+                    {{ period.value.usage_rate * 100 | number:'1.0-0' }}%<br>
+                    <span style="font-size: 0.625rem; opacity: 0.8;">{{period.value.total_decks}} decks</span>
                   </span>
                 </div>
                 <div class="trend-month">{{formatPeriod(period.key)}}</div>

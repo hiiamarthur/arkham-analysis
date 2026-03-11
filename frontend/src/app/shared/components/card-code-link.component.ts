@@ -1,5 +1,6 @@
 import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import { CardModalService } from '../../services/card-modal.service';
 
 @Component({
@@ -11,7 +12,7 @@ import { CardModalService } from '../../services/card-modal.service';
       class="card-code-link"
       (click)="onClick()"
       [title]="'Click to view ' + cardCode + ' details'">
-      {{cardCode}}
+      <ng-content>{{cardCode}}</ng-content>
     </span>
   `,
   styles: [`
@@ -43,9 +44,18 @@ export class CardCodeLinkComponent {
   @Input({ required: true }) cardCode!: string;
 
   private cardModalService = inject(CardModalService);
+  private router = inject(Router);
 
   onClick(): void {
-    if (this.cardCode) {
+    if (!this.cardCode) return;
+
+    // Check if we're on the analysis page
+    const currentUrl = this.router.url;
+    if (currentUrl.startsWith('/analysis')) {
+      // Navigate to /analysis/{code} to change URL
+      this.router.navigate(['/analysis', this.cardCode]);
+    } else {
+      // On other pages (investigators, etc.), open modal
       this.cardModalService.openCardModal(this.cardCode);
     }
   }

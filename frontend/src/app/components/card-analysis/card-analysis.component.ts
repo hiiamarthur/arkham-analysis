@@ -1,6 +1,7 @@
 import { Component, signal, computed, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormArray } from '@angular/forms';
+import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { AnalysisService, CardAnalysisRequest, AnalysisResponse } from '../../services/analysis.service';
 import { DataTableComponent, TableColumn, TableConfig } from '../../shared/components/data-table.component';
 import { CardService, CardResponse, CardStatsResponse } from '../../services/card.service';
@@ -50,7 +51,7 @@ interface Card {
 @Component({
   selector: 'app-card-analysis',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, DataTableComponent, ArkhamIconsPipe],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, DataTableComponent, ArkhamIconsPipe],
   templateUrl: './card-analysis.component.html',
   styleUrl: './card-analysis.component.css'
 })
@@ -83,6 +84,7 @@ export class CardAnalysisComponent implements OnInit {
   // Expandable sections
   topInvestigatorsExpanded = signal(true);
   usageTrendExpanded = signal(true);
+  expandedInvestigatorDetails = signal<Set<string>>(new Set());
 
   // Pagination
   currentPage = signal(1);
@@ -146,6 +148,8 @@ export class CardAnalysisComponent implements OnInit {
   private arkhamIconsService = inject(ArkhamSvgIconsService);
   private iconService = inject(IconService);
   private sanitizer = inject(DomSanitizer);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
 
   constructor(
     private fb: FormBuilder,
@@ -174,8 +178,50 @@ export class CardAnalysisComponent implements OnInit {
   availableTraits = computed(() => this.appState.traits());
 
   ngOnInit(): void {
-    // Load all cards when component initializes
-    this.loadCards();
+    // Subscribe to route parameter changes
+    this.route.paramMap.subscribe(paramMap => {
+      const cardCode = paramMap.get('code');
+      console.log('Route params changed, code:', cardCode);
+
+      if (cardCode) {
+        console.log('Loading card details for:', cardCode);
+        // Load card details and stats for the specific card
+        this.loadCardDetails(cardCode);
+      } else {
+        console.log('No card code, loading all cards');
+        // Close modal and load all cards when component initializes
+        this.showStatsModal.set(false);
+        this.selectedCardStats.set(null);
+        this.selectedCardDetails.set(null);
+        this.loadCards();
+      }
+    });
+  }
+
+  private loadCardDetails(cardCode: string): void {
+    this.statsLoading.set(true);
+    this.showStatsModal.set(true);
+
+    // Fetch card details and stats in parallel
+    const cardDetails$ = this.cardService.getCard(cardCode);
+    const cardStats$ = this.cardService.getCardStats(cardCode);
+
+    import('rxjs').then(({ forkJoin }) => {
+      forkJoin({
+        details: cardDetails$,
+        stats: cardStats$
+      }).subscribe({
+        next: (result) => {
+          this.selectedCardDetails.set(result.details);
+          this.selectedCardStats.set(result.stats);
+          this.statsLoading.set(false);
+        },
+        error: (err) => {
+          console.error('Error fetching card data:', err);
+          this.statsLoading.set(false);
+        }
+      });
+    });
   }
 
   private loadCards(): void {
@@ -554,40 +600,22 @@ export class CardAnalysisComponent implements OnInit {
   }
 
   onCardClick(card: Card): void {
-    // Fetch both card details and stats from API
-    this.statsLoading.set(true);
-    this.showStatsModal.set(true);
-
-    // Fetch card details and stats in parallel
-    const cardDetails$ = this.cardService.getCard(card.code);
-    const cardStats$ = this.cardService.getCardStats(card.code);
-
-    // Use RxJS forkJoin to wait for both requests
-    import('rxjs').then(({ forkJoin }) => {
-      forkJoin({
-        details: cardDetails$,
-        stats: cardStats$
-      }).subscribe({
-        next: (result) => {
-          this.selectedCardDetails.set(result.details);
-          this.selectedCardStats.set(result.stats);
-          this.statsLoading.set(false);
-        },
-        error: (err) => {
-          console.error('Error fetching card data:', err);
-          this.statsLoading.set(false);
-          // Fall back to enriched card for display
-          const enrichedCard = this.enrichCardWithStats(card);
-          this.selectedCard.set(enrichedCard);
-        }
-      });
+    console.log('Card clicked:', card.code);
+    // Navigate to /analysis/{code} instead of opening modal
+    this.router.navigate(['/analysis', card.code]).then(success => {
+      console.log('Navigation success:', success);
     });
   }
 
   closeStatsModal(): void {
+    console.log('Closing stats modal, navigating to /analysis');
     this.showStatsModal.set(false);
     this.selectedCardStats.set(null);
     this.selectedCardDetails.set(null);
+    // Navigate back to /analysis without card code
+    this.router.navigate(['/analysis']).then(success => {
+      console.log('Navigation to /analysis success:', success);
+    });
   }
 
   toggleTopInvestigators(): void {
@@ -598,9 +626,38 @@ export class CardAnalysisComponent implements OnInit {
     this.usageTrendExpanded.update(expanded => !expanded);
   }
 
-  getTopInvestigators(investigatorUsage: { [key: string]: number }): { code: string; rate: number }[] {
+  toggleInvestigatorDetails(code: string): void {
+    this.expandedInvestigatorDetails.update(expanded => {
+      const newSet = new Set(expanded);
+      if (newSet.has(code)) {
+        newSet.delete(code);
+      } else {
+        newSet.add(code);
+      }
+      return newSet;
+    });
+  }
+
+  isInvestigatorDetailsExpanded(code: string): boolean {
+    return this.expandedInvestigatorDetails().has(code);
+  }
+
+  getTopInvestigators(investigatorUsage: { [key: string]: any }): { code: string; rate: number; decksWithCard: number; totalDecks: number }[] {
     return Object.entries(investigatorUsage)
-      .map(([code, rate]) => ({ code, rate }))
+      .map(([code, data]) => {
+        // Handle both old format (number) and new format (object)
+        if (this.isInvestigatorUsageData(data)) {
+          return {
+            code,
+            rate: data.rate ?? 0,
+            decksWithCard: data.decks_with_card ?? 0,
+            totalDecks: data.total_decks ?? 0
+          };
+        }
+        // Old format or invalid data
+        const rate = typeof data === 'number' ? data : 0;
+        return { code, rate, decksWithCard: 0, totalDecks: 0 };
+      })
       .filter(inv => inv.rate > 0)
       .sort((a, b) => b.rate - a.rate)
       .slice(0, 10);
@@ -1051,5 +1108,62 @@ export class CardAnalysisComponent implements OnInit {
     console.log('SVG result:', svg ? 'Got SVG' : 'No SVG', svg.substring(0, 150));
 
     return this.sanitizer.bypassSecurityTrustHtml(svg);
+  }
+
+  // Calculate decks with card from usage rate and total decks
+  getDecksWithCard(stats: CardStatsResponse): number {
+    return Math.round(stats.deck_stats.popularity.overall_usage_rate * stats.data_source.decks_analyzed);
+  }
+
+  // Helper to check if data is InvestigatorUsageData
+  private isInvestigatorUsageData(data: any): data is { rate: number; decks_with_card: number; total_decks: number } {
+    return typeof data === 'object' &&
+           data !== null &&
+           'rate' in data &&
+           'decks_with_card' in data &&
+           'total_decks' in data;
+  }
+
+  // Get investigators using this card (count > 0)
+  getInvestigatorsUsingCard(stats: CardStatsResponse): number {
+    return Object.values(stats.deck_stats.popularity.investigator_usage_rate)
+      .filter(data => {
+        // Handle both old format (number) and new format (object)
+        const rate = this.isInvestigatorUsageData(data) ? data.rate : data;
+        return rate > 0;
+      }).length;
+  }
+
+  // Get total number of investigators
+  getTotalInvestigators(stats: CardStatsResponse): number {
+    return Object.keys(stats.deck_stats.popularity.investigator_usage_rate).length;
+  }
+
+  // Get trend date range
+  getTrendDateRange(stats: CardStatsResponse): string {
+    const periods = Object.keys(stats.deck_stats.trend.trend_data).sort();
+    if (periods.length === 0) return 'No data';
+
+    const firstPeriod = this.formatPeriod(periods[0]);
+    const lastPeriod = this.formatPeriod(periods[periods.length - 1]);
+
+    return `${firstPeriod} - ${lastPeriod}`;
+  }
+
+  // Format last updated time
+  getLastUpdatedText(stats: CardStatsResponse): string {
+    const lastUpdated = (stats.data_source as any).last_updated;
+    if (!lastUpdated) return '';
+
+    const date = new Date(lastUpdated);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return 'Updated today';
+    if (diffDays === 1) return 'Updated yesterday';
+    if (diffDays < 7) return `Updated ${diffDays} days ago`;
+    if (diffDays < 30) return `Updated ${Math.floor(diffDays / 7)} weeks ago`;
+    return `Updated ${Math.floor(diffDays / 30)} months ago`;
   }
 }

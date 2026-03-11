@@ -15,33 +15,19 @@ export class CardModalService {
   constructor(private cardService: CardService) {}
 
   /**
-   * Open card modal with details and stats
+   * Open card modal with details only (no stats API call)
    */
   async openCardModal(cardCode: string): Promise<void> {
     this.loading.set(true);
     this.showModal.set(true);
 
     try {
-      const result = await forkJoin({
-        details: this.cardService.getCard(cardCode),
-        stats: this.cardService.getCardStats(cardCode)
-      }).toPromise();
-
-      if (result) {
-        this.selectedCardDetails.set(result.details);
-        this.selectedCardStats.set(result.stats);
+      const details = await this.cardService.getCard(cardCode).toPromise();
+      if (details) {
+        this.selectedCardDetails.set(details);
       }
     } catch (error) {
-      console.error('Error loading card data:', error);
-      // Try to at least load the card details
-      try {
-        const details = await this.cardService.getCard(cardCode).toPromise();
-        if (details) {
-          this.selectedCardDetails.set(details);
-        }
-      } catch (detailsError) {
-        console.error('Error loading card details:', detailsError);
-      }
+      console.error('Error loading card details:', error);
     } finally {
       this.loading.set(false);
     }

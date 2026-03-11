@@ -111,11 +111,17 @@ class CardStats:
 
             # Safe division
             if len(total_investigator_decks) > 0:
-                usage_rates[investigator] = len(investigator_decks_with_card) / len(
-                    total_investigator_decks
-                )
+                usage_rates[investigator] = {
+                    "rate": len(investigator_decks_with_card) / len(total_investigator_decks),
+                    "decks_with_card": len(investigator_decks_with_card),
+                    "total_decks": len(total_investigator_decks)
+                }
             else:
-                usage_rates[investigator] = 0.0
+                usage_rates[investigator] = {
+                    "rate": 0.0,
+                    "decks_with_card": 0,
+                    "total_decks": 0
+                }
 
         return usage_rates
 

@@ -32,6 +32,10 @@ export class ArkhamSvgIconsService {
     return this.getDefaultIcon(iconName);
   }
 
+  hasIcon(iconName: string): boolean {
+    return iconName.toLowerCase() in this.iconMap;
+  }
+
   getAvailableIcons(): string[] {
     return Object.keys(this.iconMap);
   }
@@ -65,17 +69,11 @@ export class ArkhamSvgIconsService {
 
     // Check if path contains HTML elements (for colored icons with backgrounds)
     if (data.path.includes('<')) {
-      return `<svg width="1.2em" height="1.2em" viewBox="${data.viewBox}" class="arkham-svg-icon" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle;">
-        <title>${title}</title>
-        ${data.path}
-      </svg>`;
+      return `<svg width="1.2em" height="1.2em" viewBox="${data.viewBox}" class="arkham-svg-icon" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle;"><title>${title}</title>${data.path}</svg>`;
     }
 
     // Regular single-path icon
-    return `<svg width="1.2em" height="1.2em" viewBox="${data.viewBox}" class="arkham-svg-icon" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle;">
-      <title>${title}</title>
-      <path d="${data.path}" fill="${data.color}"/>
-    </svg>`;
+    return `<svg width="1.2em" height="1.2em" viewBox="${data.viewBox}" class="arkham-svg-icon" xmlns="http://www.w3.org/2000/svg" style="display: inline-block; vertical-align: middle;"><title>${title}</title><path d="${data.path}" fill="${data.color}"/></svg>`;
   }
 
   private getDefaultIcon(iconName: string): string {

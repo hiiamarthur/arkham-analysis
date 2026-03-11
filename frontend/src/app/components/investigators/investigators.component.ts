@@ -253,4 +253,11 @@ export class InvestigatorsComponent implements OnInit {
     const totalAnalyzed = stats.meta_position.total_decks_analyzed;
     return `Percentage of all competitive decks using this investigator (${totalDecks} out of ${totalAnalyzed} total decks)`;
   }
+
+  // Help panel
+  showHelp = signal<boolean>(false);
+
+  toggleHelp() {
+    this.showHelp.update(v => !v);
+  }
 }

@@ -31,6 +31,7 @@ export interface EncounterCard {
   clues_fixed?: boolean;
   shroud?: number;
   is_per_investigator?: boolean;
+  imagesrc?: string;
 }
 
 export interface ScenarioContext {
@@ -164,6 +165,7 @@ export interface ScenarioContext {
   time_pressure: number;
   resource_scarcity: number;
   encounter_cards: EncounterCard[];
+  scenario_token_modifications: Record<string, { effect: string; value: any }>;
 }
 
 export interface ChaosTokens {
@@ -202,8 +204,8 @@ export class ScenarioService {
     return this.http.get<Campaign[]>(`${this.apiUrl}/campaigns`);
   }
 
-  getScenarioContext(scenarioCode: string): Observable<ScenarioContext> {
-    return this.http.get<ScenarioContext>(`${this.apiUrl}/${scenarioCode}/context`);
+  getScenarioContext(scenarioCode: string, difficulty = 'standard', playerCount = 2): Observable<ScenarioContext> {
+    return this.http.get<ScenarioContext>(`${this.apiUrl}/${scenarioCode}/context?difficulty=${difficulty}&no_of_investigators=${playerCount}`);
   }
 
   getChaosTokens(scenarioCode: string, difficulty: string = 'standard'): Observable<ChaosTokens> {

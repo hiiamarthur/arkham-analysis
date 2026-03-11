@@ -71,13 +71,17 @@ export class ThreatAssessmentComponent implements OnInit {
   ngOnInit(): void {
     this.loadScenarios();
     this.loadCampaigns();
+    // Load context for the default scenario on init
+    const defaultScenario = this.threatForm.get('scenario')?.value;
+    if (defaultScenario) this.loadScenarioContext(defaultScenario);
 
-    // Watch for scenario changes to load context
-    this.threatForm.get('scenario')?.valueChanges.subscribe(scenarioCode => {
-      if (scenarioCode) {
-        this.loadScenarioContext(scenarioCode);
-      }
-    });
+    // Watch for scenario/difficulty changes to reload context
+    const reloadContext = () => {
+      const scenarioCode = this.threatForm.get('scenario')?.value;
+      if (scenarioCode) this.loadScenarioContext(scenarioCode);
+    };
+    this.threatForm.get('scenario')?.valueChanges.subscribe(reloadContext);
+    this.threatForm.get('difficulty')?.valueChanges.subscribe(reloadContext);
 
     // Watch for campaign changes to filter scenarios
     this.threatForm.get('campaign')?.valueChanges.subscribe(campaign => {
@@ -113,7 +117,9 @@ export class ThreatAssessmentComponent implements OnInit {
   async loadScenarioContext(scenarioCode: string): Promise<void> {
     this.loading.set(true);
     try {
-      const context = await this.scenarioService.getScenarioContext(scenarioCode).toPromise();
+      const difficulty = this.threatForm.get('difficulty')?.value || 'standard';
+      const playerCount = this.threatForm.get('playerCount')?.value || 2;
+      const context = await this.scenarioService.getScenarioContext(scenarioCode, difficulty, playerCount).toPromise();
       if (context) {
         this.selectedScenarioContext.set(context);
 
@@ -366,6 +372,67 @@ export class ThreatAssessmentComponent implements OnInit {
     if (level < 0.6) return 'High threat environment requiring defensive play';
     if (level < 0.8) return 'Critical situation demanding immediate action';
     return 'Extreme danger - survival is the only priority';
+  }
+
+  // Encounter deck spoiler gate
+  showEncounterCards = signal<boolean>(false);
+
+  toggleEncounterCards(): void {
+    this.showEncounterCards.update(v => !v);
+  }
+
+  isHiddenFactor(key: string): boolean {
+    return ['health_pressure', 'sanity_pressure', 'resource_pressure'].includes(key);
+  }
+
+  // Pre-compute token distribution display data to avoid multiple function calls in template
+  tokenCompositionDisplay = computed(() => {
+    const dist = this.selectedScenarioContext()?.scenario_context?.chaos_bag_stats?.token_distribution;
+    if (!dist) return [];
+    return Object.entries(dist).map(([key, count]) => {
+      const iconName = this.getTokenIconName(key);
+      const numericDisplay = iconName ? null : this.getNumericTokenDisplay(key);
+      const numericClass = numericDisplay ? this.getNumericTokenClass(numericDisplay) : '';
+      return { key, count, iconName, numericDisplay, numericClass };
+    });
+  });
+
+  // Flatten scenario_token_modifications into a typed array for the template
+  scenarioTokenEffects = computed(() => {
+    const mods = this.selectedScenarioContext()?.scenario_token_modifications;
+    if (!mods) return [];
+    return Object.entries(mods).map(([key, value]) => ({ key, value }));
+  });
+
+  // Maps class-derived token keys to their numeric display value (+1, 0, -1, etc.)
+  getNumericTokenDisplay(key: string): string | null {
+    const map: Record<string, string> = {
+      plusone: '+1', zero: '0',
+      minusone: '-1', minustwo: '-2', minusthree: '-3',
+      minusfour: '-4', minusfive: '-5', minussix: '-6',
+      minuseight: '-8',
+    };
+    return map[key.toLowerCase()] ?? null;
+  }
+
+  getNumericTokenClass(num: string): string {
+    if (num === '+1') return 'numeric-token numeric-token--positive';
+    if (num === '0') return 'numeric-token numeric-token--neutral';
+    return 'numeric-token numeric-token--negative';
+  }
+
+  getTokenIconName(tokenType: string): string | null {
+    // Normalize class-derived names (e.g. autofail, eldersign, elderthing)
+    // to the underscore-keyed icon names used in arkham-icon-data.ts
+    const aliasMap: Record<string, string> = {
+      autofail: 'auto_fail',
+      eldersign: 'elder_sign',
+      elderthing: 'elder_thing',
+    };
+    const key = tokenType.toLowerCase().replace(/\s+/g, '_');
+    const resolved = aliasMap[key] ?? key;
+    const specialTokens = ['skull', 'cultist', 'tablet', 'elder_thing', 'auto_fail', 'bless', 'curse', 'frost', 'elder_sign'];
+    return specialTokens.includes(resolved) ? resolved : null;
   }
 
   getRecommendationText(): string {

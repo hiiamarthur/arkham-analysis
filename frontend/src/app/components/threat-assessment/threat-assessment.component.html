@@ -142,7 +142,7 @@
   </div>
 
   <!-- Results Section -->
-  <div class="results-section" *ngIf="hasAssessment() || hasError()">
+  <div class="results-section" *ngIf="hasAssessment() || hasError() || selectedScenarioContext()">
     <!-- Error Display -->
     <div *ngIf="hasError()" class="error-message">
       <h3>Assessment Failed</h3>
@@ -182,26 +182,28 @@
           <h3>Threat Factor Breakdown</h3>
           <div class="factors-grid">
             <!-- Show context-based factors if available -->
-            <div
-              *ngFor="let factor of (threatFactors() ? (threatFactors() | keyvalue) : (assessment()?.threat_assessment?.threat_factors | keyvalue))"
-              class="factor-item">
-              <div class="factor-header">
-                <span class="factor-name">{{factor.key | titlecase | replace:'_':' '}}</span>
-                <span class="factor-value">{{factor.value * 100 | number:'1.0-0'}}%</span>
-              </div>
-              <div class="factor-bar">
-                <div
-                  class="factor-fill"
-                  [style.width.%]="factor.value * 100"
-                  [class]="getFactorClass(factor.value)">
+            <ng-container *ngFor="let factor of (threatFactors() ? (threatFactors() | keyvalue) : (assessment()?.threat_assessment?.threat_factors | keyvalue))">
+              <div class="factor-item" *ngIf="!isHiddenFactor(factor.key)">
+                <div class="factor-header">
+                  <span class="factor-name">{{factor.key | titlecase | replace:'_':' '}}</span>
+                  <span class="factor-value">{{factor.value * 100 | number:'1.0-0'}}%</span>
+                </div>
+                <div class="factor-bar">
+                  <div
+                    class="factor-fill"
+                    [style.width.%]="factor.value * 100"
+                    [class]="getFactorClass(factor.value)">
+                  </div>
                 </div>
               </div>
-            </div>
+            </ng-container>
           </div>
         </div>
+      </div>
+    </div>
 
-        <!-- Scenario Context Stats -->
-        <div class="scenario-stats" *ngIf="selectedScenarioContext()">
+    <!-- Scenario Context Stats (visible once scenario is selected) -->
+    <div class="scenario-stats" *ngIf="selectedScenarioContext()">
           <h3>Scenario Statistics</h3>
 
           <!-- Encounter Composition -->
@@ -209,19 +211,19 @@
             <h4>Encounter Composition</h4>
             <div class="composition-grid">
               <div class="composition-item">
-                <span class="composition-icon">⚔️</span>
+                <span class="composition-icon" [innerHTML]="getIcon('combat')"></span>
                 <span class="composition-label">Enemies</span>
                 <span class="composition-value">{{selectedScenarioContext()?.scenario_context?.enemy_stats?.enemy_count}}</span>
                 <span class="composition-percent">{{selectedScenarioContext()?.scenario_context?.encounter_wide_stats?.encounter_card_density?.enemy_percentage | number:'1.0-0'}}%</span>
               </div>
               <div class="composition-item">
-                <span class="composition-icon">☠️</span>
+                <span class="composition-icon" [innerHTML]="getIcon('auto_fail')"></span>
                 <span class="composition-label">Treacheries</span>
                 <span class="composition-value">{{selectedScenarioContext()?.scenario_context?.treachery_stats?.treachery_count}}</span>
                 <span class="composition-percent">{{selectedScenarioContext()?.scenario_context?.encounter_wide_stats?.encounter_card_density?.treachery_percentage | number:'1.0-0'}}%</span>
               </div>
               <div class="composition-item">
-                <span class="composition-icon">📍</span>
+                <span class="composition-icon" [innerHTML]="getIcon('elder_sign')"></span>
                 <span class="composition-label">Locations</span>
                 <span class="composition-value">{{selectedScenarioContext()?.scenario_context?.location_stats?.no_of_location}}</span>
                 <span class="composition-percent">{{selectedScenarioContext()?.scenario_context?.encounter_wide_stats?.encounter_card_density?.location_percentage | number:'1.0-0'}}%</span>
@@ -261,25 +263,25 @@
             <h4>Skill Test Requirements</h4>
             <div class="test-grid">
               <div class="test-item" *ngIf="selectedScenarioContext()?.scenario_context?.treachery_stats?.no_of_willpower_test as count">
-                <span class="test-icon">[willpower]</span>
+                <span class="test-icon" [innerHTML]="getIcon('willpower')"></span>
                 <span class="test-label">Willpower</span>
                 <span class="test-count">{{count}} tests</span>
                 <span class="test-avg">Avg: {{selectedScenarioContext()?.scenario_context?.treachery_stats?.average_willpower_test_value | number:'1.1-1'}}</span>
               </div>
               <div class="test-item" *ngIf="selectedScenarioContext()?.scenario_context?.treachery_stats?.no_of_agility_test as count">
-                <span class="test-icon">[agility]</span>
+                <span class="test-icon" [innerHTML]="getIcon('agility')"></span>
                 <span class="test-label">Agility</span>
                 <span class="test-count">{{count}} tests</span>
                 <span class="test-avg">Avg: {{selectedScenarioContext()?.scenario_context?.treachery_stats?.average_agility_test_value | number:'1.1-1'}}</span>
               </div>
               <div class="test-item" *ngIf="selectedScenarioContext()?.scenario_context?.treachery_stats?.no_of_intellect_test as count">
-                <span class="test-icon">[intellect]</span>
+                <span class="test-icon" [innerHTML]="getIcon('intellect')"></span>
                 <span class="test-label">Intellect</span>
                 <span class="test-count">{{count}} tests</span>
                 <span class="test-avg">Avg: {{selectedScenarioContext()?.scenario_context?.treachery_stats?.average_intellect_test_value | number:'1.1-1'}}</span>
               </div>
               <div class="test-item" *ngIf="selectedScenarioContext()?.scenario_context?.treachery_stats?.no_of_combat_test as count">
-                <span class="test-icon">[combat]</span>
+                <span class="test-icon" [innerHTML]="getIcon('combat')"></span>
                 <span class="test-label">Combat</span>
                 <span class="test-count">{{count}} tests</span>
                 <span class="test-avg">Avg: {{selectedScenarioContext()?.scenario_context?.treachery_stats?.average_combat_test_value | number:'1.1-1'}}</span>
@@ -306,23 +308,32 @@
               <div class="token-distribution">
                 <h5>Token Composition</h5>
                 <div class="token-grid">
-                  <div class="token-item" *ngFor="let token of selectedScenarioContext()?.scenario_context?.chaos_bag_stats?.token_distribution | keyvalue">
-                    <span class="token-type">{{token.key}}</span>
-                    <span class="token-count">{{token.value}}</span>
+                  <div class="token-item" *ngFor="let token of tokenCompositionDisplay()">
+                    <span *ngIf="token.iconName" class="token-type token-icon" [innerHTML]="getIcon(token.iconName)"></span>
+                    <span *ngIf="token.numericDisplay" [class]="token.numericClass">{{token.numericDisplay}}</span>
+                    <span *ngIf="!token.iconName && !token.numericDisplay" class="token-type">{{token.key}}</span>
+                    <span class="token-count">{{token.count}}</span>
                   </div>
                 </div>
               </div>
 
-              <!-- Special Token Effects -->
-              <div class="special-tokens" *ngIf="selectedScenarioContext()?.scenario_context?.chaos_bag_stats?.special_token_effects?.length">
-                <h5>Special Token Effects</h5>
-                <div class="effects-list">
-                  <div class="effect-item" *ngFor="let effect of selectedScenarioContext()?.scenario_context?.chaos_bag_stats?.special_token_effects">
-                    <span class="effect-token">[{{effect.token_type}}]</span>
-                    <span class="effect-text">{{effect.effect}}</span>
+              <!-- Special Token Effects (from scenario modifications) -->
+              <ng-container *ngIf="scenarioTokenEffects() as tokenEffects">
+                <div class="special-tokens" *ngIf="tokenEffects.length > 0">
+                  <h5>Special Token Effects</h5>
+                  <div class="effects-list">
+                    <div class="effect-item" *ngFor="let mod of tokenEffects">
+                      <ng-container *ngIf="getTokenIconName(mod.key) as iconName">
+                        <span class="effect-token effect-token-icon" [innerHTML]="getIcon(iconName)"></span>
+                      </ng-container>
+                      <ng-container *ngIf="!getTokenIconName(mod.key)">
+                        <span class="effect-token">[{{mod.key}}]</span>
+                      </ng-container>
+                      <span class="effect-text">{{mod.value.effect}}</span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </ng-container>
             </div>
           </div>
 
@@ -346,111 +357,111 @@
           </div>
 
           <!-- Encounter Cards List -->
-          <div class="stats-section" *ngIf="groupedEncounterCards()">
+          <div class="stats-section">
             <h4>Encounter Deck Breakdown</h4>
-            <div class="encounter-cards-list">
-              <div class="card-type-group" *ngFor="let group of groupedEncounterCards()">
-                <h5 class="card-type-header">{{group.type | titlecase}}s ({{group.totalQuantity}})</h5>
-                <div class="encounter-card-items">
-                  <div class="encounter-card-item" *ngFor="let card of group.cards">
-                    <div class="card-header">
-                      <div class="card-title-section">
-                        <span class="card-name">{{card.name}}</span>
-                        <span class="card-code">{{card.code}}</span>
-                        <span class="card-quantity" [class.quantity-multiple]="card.quantity > 1">
-                          ×{{card.quantity}}
-                        </span>
-                      </div>
-                      <div class="card-traits" *ngIf="card.traits && card.traits.length > 0">
-                        <span class="trait-badge" *ngFor="let trait of card.traits">{{trait}}</span>
-                      </div>
-                    </div>
-                    <div class="card-details" *ngIf="card.card_type !== 'act' && card.card_type !== 'agenda' && card.card_type !== 'scenario'">
-                      <div class="card-text" *ngIf="card.text">{{card.text}}</div>
-                      <div class="card-stats" *ngIf="card.card_type === 'enemy'">
-                        <span class="stat-badge" *ngIf="card.fight !== undefined">
-                          <span class="stat-label">Fight:</span> {{card.fight}}
-                        </span>
-                        <span class="stat-badge" *ngIf="card.evade !== undefined">
-                          <span class="stat-label">Evade:</span> {{card.evade}}
-                        </span>
-                        <span class="stat-badge" *ngIf="card.health !== undefined">
-                          <span class="stat-label">Health:</span> {{card.health}}<span *ngIf="card.health_per_investigator"> (per investigator)</span>
-                        </span>
-                        <span class="stat-badge" *ngIf="card.damage !== undefined && card.damage > 0">
-                          <span class="stat-label">Damage:</span> {{card.damage}}
-                        </span>
-                        <span class="stat-badge" *ngIf="card.horror !== undefined && card.horror > 0">
-                          <span class="stat-label">Horror:</span> {{card.horror}}
-                        </span>
-                        <span class="stat-badge victory" *ngIf="card.victory">
-                          <span class="stat-label">Victory:</span> {{card.victory}}
-                        </span>
-                      </div>
-                      <div class="card-stats" *ngIf="card.card_type === 'location'">
-                        <span class="stat-badge" *ngIf="card.clues !== undefined">
-                          <span class="stat-label">Clues:</span> {{card.clues}}<span *ngIf="!card.clues_fixed"> (per investigator)</span>
-                        </span>
-                        <span class="stat-badge" *ngIf="card.shroud !== undefined">
-                          <span class="stat-label">Shroud:</span> {{card.shroud}}
-                        </span>
-                        <span class="stat-badge victory" *ngIf="card.victory">
-                          <span class="stat-label">Victory:</span> {{card.victory}}
-                        </span>
+
+            <!-- Spoiler Gate -->
+            <div class="encounter-spoiler-gate" *ngIf="!showEncounterCards()">
+              <span class="spoiler-icon" [innerHTML]="getIcon('alert')"></span>
+              <p class="spoiler-text">Encounter deck contents may contain spoilers for this scenario.</p>
+              <button class="spoiler-reveal-btn" (click)="toggleEncounterCards()">Reveal Encounter Deck</button>
+            </div>
+
+            <!-- Encounter Cards (revealed) -->
+            <ng-container *ngIf="showEncounterCards()">
+              <ng-container *ngIf="groupedEncounterCards(); else noEncounterCards">
+              <div class="encounter-cards-list">
+                <div class="card-type-group" *ngFor="let group of groupedEncounterCards()">
+                  <h5 class="card-type-header">{{group.type | titlecase}}s ({{group.totalQuantity}})</h5>
+                  <div class="encounter-card-items">
+                    <div class="encounter-card-item" *ngFor="let card of group.cards">
+                      <div class="card-layout">
+                        <img
+                          *ngIf="card.imagesrc"
+                          [src]="'https://arkhamdb.com' + card.imagesrc"
+                          [alt]="card.name"
+                          class="encounter-card-image"
+                          loading="lazy">
+                        <div class="card-content">
+                          <div class="card-header">
+                            <div class="card-title-section">
+                              <span class="card-name">{{card.name}}</span>
+                              <span class="card-code">{{card.code}}</span>
+                              <span class="card-quantity" [class.quantity-multiple]="card.quantity > 1">
+                                ×{{card.quantity}}
+                              </span>
+                            </div>
+                            <div class="card-traits" *ngIf="card.traits && card.traits.length > 0">
+                              <span class="trait-badge" *ngFor="let trait of card.traits">{{trait}}</span>
+                            </div>
+                          </div>
+                          <div class="card-details" *ngIf="card.card_type !== 'act' && card.card_type !== 'agenda' && card.card_type !== 'scenario'">
+                            <div class="card-text" *ngIf="card.text">{{card.text}}</div>
+                            <div class="card-stats" *ngIf="card.card_type === 'enemy'">
+                              <span class="stat-badge" *ngIf="card.fight !== undefined">
+                                <span class="stat-label">Fight:</span> {{card.fight}}
+                              </span>
+                              <span class="stat-badge" *ngIf="card.evade !== undefined">
+                                <span class="stat-label">Evade:</span> {{card.evade}}
+                              </span>
+                              <span class="stat-badge" *ngIf="card.health !== undefined">
+                                <span class="stat-label">Health:</span> {{card.health}}<span *ngIf="card.health_per_investigator"> (per investigator)</span>
+                              </span>
+                              <span class="stat-badge" *ngIf="card.damage !== undefined && card.damage > 0">
+                                <span class="stat-label">Damage:</span> {{card.damage}}
+                              </span>
+                              <span class="stat-badge" *ngIf="card.horror !== undefined && card.horror > 0">
+                                <span class="stat-label">Horror:</span> {{card.horror}}
+                              </span>
+                              <span class="stat-badge victory" *ngIf="card.victory">
+                                <span class="stat-label">Victory:</span> {{card.victory}}
+                              </span>
+                            </div>
+                            <div class="card-stats" *ngIf="card.card_type === 'location'">
+                              <span class="stat-badge" *ngIf="card.clues !== undefined">
+                                <span class="stat-label">Clues:</span> {{card.clues}}<span *ngIf="!card.clues_fixed"> (per investigator)</span>
+                              </span>
+                              <span class="stat-badge" *ngIf="card.shroud !== undefined">
+                                <span class="stat-label">Shroud:</span> {{card.shroud}}
+                              </span>
+                              <span class="stat-badge victory" *ngIf="card.victory">
+                                <span class="stat-label">Victory:</span> {{card.victory}}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
+              </ng-container>
+              <ng-template #noEncounterCards>
+                <p class="no-data-text">No encounter card data available for this scenario.</p>
+              </ng-template>
+              <button class="spoiler-hide-btn" (click)="toggleEncounterCards()">Hide Encounter Deck</button>
+            </ng-container>
           </div>
-        </div>
+    </div>
 
-        <!-- Scenario Info -->
-        <div class="scenario-info">
-          <h3>Current Game State</h3>
-          <div class="info-grid">
-            <div class="info-item">
-              <span class="info-label">Scenario</span>
-              <span class="info-value">{{selectedScenarioContext()?.scenario_type || assessment()?.scenario_info?.scenario}}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Act</span>
-              <span class="info-value">{{threatForm.get('act')?.value || assessment()?.scenario_info?.act}}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Agenda</span>
-              <span class="info-value">{{threatForm.get('agenda')?.value || assessment()?.scenario_info?.agenda}}</span>
-            </div>
-            <div class="info-item">
-              <span class="info-label">Doom Pressure</span>
-              <span class="info-value">{{(threatForm.get('doomOnAgenda')?.value / threatForm.get('doomThreshold')?.value * 100) | number:'1.0-0'}}%</span>
-            </div>
-          </div>
+    <!-- Scenario Info -->
+    <div class="scenario-info" *ngIf="hasAssessment()">
+      <h3>Current Game State</h3>
+      <div class="info-grid">
+        <div class="info-item">
+          <span class="info-label">Scenario</span>
+          <span class="info-value">{{selectedScenarioContext()?.scenario_type || assessment()?.scenario_info?.scenario}}</span>
         </div>
-
-        <!-- Recommendations -->
-        <div class="recommendations">
-          <h3>Strategic Recommendations</h3>
-          <div class="recommendation-list">
-            <div
-              class="recommendation-item"
-              [class]="threatLevel().level.toLowerCase()">
-              <div class="recommendation-icon" [innerHTML]="getRecommendationIcon()"></div>
-              <div class="recommendation-content">
-                <h4>{{getRecommendationTitle()}}</h4>
-                <p>{{getRecommendationText()}}</p>
-              </div>
-            </div>
-          </div>
+        <div class="info-item">
+          <span class="info-label">Act</span>
+          <span class="info-value">{{threatForm.get('act')?.value || assessment()?.scenario_info?.act}}</span>
         </div>
-
-        <!-- Raw Data -->
-        <details class="raw-data">
-          <summary>Raw Assessment Data</summary>
-          <pre>{{assessment() | json}}</pre>
-        </details>
+        <div class="info-item">
+          <span class="info-label">Agenda</span>
+          <span class="info-value">{{threatForm.get('agenda')?.value || assessment()?.scenario_info?.agenda}}</span>
+        </div>
       </div>
     </div>
+
   </div>
 </div>

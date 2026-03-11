@@ -157,9 +157,7 @@ export class IconService {
     'alert': `<svg class="arkham-svg-icon" height="1.2em" viewBox="0 0 24 24" fill="#dc3545" xmlns="http://www.w3.org/2000/svg">
       <path d="M12 5.99L19.53 19H4.47L12 5.99M12 2L1 21h22L12 2zm1 14h-2v2h2v-2zm0-6h-2v4h2v-4z"/>
     </svg>`,
-    'skull': `<svg class="arkham-svg-icon" height="1.2em" viewBox="0 0 24 24" fill="#6c2e46" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 2C7.03 2 3 6.03 3 11c0 3.54 2.06 6.58 5.01 8.03L8 21.5c0 .83.67 1.5 1.5 1.5h5c.83 0 1.5-.67 1.5-1.5l-.01-2.47C18.94 17.58 21 14.54 21 11c0-4.97-4.03-9-9-9zM8 11c0-1.1.9-2 2-2s2 .9 2 2-.9 2-2 2-2-.9-2-2zm4 7h-1v-1h1v1zm0-2h-1v-1h1v1zm2 2h-1v-1h1v1zm0-2h-1v-1h1v1zm0-4c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z"/>
-    </svg>`,
+    
     'question': `<svg class="arkham-svg-icon" height="1.2em" viewBox="0 0 24 24" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
       <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17h-2v-2h2v2zm2.07-7.75l-.9.92C13.45 12.9 13 13.5 13 15h-2v-.5c0-1.1.45-2.1 1.17-2.83l1.24-1.26c.37-.36.59-.86.59-1.41 0-1.1-.9-2-2-2s-2 .9-2 2H8c0-2.21 1.79-4 4-4s4 1.79 4 4c0 .88-.36 1.68-.93 2.25z"/>
     </svg>`

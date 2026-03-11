@@ -250,6 +250,29 @@
       <div class="section-card" *ngIf="stats.build_recommendations">
         <h3><span [innerHTML]="getCustomIcon('recommendation')"></span> Build Recommendations</h3>
 
+        <div class="recommendation-section must-include-section" *ngIf="stats.build_recommendations.must_include.length > 0">
+          <h4>Must Include — Signatures &amp; Weaknesses</h4>
+          <p class="section-note">These cards are required in every deck. If replacements exist, you may use any one option per slot.</p>
+          <div class="must-include-list">
+            <div class="must-include-slot" *ngFor="let code of stats.build_recommendations.must_include; let i = index">
+              <app-card-code-link class="card-badge must-include" [cardCode]="code">
+                {{(stats.build_recommendations.must_include_names?.[i]) || code}}
+              </app-card-code-link>
+              <ng-container *ngIf="stats.build_recommendations.must_include_replacements?.[code] as alts">
+                <ng-container *ngIf="alts.length > 0">
+                  <span class="or-divider">or</span>
+                  <app-card-code-link
+                    class="card-badge must-include alt"
+                    *ngFor="let altCode of alts; let j = index"
+                    [cardCode]="altCode">
+                    {{(stats.build_recommendations.must_include_replacements_names?.[code]?.[j]) || altCode}}
+                  </app-card-code-link>
+                </ng-container>
+              </ng-container>
+            </div>
+          </div>
+        </div>
+
         <div class="recommendation-section">
           <h4>Core Cards</h4>
           <div class="card-codes-list">
@@ -322,3 +345,152 @@
   <!-- Card Modal -->
   <app-card-modal></app-card-modal>
 </div>
+
+<!-- Floating Help Button -->
+<button class="help-fab" (click)="toggleHelp()" [class.active]="showHelp()" title="How stats are calculated">
+  {{ showHelp() ? '✕' : '?' }}
+</button>
+
+<!-- Help Panel -->
+<div class="help-panel" [class.open]="showHelp()">
+  <div class="help-panel-header">
+    <h3>How Stats Are Calculated</h3>
+    <p class="help-subtitle">All numbers are derived from competitive ArkhamDB decks</p>
+  </div>
+  <div class="help-panel-body">
+
+    <div class="help-section">
+      <h4>Overview Cards</h4>
+      <dl>
+        <dt>Total Decks</dt>
+        <dd>Count of competitive decks in the analysis window (last 365 days) that used this investigator.</dd>
+
+        <dt>Optimization</dt>
+        <dd>
+          <code>(staple_count / 10 + deck_size_consistency) / 2</code><br>
+          Measures how consistently decks include high-confidence staple cards and how stable deck sizes are.
+          1.0 = maximally optimized; below 0.6 = high optimization opportunity.
+        </dd>
+
+        <dt>Diversity</dt>
+        <dd>
+          <code>unique_deck_count / total_decks</code><br>
+          How varied deck lists are. 1.0 means every deck is completely different; 0.1 means most decks share the same card list.
+        </dd>
+
+        <dt>Innovation</dt>
+        <dd>
+          <code>unique_cards / (avg_deck_size × total_decks) × 10</code><br>
+          Compares the actual card variety used to the maximum possible variety if every deck ran different cards. Below 0.3 = low innovation (most decks are copies of each other).
+        </dd>
+      </dl>
+    </div>
+
+    <div class="help-section">
+      <h4>Deck Composition</h4>
+      <dl>
+        <dt>Average / Most Common Size</dt>
+        <dd>Mean and mode of total card counts across all decks, excluding signature cards.</dd>
+
+        <dt>Size Consistency</dt>
+        <dd>
+          <code>1 − (std_dev / mean)</code> of deck sizes (inverted coefficient of variation).<br>
+          100% = everyone builds the same size; lower = high variance in how many cards people include.
+        </dd>
+      </dl>
+    </div>
+
+    <div class="help-section">
+      <h4>Top Cards &amp; Staple Cards</h4>
+      <dl>
+        <dt>Usage Rate</dt>
+        <dd>
+          <code>decks_with_card / total_decks</code><br>
+          How many decks include this card. Signature cards and unique weaknesses are excluded.
+        </dd>
+
+        <dt>Consistency Score</dt>
+        <dd>
+          <code>1 − (std_dev / mean)</code> of the quantity run per deck.<br>
+          100% = everyone runs the same number of copies; lower = variable copy counts.
+        </dd>
+
+        <dt>Staple Confidence</dt>
+        <dd>
+          <code>usage_rate × consistency_score</code> (capped at 1.0)<br>
+          Combined signal that a card is truly essential — high only when both usage and copy-count consistency are high. Cards above 60% usage rate qualify as staples.
+        </dd>
+      </dl>
+    </div>
+
+    <div class="help-section">
+      <h4>Rising &amp; Falling Cards</h4>
+      <dl>
+        <dt>Change Rate</dt>
+        <dd>
+          <code>(new_usage_rate − old_usage_rate) / old_usage_rate</code><br>
+          Decks are split chronologically into two halves. Cards with &gt;20% relative change appear here. A card at 20% usage that jumps to 30% shows +50% change.
+        </dd>
+      </dl>
+    </div>
+
+    <div class="help-section">
+      <h4>Common Build Patterns</h4>
+      <dl>
+        <dt>Pattern Detection</dt>
+        <dd>
+          Each deck's top 5 highest-quantity cards form its "signature". Decks sharing the same signature are grouped into a pattern. Patterns with at least 2 decks are shown, sorted by frequency.
+        </dd>
+      </dl>
+    </div>
+
+    <div class="help-section">
+      <h4>Hidden Gems</h4>
+      <dl>
+        <dt>Gem Potential</dt>
+        <dd>
+          <code>consistency_score / (usage_rate + 0.1)</code><br>
+          Cards run in &lt;20% of decks but with &gt;80% copy-count consistency. High potential = card is very consistently run at a fixed count whenever it appears — suggesting it's more effective than its low adoption implies.
+        </dd>
+      </dl>
+    </div>
+
+    <div class="help-section">
+      <h4>Build Recommendations</h4>
+      <dl>
+        <dt>Must Include</dt>
+        <dd>Signature cards and unique weaknesses from the investigator's deck requirements. Replacement options (e.g. parallel versions) are shown as alternatives.</dd>
+
+        <dt>Core Cards</dt>
+        <dd>Top staple cards by confidence score — the cards most consistently found in optimized decks for this investigator.</dd>
+
+        <dt>Hidden Gems</dt>
+        <dd>Underused cards with high copy-count consistency — worth testing if you want to experiment beyond the established meta.</dd>
+
+        <dt>Trending Picks</dt>
+        <dd>Cards with the strongest rising usage trend in recent decks.</dd>
+
+        <dt>Optimization Priority</dt>
+        <dd>High when optimization score &lt; 0.6 — indicates staple cards are inconsistently included and tightening the pool would have a noticeable impact.</dd>
+
+        <dt>Innovation Opportunity</dt>
+        <dd>High when innovation score &lt; 0.3 — most decks run nearly identical cards, leaving significant room to explore off-meta picks.</dd>
+      </dl>
+    </div>
+
+    <div class="help-section">
+      <h4>Meta Share</h4>
+      <dl>
+        <dt>Formula</dt>
+        <dd>
+          <code>investigator_decks / all_decks_analyzed</code><br>
+          What fraction of all competitive decks in the period belong to this investigator.
+        </dd>
+      </dl>
+    </div>
+
+  </div>
+</div>
+
+<!-- Help backdrop -->
+<div class="help-backdrop" *ngIf="showHelp()" (click)="toggleHelp()"></div>

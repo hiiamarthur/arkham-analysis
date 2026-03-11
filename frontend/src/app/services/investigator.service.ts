@@ -124,6 +124,10 @@ export interface InvestigatorStatsResponse {
   };
   card_efficiency_ratings: CardEfficiency[];
   build_recommendations: {
+    must_include: string[];
+    must_include_names?: string[];
+    must_include_replacements?: { [slotCode: string]: string[] };
+    must_include_replacements_names?: { [slotCode: string]: string[] };
     core_recommendations: string[];
     core_recommendations_names?: string[];
     hidden_gems: string[];

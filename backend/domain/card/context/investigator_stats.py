@@ -14,6 +14,7 @@ class InvestigatorStats:
         investigator: InvestigatorCard,
         decks: List[Deck],
         trend_period: str = "month",
+        signature_slots: dict | None = None,
     ):
         self.investigator_code = investigator.code
         self.investigator_name = self._get_investigator_name(decks)
@@ -22,6 +23,14 @@ class InvestigatorStats:
             deck for deck in decks if deck.investigator_code == investigator.code
         ]
         self.trend_period = trend_period
+        # signature_slots: {slot_code: [choice_codes]} — each slot is a mandatory card group
+        # with one or more valid choices (original + replacements)
+        self.signature_slots: dict = signature_slots or {}
+        # Flat set of all codes across all slots — used for filtering
+        self.signature_codes: set = set()
+        for slot_code, options in self.signature_slots.items():
+            self.signature_codes.add(slot_code)
+            self.signature_codes.update(options)
 
     def _get_investigator_name(self, decks: List[Deck]) -> str:
         """Get investigator name from decks"""
@@ -100,6 +109,8 @@ class InvestigatorStats:
 
         for deck in self.decks:
             for card_code, quantity in deck.slots.items():
+                if card_code in self.signature_codes:
+                    continue  # Skip signature/weakness cards
                 card_usage[card_code] += 1
                 card_counts[card_code].append(quantity)
 
@@ -185,6 +196,8 @@ class InvestigatorStats:
         card_usage = Counter()
         for deck in decks:
             for card_code in deck.slots.keys():
+                if card_code in self.signature_codes:
+                    continue  # Skip signature/weakness cards
                 card_usage[card_code] += 1
 
         return {
@@ -447,13 +460,36 @@ class InvestigatorStats:
             efficiency_ratings, key=lambda x: x["efficiency_score"], reverse=True
         )
 
+    def _get_must_include_cards(self) -> Dict:
+        """Get signature cards and unique weaknesses grouped by slot with replacements"""
+        if not self.signature_slots:
+            return {"slots": [], "primary_codes": [], "replacements": {}}
+
+        primary_codes = []
+        replacements: Dict[str, List[str]] = {}
+
+        for slot_code, options in self.signature_slots.items():
+            primary_codes.append(slot_code)
+            # Alternatives are options that are NOT the slot code itself
+            alts = [c for c in options if c != slot_code]
+            if alts:
+                replacements[slot_code] = alts
+
+        return {
+            "primary_codes": primary_codes,
+            "replacements": replacements,
+        }
+
     def _generate_build_recommendations(self) -> Dict:
         """Generate deck building recommendations for this investigator"""
         staples = self._get_staple_cards()[:10]
         gems = self._find_underused_gems()[:5]
         trending_up = self._get_trending_cards("rising")[:5]
+        must_include = self._get_must_include_cards()
 
         return {
+            "must_include": must_include["primary_codes"],
+            "must_include_replacements": must_include["replacements"],
             "core_recommendations": [card["card_code"] for card in staples],
             "hidden_gems": [card["card_code"] for card in gems],
             "trending_picks": [card["card_code"] for card in trending_up],

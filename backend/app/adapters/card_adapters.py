@@ -59,6 +59,7 @@ class UnifiedCardAdapter:
             "encounter_position": schema.encounter_position or 0,
             "doom": schema.doom or 0,
             "health_per_investigator": schema.health_per_investigator or False,
+            "imagesrc": schema.imagesrc,
         }
 
         # Remove None values to keep the dict clean

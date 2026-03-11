@@ -49,6 +49,7 @@ class BaseCard(CardMixin, ABC):
     quantity: int = 1
     back_text: Optional[str] = None
     taboo: Optional[TabooData] = None
+    imagesrc: Optional[str] = None
 
     @classmethod
     def from_dict(cls, data: dict) -> "BaseCard":

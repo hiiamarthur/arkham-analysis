@@ -6,6 +6,7 @@ from enum import Enum
 from typing import Dict, List, Any, Tuple
 from .campaigns import CampaignType
 from .difficulty import Difficulty
+from .scenario_modifications import ALL_SCENARIO_MODIFICATIONS
 
 
 class ScenarioType(Enum):
@@ -339,77 +340,14 @@ def get_scenario_display_name(scenario: ScenarioType) -> str:
     return scenario.value.replace("_", " ").title()
 
 
-# Scenario-specific chaos token modifications
+# Scenario-specific chaos token modifications — built from per-campaign modules
+# Convert string keys to ScenarioType enum for type safety
 SCENARIO_MODIFICATIONS: Dict[
     ScenarioType, Dict[str, Dict[Tuple[str, ...], Dict[str, Any]]]
 ] = {
-    ScenarioType.THE_GATHERING: {
-        "skull": {
-            ("easy", "standard"): {
-                "effect": "-X. X is the number of Ghoul enemies at your location.",
-                "value": "X",
-            },
-            ("hard", "expert"): {
-                "effect": "-2. If you fail, after this skill test, search the encounter deck and discard pile for a Ghoul enemy, and draw it. Shuffle the encounter deck.",
-                "value": "2",
-            },
-        },
-        "cultist": {
-            ("easy", "standard"): {
-                "effect": "-1. If you fail, take 1 horror.",
-                "value": -1,
-            },
-            ("hard", "expert"): {
-                "effect": "Reveal another token. If you fail, take 2 horror.",
-                "value": 0,
-                "revealAnotherToken": True,
-            },
-        },
-        "tablet": {
-            ("easy", "standard"): {
-                "effect": "-2. If there is a Ghoul enemy at your location, take 1 damage.",
-                "value": -2,
-            },
-            ("hard", "expert"): {
-                "effect": "-4. If there is a Ghoul enemy at your location, take 1 damage and 1 horror. If you fail, take 2 horror.",
-                "value": -4,
-            },
-        },
-    },
-    ScenarioType.THE_MIDNIGHT_MASKS: {
-        "skull": {
-            ("easy", "standard"): {
-                "effect": "-X. X is the highest number of doom on a Cultist enemy in play.",
-                "value": "-X",
-            },
-            ("hard", "expert"): {
-                "effect": "-X. X is the total number of doom in play.",
-                "value": "-X",
-            },
-        },
-        "cultist": {
-            ("easy", "standard"): {
-                "effect": "-2. Place 1 doom on the nearest Cultist enemy.",
-                "value": -2,
-            },
-            ("hard", "expert"): {
-                "effect": "-2. Place 1 doom on each Cultist enemy in play. If there are no Cultist enemies in play, reveal another token.",
-                "value": -2,
-                "revealAnotherToken": True,
-            },
-        },
-        "tablet": {
-            ("easy", "standard"): {
-                "effect": "-3. If you fail, place 1 of your clues on your location.",
-                "value": -3,
-            },
-            ("hard", "expert"): {
-                "effect": "-4. If you fail, place all your clues on your location.",
-                "value": -4,
-            },
-        },
-    },
-    # Add more scenario modifications as needed...
+    scenario: token_data
+    for scenario in ScenarioType
+    if (token_data := ALL_SCENARIO_MODIFICATIONS.get(scenario.value)) is not None
 }
 
 

@@ -16,7 +16,7 @@ backend_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", ".
 if backend_path not in sys.path:
     sys.path.append(backend_path)
 
-from domain import ScenarioType, Difficulty, CampaignType
+from domain import ScenarioType, Difficulty, CampaignType, get_scenario_modifications
 from domain.Token.chaos_bag import ChaosBag
 from .components import (
     ChaosBagManager,
@@ -98,6 +98,16 @@ class Scenario(ABC):
             "time_pressure": self.calculate_time_pressure(),
             "resource_scarcity": self.calculate_resource_scarcity(),
             "encounter_cards": [card.dict for card in self.encounter_cards],
+            # Scenario-specific chaos token modifications (skull, cultist, tablet, elder_thing)
+            "scenario_token_modifications": self._get_token_modifications(),
+        }
+
+    def _get_token_modifications(self) -> Dict[str, Dict[str, Any]]:
+        """Return scenario-specific token effects for the current difficulty."""
+        mods = get_scenario_modifications(self.scenario_type, self.difficulty)
+        return {
+            token: {"effect": data.get("effect", ""), "value": data.get("value", "")}
+            for token, data in mods.items()
         }
 
     def _serialize_config_summary(self) -> Dict[str, Any]:

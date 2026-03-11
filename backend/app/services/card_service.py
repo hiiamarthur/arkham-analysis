@@ -200,12 +200,29 @@ class CardService:
                 except Exception as e:
                     print(f"Error converting deck: {e}")
 
+        # Extract signature slots from deck_requirements
+        # Structure: {"card": {"SLOT_CODE": {"CHOICE_CODE": "CHOICE_CODE", ...}}}
+        # Each slot has one or more valid choices (original + replacements)
+        signature_slots: dict = {}
+        deck_req = investigator.deck_requirements
+        if isinstance(deck_req, dict):
+            card_req = deck_req.get("card", {})
+            if isinstance(card_req, dict):
+                for slot_code, choices in card_req.items():
+                    if isinstance(choices, dict):
+                        signature_slots[slot_code] = list(choices.keys())
+                    elif isinstance(choices, str):
+                        signature_slots[slot_code] = [choices]
+                    else:
+                        signature_slots[slot_code] = [slot_code]
+
         investigator_stats = InvestigatorStats(
             cast(
                 InvestigatorCard,
                 adapter.schema_to_domain(schema=CardSchema.from_model(investigator)),
             ),
             converted_decks,
+            signature_slots=signature_slots,
         )
         stats = investigator_stats.get_stats()
 
@@ -268,21 +285,25 @@ class CardService:
         # From build recommendations
         if "build_recommendations" in stats:
             rec = stats["build_recommendations"]
-            for key in ["core_recommendations", "hidden_gems", "trending_picks"]:
+            for key in ["must_include", "core_recommendations", "hidden_gems", "trending_picks"]:
                 for code in rec.get(key, []):
                     card_codes.add(code)
+            # From must_include_replacements (dict of slot_code -> [alt_codes])
+            for alt_codes in rec.get("must_include_replacements", {}).values():
+                for code in alt_codes:
+                    card_codes.add(code)
 
-        # Fetch card names
+        # Batch fetch all card names in a single query
         card_name_map = {}
-        for code in card_codes:
+        if card_codes:
             try:
-                card = await self.card_repo.get_first(
-                    filters={"filter_by[code][equals]": code}
+                cards = await self.card_repo.get_all(
+                    filter_by={"filter_by[code][in]": list(card_codes)},
+                    items_per_page=len(card_codes) + 10,
                 )
-                if card:
-                    card_name_map[code] = card.name
-            except Exception:
-                card_name_map[code] = code  # Fallback to code if lookup fails
+                card_name_map = {card.code: card.name for card in cards if card.name}
+            except Exception as e:
+                print(f"Warning: Could not batch fetch card names: {e}")
 
         # Add card names to stats
         if "card_rankings" in stats:
@@ -328,10 +349,16 @@ class CardService:
 
         if "build_recommendations" in stats:
             rec = stats["build_recommendations"]
-            for key in ["core_recommendations", "hidden_gems", "trending_picks"]:
+            for key in ["must_include", "core_recommendations", "hidden_gems", "trending_picks"]:
                 rec[f"{key}_names"] = [
                     card_name_map.get(code, code) for code in rec.get(key, [])
                 ]
+            # Enrich replacement names
+            replacements = rec.get("must_include_replacements", {})
+            rec["must_include_replacements_names"] = {
+                slot_code: [card_name_map.get(c, c) for c in alt_codes]
+                for slot_code, alt_codes in replacements.items()
+            }
 
     async def search_all_cards(
         self,
@@ -625,37 +652,14 @@ class CardService:
         Get all unique traits from all cards.
         Returns a sorted list of unique trait strings.
         """
+        from sqlalchemy import select, text
+        from app.models.arkham_model import TraitModel
         try:
-            # Get all cards
-            cards = await self.card_repo.get_all(
-                filter_by={},
-                items_per_page=10000,
-            )
-
-            # Extract and parse traits
-            all_traits = set()
-            for card in cards:
-                if card.traits:
-                    # Traits might be a string or a list of TraitModel objects
-                    if isinstance(card.traits, str):
-                        # Traits are stored as comma-separated values like "Item. Weapon. Firearm."
-                        # Split by period and strip whitespace
-                        traits_list = [
-                            trait.strip()
-                            for trait in card.traits.replace(".", ",").split(",")
-                            if trait.strip()
-                        ]
-                        all_traits.update(traits_list)
-                    elif isinstance(card.traits, list):
-                        # If it's a list of TraitModel objects, extract names
-                        for trait_obj in card.traits:
-                            if hasattr(trait_obj, "name") and trait_obj.name:
-                                all_traits.add(trait_obj.name.strip())
-                            elif isinstance(trait_obj, str):
-                                all_traits.add(trait_obj.strip())
-
-            # Return sorted list
-            return sorted(list(all_traits))
+            # Query traits table directly — much faster than loading all cards
+            stmt = select(TraitModel.name).distinct().order_by(TraitModel.name)
+            result = await self.db.execute(stmt)
+            traits = [row[0] for row in result.all() if row[0]]
+            return traits
         except Exception as e:
             print(f"Error getting traits: {e}")
             return []
@@ -694,28 +698,23 @@ class CardService:
         Get all unique encounter sets.
         Returns a list of {code, name} objects.
         """
+        from sqlalchemy import select
+        from app.models.arkham_model import CardModel
         try:
-            # Get all cards with encounter set info
-            cards = await self.card_repo.get_all(
-                filter_by={},
-                items_per_page=10000,
+            # Query distinct encounter codes/names directly — much faster than loading all cards
+            stmt = (
+                select(CardModel.encounter_code, CardModel.encounter_name)
+                .where(CardModel.encounter_code.isnot(None))
+                .distinct()
+                .order_by(CardModel.encounter_name)
             )
-
-            # Extract unique encounter sets
-            encounter_sets = {}
-            for card in cards:
-                # Check if card has encounter set code
-                encounter_code = getattr(card, "encounter_code", None)
-                encounter_name = getattr(card, "encounter_name", None)
-
-                if encounter_code:
-                    encounter_sets[encounter_code] = {
-                        "code": encounter_code,
-                        "name": encounter_name or encounter_code,
-                    }
-
-            # Return sorted list by name
-            return sorted(list(encounter_sets.values()), key=lambda x: x["name"])
+            result = await self.db.execute(stmt)
+            encounter_sets = [
+                {"code": row[0], "name": row[1] or row[0]}
+                for row in result.all()
+                if row[0]
+            ]
+            return encounter_sets
         except Exception as e:
             print(f"Error getting encounter sets: {e}")
             return []

@@ -54,7 +54,7 @@ class Campaign(ABC):
                 all_tokens.extend([cls(*args) for _ in range(count)])
             else:
                 # All numbered tokens should work with no parameters
-                all_tokens.extend([token_class for _ in range(count)])
+                all_tokens.extend([token_class() for _ in range(count)])
 
         return all_tokens
 

@@ -88,8 +88,6 @@ class ScenarioService:
             # include=["traits", "linked_card", "bonded_cards.bonded_card"],
         )
         print("encounter_cards", encounter_cards)
-        if not scenarioCard:
-            raise HTTPException(status_code=404, detail="Scenario not found")
         return ScenarioFactory.create_scenario(
             campaign_chaos_bag=ChaosBag(),
             player_count=no_of_investigators,

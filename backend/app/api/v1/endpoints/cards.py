@@ -306,25 +306,7 @@ async def get_card(
     try:
         card = await app_service.get_card(card_code)
 
-        # If it's an investigator, add basic stats
-        if card.type_code == "investigator":
-            try:
-                stats = await card_service.get_investigator_stats(card_code)
-                if stats and "deck_composition" in stats and "meta_position" in stats:
-                    # Deck size stats
-                    card.average_deck_size = stats["deck_composition"].get("average_deck_size")
-                    deck_size_range = stats["deck_composition"].get("deck_size_range", [])
-                    if deck_size_range and len(deck_size_range) >= 2:
-                        card.deck_size_min = deck_size_range[0]
-                        card.deck_size_max = deck_size_range[1]
-
-                    # Popularity stats
-                    card.meta_share = stats["meta_position"].get("meta_share")
-                    card.total_decks = stats["meta_position"].get("total_decks")
-                    card.total_decks_analyzed = stats["meta_position"].get("total_decks_analyzed")
-            except Exception as e:
-                # If stats fail, just return card without stats
-                print(f"Warning: Could not fetch investigator stats for {card_code}: {e}")
+        # Investigator stats are available via /investigator/{code}/stats endpoint
 
         # Set Arkham-specific headers
         response.headers.update(ARKHAM_HEADERS)

@@ -1,0 +1,7 @@
+[build]
+buildCommand = "sed -i \"s|__API_URL__|${API_URL}|g\" src/environments/environment.prod.ts && npm run build"
+
+[deploy]
+startCommand = "node dist/frontend/server/server.mjs"
+healthcheckPath = "/"
+healthcheckTimeout = 30

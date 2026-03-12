@@ -1,178 +1,136 @@
 <div class="about-container">
+
+  <!-- Hero -->
   <div class="hero-section">
     <div class="hero-content">
-      <h1 class="hero-title">
-        <span class="hero-icon" [innerHTML]="getIcon('card')"></span>
-        Arkham Horror Card Analysis
-      </h1>
+      <p class="hero-eyebrow">The Arkham Archives</p>
+      <h1 class="hero-title">Knowledge is the only weapon<br>that matters in Arkham</h1>
       <p class="hero-subtitle">
-        Advanced context-aware card evaluation powered by GPT and comprehensive game state analysis
+        A companion platform for Arkham Horror: The Card Game players. Track investigator trends,
+        read the chaos bag, and face each scenario knowing what you're walking into.
       </p>
       <div class="hero-actions">
-        <a routerLink="/analysis" class="cta-button primary">
-          Start Analysis
+        <a routerLink="/investigators" class="cta-button primary">
+          <span [innerHTML]="getIcon('investigator')"></span>
+          Investigator Archives
         </a>
         <a routerLink="/threat-assessment" class="cta-button secondary">
+          <span [innerHTML]="getIcon('skull')"></span>
           Threat Assessment
         </a>
       </div>
     </div>
+    <div class="hero-divider"></div>
   </div>
 
+  <!-- What this is -->
+  <div class="manifesto-section">
+    <div class="manifesto-inner">
+      <div class="manifesto-block">
+        <h2>What is the Arkham Archives?</h2>
+        <p>
+          Not a deck builder. Not a collection tracker. The Arkham Archives is a reading tool —
+          a way to understand the patterns behind investigator choices, the mathematics behind the chaos bag,
+          and the threat profile of every scenario across every campaign.
+        </p>
+        <p>
+          It draws on published deck data, official card text, and game rules to surface what the numbers
+          actually say. What cards do Agnes players keep reaching for? Which investigator survives
+          a Carcosa bag at Expert? How dangerous is this scenario compared to the last one?
+        </p>
+        <p>
+          These are the questions it answers. No oracles. Just patterns and probability.
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Features -->
   <div class="features-section">
     <div class="section-header">
-      <h2>Intelligent Features</h2>
-      <p>Powered by advanced algorithms and comprehensive game knowledge</p>
+      <h2>What the Archives Contains</h2>
+      <p>Six lenses for understanding the game more clearly</p>
     </div>
-    
+
     <div class="features-grid">
       <div *ngFor="let feature of features" class="feature-card">
         <div class="feature-icon" [innerHTML]="getIcon(feature.icon)"></div>
-        <h3 class="feature-title">{{feature.title}}</h3>
-        <p class="feature-description">{{feature.description}}</p>
+        <h3 class="feature-title">{{ feature.title }}</h3>
+        <p class="feature-description">{{ feature.description }}</p>
       </div>
     </div>
   </div>
 
-  <div class="how-it-works-section">
+  <!-- How to use -->
+  <div class="use-section">
     <div class="section-header">
-      <h2>How It Works</h2>
-      <p>Advanced context-aware analysis in three steps</p>
+      <h2>Before You Enter the Scenario</h2>
+      <p>A suggested ritual for new sessions</p>
     </div>
-    
+
     <div class="steps-container">
       <div class="step">
-        <div class="step-number">1</div>
+        <div class="step-number">I</div>
         <div class="step-content">
-          <h3>Context Collection</h3>
-          <p>System gathers investigator capabilities, campaign rules, current game state, and threat levels to build comprehensive context.</p>
+          <h3>Read the Scenario</h3>
+          <p>Open Threat Assessment. Select your scenario and difficulty. See the encounter deck composition, chaos bag hostility, and what skill tests you will face most.</p>
         </div>
       </div>
-      
-      <div class="step-arrow">→</div>
-      
+
+      <div class="step-arrow">—</div>
+
       <div class="step">
-        <div class="step-number">2</div>
+        <div class="step-number">II</div>
         <div class="step-content">
-          <h3>Dynamic Axiom Calculation</h3>
-          <p>21+ game mechanics axioms adapt in real-time. Expert difficulty increases survivability values, Path to Carcosa emphasizes horror resistance.</p>
+          <h3>Know Your Party</h3>
+          <p>Add your investigators. See exactly how each stat line performs against this scenario's chaos bag, ranked by who is best suited for what this darkness demands.</p>
         </div>
       </div>
-      
-      <div class="step-arrow">→</div>
-      
+
+      <div class="step-arrow">—</div>
+
       <div class="step">
-        <div class="step-number">3</div>
+        <div class="step-number">III</div>
         <div class="step-content">
-          <h3>GPT Analysis</h3>
-          <p>Context-modified prompts enable GPT to provide accurate, situation-specific card evaluations and strategic recommendations.</p>
+          <h3>Check the Meta</h3>
+          <p>Visit the Investigator Archives. See what cards the community considers essential for your investigator, what is rising, and what hidden gems others have found.</p>
         </div>
       </div>
     </div>
   </div>
 
-  <div class="examples-section">
-    <div class="section-header">
-      <h2>Context-Aware Examples</h2>
-      <p>See how the same card gets different evaluations based on context</p>
-    </div>
-    
-    <div class="examples-grid">
-      <div class="example-card">
-        <h3>Emergency Cache - Roland (Expert Carcosa)</h3>
-        <div class="context-tags">
-          <span class="tag fighter">Fighter</span>
-          <span class="tag expert">Expert</span>
-          <span class="tag carcosa">Horror Focus</span>
-          <span class="tag emergency">High Threat</span>
-        </div>
-        <p class="example-text">
-          "Extremely valuable in this high-pressure situation. Resource acceleration worth 1.2 resources per extra resource. 
-          Fast action saves critical time when engaged with horror-dealing enemies."
-        </p>
-      </div>
-      
-      <div class="example-card">
-        <h3>Emergency Cache - Daisy (Easy NotZ)</h3>
-        <div class="context-tags">
-          <span class="tag seeker">Seeker</span>
-          <span class="tag easy">Easy</span>
-          <span class="tag notz">Standard</span>
-          <span class="tag stable">Low Threat</span>
-        </div>
-        <p class="example-text">
-          "Moderate value for setup phase. Consider timing for maximum tome synergy. 
-          Resource acceleration worth 0.8 resources. Can afford to wait for optimal play window."
-        </p>
-      </div>
+  <!-- Lore / tone section -->
+  <div class="lore-section">
+    <div class="lore-inner">
+      <blockquote class="lore-quote">
+        "The darkness between the stars is not empty. It is full of things that cannot be counted,
+        only survived — and only then by those who prepared."
+      </blockquote>
+      <cite class="lore-cite">— Notes found in the Miskatonic University restricted archives</cite>
     </div>
   </div>
 
-  <div class="tech-section">
-    <div class="section-header">
-      <h2>Technical Architecture</h2>
-      <p>Built with modern technologies for performance and scalability</p>
-    </div>
-    
-    <div class="tech-grid">
-      <div *ngFor="let tech of techStack" class="tech-item">
-        <h4 class="tech-name">{{tech.name}}</h4>
-        <p class="tech-description">{{tech.description}}</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="api-section">
-    <div class="section-header">
-      <h2>API Integration</h2>
-      <p>Comprehensive backend services for card analysis</p>
-    </div>
-    
-    <div class="api-grid">
-      <div class="api-item">
-        <h4>Card Strength Analysis</h4>
-        <code>POST /api/v1/analysis/card-strength</code>
-        <p>Context-aware power evaluation with mathematical resource conversion</p>
-      </div>
-      
-      <div class="api-item">
-        <h4>Card Synergies</h4>
-        <code>POST /api/v1/analysis/card-synergies</code>
-        <p>Multi-card interaction analysis and combo recommendations</p>
-      </div>
-      
-      <div class="api-item">
-        <h4>Optimal Timing</h4>
-        <code>POST /api/v1/analysis/card-timing</code>
-        <p>Game state-aware timing recommendations for maximum impact</p>
-      </div>
-      
-      <div class="api-item">
-        <h4>Threat Assessment</h4>
-        <code>GET /api/v1/analysis/threat-assessment</code>
-        <p>Real-time danger level calculation and strategic guidance</p>
-      </div>
-    </div>
-  </div>
-
+  <!-- Footer -->
   <div class="footer-section">
     <div class="footer-content">
-      <h3>Ready to Optimize Your Arkham Strategy?</h3>
-      <p>Start analyzing your cards with advanced context-aware intelligence</p>
+      <h3>The Archives are open.</h3>
+      <p>Choose where to begin.</p>
       <div class="footer-actions">
-        <a routerLink="/analysis" class="cta-button primary">
-          Begin Analysis
-        </a>
+        <a routerLink="/investigators" class="cta-button primary">Investigator Archives</a>
+        <a routerLink="/threat-assessment" class="cta-button secondary">Threat Assessment</a>
+        <a routerLink="/cards" class="cta-button secondary">Card Search</a>
       </div>
-      
+
       <div class="disclaimer">
         <p>
           <small>
-            This tool is for educational and entertainment purposes. 
-            Arkham Horror: The Card Game is a trademark of Fantasy Flight Games.
+            Arkham Horror: The Card Game is a trademark of Fantasy Flight Games / Asmodee.
+            This is an independent fan platform, not affiliated with or endorsed by FFG.
+            Deck data sourced from ArkhamDB.
           </small>
         </p>
       </div>
     </div>
   </div>
+
 </div>

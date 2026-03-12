@@ -1,8 +1,10 @@
 import { Component, signal, computed, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { AnalysisService, ThreatAssessment } from '../../services/analysis.service';
-import { ScenarioService, Scenario, ScenarioContext, Campaign } from '../../services/scenario.service';
+import { ScenarioService, Scenario, ScenarioContext, Campaign, InvestigatorAnalysis, InvestigatorAnalysisResponse } from '../../services/scenario.service';
+import { InvestigatorService, InvestigatorMetadata } from '../../services/investigator.service';
 import { ReplacePipe } from '../../pipes/replace.pipe';
 import { IconService } from '../../shared/services/icon.service';
 import { SafeHtml } from '@angular/platform-browser';
@@ -27,7 +29,14 @@ export class ThreatAssessmentComponent implements OnInit {
   loadingScenarios = signal(false);
   selectedCampaign = signal<string>('');
 
+  // Investigator selection
+  availableInvestigators = signal<InvestigatorMetadata[]>([]);
+  selectedInvestigatorCodes = signal<string[]>([]);
+  investigatorAnalysis = signal<InvestigatorAnalysisResponse | null>(null);
+  analysisLoading = signal(false);
+
   // Computed values
+  canAddInvestigator = computed(() => this.selectedInvestigatorCodes().length < 4);
   hasAssessment = computed(() => this.assessment() !== null);
   hasError = computed(() => this.error() !== null);
   hasScenarioContext = computed(() => this.selectedScenarioContext() !== null);
@@ -54,7 +63,9 @@ export class ThreatAssessmentComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private analysisService: AnalysisService,
-    private scenarioService: ScenarioService
+    private scenarioService: ScenarioService,
+    private investigatorService: InvestigatorService,
+    private route: ActivatedRoute
   ) {
     this.threatForm = this.fb.group({
       campaign: [''],
@@ -71,8 +82,14 @@ export class ThreatAssessmentComponent implements OnInit {
   ngOnInit(): void {
     this.loadScenarios();
     this.loadCampaigns();
-    // Load context for the default scenario on init
-    const defaultScenario = this.threatForm.get('scenario')?.value;
+    this.loadInvestigators();
+
+    // Check for scenario query param (e.g. from dashboard quick links)
+    const queryScenario = this.route.snapshot.queryParamMap.get('scenario');
+    const defaultScenario = queryScenario || this.threatForm.get('scenario')?.value;
+    if (queryScenario) {
+      this.threatForm.patchValue({ scenario: queryScenario });
+    }
     if (defaultScenario) this.loadScenarioContext(defaultScenario);
 
     // Watch for scenario/difficulty changes to reload context
@@ -135,6 +152,74 @@ export class ThreatAssessmentComponent implements OnInit {
     } finally {
       this.loading.set(false);
     }
+  }
+
+  async loadInvestigators(): Promise<void> {
+    try {
+      const investigators = await this.investigatorService.getAllInvestigators().toPromise();
+      if (investigators) this.availableInvestigators.set(investigators);
+    } catch (error) {
+      console.error('Failed to load investigators:', error);
+    }
+  }
+
+  addInvestigator(code: string): void {
+    if (!code) return;
+    const current = this.selectedInvestigatorCodes();
+    if (current.length < 4 && !current.includes(code)) {
+      this.selectedInvestigatorCodes.set([...current, code]);
+    }
+  }
+
+  removeInvestigator(code: string): void {
+    this.selectedInvestigatorCodes.update(codes => codes.filter(c => c !== code));
+    // Clear analysis if party changes
+    this.investigatorAnalysis.set(null);
+  }
+
+  getInvestigatorName(code: string): string {
+    return this.availableInvestigators().find(i => i.code === code)?.name ?? code;
+  }
+
+  async analyzeInvestigators(): Promise<void> {
+    const codes = this.selectedInvestigatorCodes();
+    const scenarioCode = this.threatForm.get('scenario')?.value;
+    if (!codes.length || !scenarioCode) return;
+
+    this.analysisLoading.set(true);
+    try {
+      const result = await this.scenarioService.analyzeInvestigatorsVsScenario(
+        scenarioCode,
+        this.threatForm.get('difficulty')?.value || 'standard',
+        this.threatForm.get('playerCount')?.value || 2,
+        codes
+      ).toPromise();
+      if (result) this.investigatorAnalysis.set(result);
+    } catch (error) {
+      console.error('Investigator analysis failed:', error);
+    } finally {
+      this.analysisLoading.set(false);
+    }
+  }
+
+  getStatSuccessRateColor(rate: number): string {
+    if (rate >= 0.75) return '#28a745';
+    if (rate >= 0.55) return '#ffc107';
+    if (rate >= 0.35) return '#fd7e14';
+    return '#dc3545';
+  }
+
+  getFactionColor(faction: string): string {
+    const colors: Record<string, string> = {
+      guardian: '#2b80c5', seeker: '#ec8b26', rogue: '#107116',
+      mystic: '#4e1a45', survivor: '#cc3038', neutral: '#5a5a5a'
+    };
+    return colors[faction?.toLowerCase()] ?? '#5a5a5a';
+  }
+
+  getStatRates(inv: InvestigatorAnalysis, stat: 'willpower' | 'intellect' | 'combat' | 'agility'): number[] {
+    const rates = inv.success_rates[stat];
+    return [rates.vs_1, rates.vs_2, rates.vs_3, rates.vs_4, rates.vs_5];
   }
 
   // Computed signals for filtered scenarios

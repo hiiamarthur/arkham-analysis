@@ -45,49 +45,21 @@ class ScenarioService:
             EncounterSetModel, db
         )
 
-    async def yield_scenario_context(
+    async def _build_scenario(
         self,
         scenario_code: ScenarioType,
         difficulty: Difficulty,
         no_of_investigators: int,
-    ) -> Any:
-        """Get complete scenario context with caching"""
-        cache_key = f"{scenario_code}_{difficulty.__str__()}"
-
-        if cache_key in self.scenario_cache:
-            return self.scenario_cache[cache_key]
+    ):
+        """Return the raw Scenario domain object for direct chaos bag access."""
         encounter_set_of_scenario = get_encounter_set_by_name(scenario_code.__str__())
-        print(
-            "encounter_set_of_scenario is",
-            encounter_set_of_scenario,
-            scenario_code.name,
-        )
         encounter_set_used_for_scenario = get_encounter_sets_for_scenario(scenario_code)
         encounter_set_of_scenario_record = await self.encounter_set_repo.get_first(
             filters={"filter_by[name][equals]": encounter_set_of_scenario["name"]}
         )
-        print("encounter_set_used_for_scenario", encounter_set_used_for_scenario)
         encounter_cards = await self.card_repo.get_all(
             filter_by={"filter_by[encounter_code][in]": encounter_set_used_for_scenario}
         )
-        print(
-            "encounter_set_of_scenario",
-            scenario_code.__str__(),
-            encounter_set_of_scenario,
-            encounter_set_of_scenario_record,
-        )
-        scenarioCard = await self.card_repo.get_first(
-            filters={
-                "filter_by[type_code][equals]": "scenario",
-                "filter_by[encounter_code][equals]": (
-                    encounter_set_of_scenario_record.code
-                    if encounter_set_of_scenario_record
-                    else None
-                ),
-            },
-            # include=["traits", "linked_card", "bonded_cards.bonded_card"],
-        )
-        print("encounter_cards", encounter_cards)
         return ScenarioFactory.create_scenario(
             campaign_chaos_bag=ChaosBag(),
             player_count=no_of_investigators,
@@ -103,7 +75,22 @@ class ScenarioService:
                 )
                 for card in encounter_cards
             ],
-        ).to_dict()
+        )
+
+    async def yield_scenario_context(
+        self,
+        scenario_code: ScenarioType,
+        difficulty: Difficulty,
+        no_of_investigators: int,
+    ) -> Any:
+        """Get complete scenario context with caching"""
+        cache_key = f"{scenario_code}_{difficulty.__str__()}"
+
+        if cache_key in self.scenario_cache:
+            return self.scenario_cache[cache_key]
+
+        scenario = await self._build_scenario(scenario_code, difficulty, no_of_investigators)
+        return scenario.to_dict()
         # return ScenarioContext(
         #     scenario_code=scenarioCard.code,
         #     scenario_name=scenarioCard.name,

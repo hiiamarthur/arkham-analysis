@@ -188,11 +188,120 @@ export interface Campaign {
   scenarios: number;
 }
 
+export interface InvestigatorSuccessRates {
+  vs_1: number;
+  vs_2: number;
+  vs_3: number;
+  vs_4: number;
+  vs_5: number;
+}
+
+export interface InvestigatorAnalysis {
+  rank: number;
+  investigator_code: string;
+  investigator_name: string;
+  faction: string;
+  hp: number;
+  sanity: number;
+  stats: {
+    willpower: number;
+    intellect: number;
+    combat: number;
+    agility: number;
+  };
+  success_rates: {
+    willpower: InvestigatorSuccessRates;
+    intellect: InvestigatorSuccessRates;
+    combat: InvestigatorSuccessRates;
+    agility: InvestigatorSuccessRates;
+  };
+  overall_score: number;
+  scenario_fit: {
+    investigation_rating: number;
+    combat_rating: number;
+    evasion_rating: number;
+    willpower_rating: number;
+  };
+}
+
+export interface InvestigatorAnalysisResponse {
+  scenario_code: string;
+  difficulty: string;
+  chaos_bag_summary: {
+    expected_value: number;
+    hostility_rating: number;
+    composition: Record<string, number>;
+    simulation_ready: boolean;
+  };
+  investigator_analyses: InvestigatorAnalysis[];
+}
+
+export interface DashboardInvestigator {
+  code: string;
+  name: string;
+  faction: string;
+  deck_count: number;
+  meta_share: number;
+}
+
+export interface DashboardCard {
+  code: string;
+  name: string;
+  type_code: string;
+  faction_code: string;
+  xp: number;
+  deck_count: number;
+  inclusion_rate: number;
+}
+
+export interface DashboardVersatileCard extends DashboardCard {
+  factions: string[];
+  faction_count: number;
+}
+
+export interface DashboardTrendingInvestigator {
+  code: string;
+  name: string;
+  faction: string;
+  recent_decks: number;
+  prior_decks: number;
+  change_pct: number;
+}
+
+export interface DashboardStats {
+  meta: { decks_analyzed: number; days: number; generated_at: string; };
+  top_investigators: DashboardInvestigator[];
+  most_popular_cards: DashboardCard[];
+  card_stats: {
+    top_assets: DashboardCard[];
+    top_events: DashboardCard[];
+    top_skills: DashboardCard[];
+    top_level_0: DashboardCard[];
+    top_upgraded: DashboardCard[];
+    most_versatile: DashboardVersatileCard[];
+    avg_xp_per_deck: number;
+    xp_distribution: Record<string, number>;
+  };
+  faction_meta_share: Record<string, number>;
+  trending: {
+    rising: DashboardTrendingInvestigator[];
+    falling: DashboardTrendingInvestigator[];
+  };
+  highlight: {
+    most_played_investigator?: DashboardInvestigator;
+    dominant_faction?: { faction: string; share: number; };
+    runner_up?: DashboardInvestigator;
+    total_decks_analyzed?: number;
+    avg_xp_per_deck?: number;
+  };
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class ScenarioService {
   private apiUrl = 'http://localhost:8000/v1/scenarios';
+  private dashboardUrl = 'http://localhost:8000/v1/dashboard';
 
   constructor(private http: HttpClient) {}
 
@@ -226,5 +335,25 @@ export class ScenarioService {
 
   simulateChaosBag(scenarioCode: string, params: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/${scenarioCode}/simulate-chaos-bag`, params);
+  }
+
+  getDashboardStats(days = 365): Observable<DashboardStats> {
+    return this.http.get<DashboardStats>(`${this.dashboardUrl}?days=${days}`);
+  }
+
+  analyzeInvestigatorsVsScenario(
+    scenarioCode: string,
+    difficulty: string,
+    playerCount: number,
+    investigatorCodes: string[]
+  ): Observable<InvestigatorAnalysisResponse> {
+    return this.http.post<InvestigatorAnalysisResponse>(
+      `${this.apiUrl}/${scenarioCode}/investigator-analysis`,
+      {
+        difficulty,
+        no_of_investigators: playerCount,
+        investigator_codes: investigatorCodes,
+      }
+    );
   }
 }

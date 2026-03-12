@@ -68,13 +68,17 @@ class ChaosBag:
                     result += prob * token_prob
                     continue
 
+                # Variable-value tokens (e.g. skull with value='X') use 0 as modifier
+                # since the actual modifier depends on runtime game state
+                token_numeric_value = token.value if isinstance(token.value, (int, float)) else 0
+
                 if token.revealAnotherToken:
                     # Draw again (pool now smaller)
                     result += recurse(
-                        mod_total + token.value, prob * token_prob, next_pool
+                        mod_total + token_numeric_value, prob * token_prob, next_pool
                     )
                 else:
-                    total_value = base_stat + mod_total + token.value
+                    total_value = base_stat + mod_total + token_numeric_value
                     if total_value >= difficulty:
                         result += prob * token_prob
 

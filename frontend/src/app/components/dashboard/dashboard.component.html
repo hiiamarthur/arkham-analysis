@@ -1,276 +1,391 @@
 <div class="dashboard-container">
+
+  <!-- Header -->
   <div class="dashboard-header">
-    <div class="header-content">
-      <h1 class="dashboard-title">
-        <span class="title-icon" [innerHTML]="getIcon('card')"></span>
-        Analysis Dashboard
-      </h1>
-      <p class="dashboard-subtitle">
-        Welcome to your Arkham Horror card analysis center
-      </p>
+    <p class="header-eyebrow">The Arkham Archives</p>
+    <h1 class="dashboard-title">Dashboard</h1>
+    <p class="dashboard-subtitle">Platform overview — data drawn from ArkhamDB and published deck records</p>
+  </div>
+
+  <!-- Stats Grid -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon" [innerHTML]="getIcon('investigator')"></div>
+      <div class="stat-body">
+        <div class="stat-number" [class.skeleton]="loading()">{{ loading() ? '' : investigatorCount() }}</div>
+        <div class="stat-label">Investigators</div>
+      </div>
     </div>
-    
-    <!-- Quick Action -->
-    <div class="quick-action">
-      <h3>Quick Analysis</h3>
-      <div class="quick-form">
-        <input 
-          type="text" 
-          [(ngModel)]="quickCardCode"
-          placeholder="Enter card code (e.g., 01030)"
-          class="quick-input"
-        >
-        <button 
-          class="quick-button" 
-          (click)="analyzeQuickCard()"
-          [disabled]="!quickCardCode().trim()"
-        >
-          Analyze
-        </button>
+    <div class="stat-card">
+      <div class="stat-icon" [innerHTML]="getIcon('campaign')"></div>
+      <div class="stat-body">
+        <div class="stat-number" [class.skeleton]="loading()">{{ loading() ? '' : campaignCount() }}</div>
+        <div class="stat-label">Campaigns</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" [innerHTML]="getIcon('skull')"></div>
+      <div class="stat-body">
+        <div class="stat-number" [class.skeleton]="loading()">{{ loading() ? '' : scenarioCount() }}</div>
+        <div class="stat-label">Scenarios</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" [innerHTML]="getIcon('pack')"></div>
+      <div class="stat-body">
+        <div class="stat-number" [class.skeleton]="loading()">{{ loading() ? '' : encounterSetCount() }}</div>
+        <div class="stat-label">Encounter Sets</div>
+      </div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon" [innerHTML]="getIcon('subtype')"></div>
+      <div class="stat-body">
+        <div class="stat-number" [class.skeleton]="loading()">{{ loading() ? '' : traitCount() }}</div>
+        <div class="stat-label">Unique Traits</div>
       </div>
     </div>
   </div>
 
-  <!-- Stats Overview -->
-  <div class="stats-section">
-    <app-custom-input
-      type="text"
-      [(ngModel)]="quickCardCode"
-      placeholder="Enter card code (e.g., 01030)"
-    ></app-custom-input>
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-icon" [innerHTML]="getIcon('subtype')"></div>
-        <div class="stat-content">
-          <div class="stat-number">{{traitCount()}}</div>
-          <div class="stat-label">Unique Traits</div>
-        </div>
+  <!-- Static Charts: card pool -->
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3>Investigators by Faction</h3>
+        <span class="chart-sub">Pool of {{ investigatorCount() }} investigators</span>
       </div>
-
-      <div class="stat-card">
-        <div class="stat-icon" [innerHTML]="getIcon('pack')"></div>
-        <div class="stat-content">
-          <div class="stat-number">{{encounterSetCount()}}</div>
-          <div class="stat-label">Encounter Sets</div>
-        </div>
+      <div class="chart-container"><canvas #factionChart></canvas></div>
+    </div>
+    <div class="chart-card">
+      <div class="chart-header">
+        <h3>Scenarios per Campaign</h3>
+        <span class="chart-sub">Across {{ campaignCount() }} active campaigns</span>
       </div>
-
-      <div class="stat-card">
-        <div class="stat-icon" [innerHTML]="getIcon('trend')"></div>
-        <div class="stat-content">
-          <div class="stat-number">{{stats().analysesThisWeek}}</div>
-          <div class="stat-label">Analyses This Week</div>
-        </div>
-      </div>
-
-      <div class="stat-card">
-        <div class="stat-icon" [innerHTML]="getIcon('star')"></div>
-        <div class="stat-content">
-          <div class="stat-number">{{stats().averageCardRating}}</div>
-          <div class="stat-label">Average Card Rating</div>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon" [innerHTML]="getIcon('investigator')"></div>
-        <div class="stat-content">
-          <div class="stat-number">{{stats().topInvestigator}}</div>
-          <div class="stat-label">Most Analyzed Investigator</div>
-        </div>
-      </div>
-      
-      <div class="stat-card">
-        <div class="stat-icon" [innerHTML]="getIcon('card')"></div>
-        <div class="stat-content">
-          <div class="stat-number">{{stats().mostAnalyzedCard}}</div>
-          <div class="stat-label">Most Analyzed Card</div>
-        </div>
-      </div>
+      <div class="chart-container"><canvas #campaignChart></canvas></div>
     </div>
   </div>
 
-  <!-- Charts Section -->
-  <div class="charts-section">
-    <div class="charts-grid">
-      <div class="chart-card">
-        <div class="chart-header">
-          <h3>Analysis Trends</h3>
-          <span class="chart-subtitle">Weekly activity overview</span>
-        </div>
-        <div class="chart-container">
-          <canvas #analysisChart></canvas>
-        </div>
-      </div>
-      
-      <div class="chart-card">
-        <div class="chart-header">
-          <h3>Popular Cards</h3>
-          <span class="chart-subtitle">Most analyzed cards</span>
-        </div>
-        <div class="chart-container">
-          <canvas #cardPopularityChart></canvas>
-        </div>
-      </div>
-      
-      <div class="chart-card">
-        <div class="chart-header">
-          <h3>Threat Levels</h3>
-          <span class="chart-subtitle">Assessment distribution</span>
-        </div>
-        <div class="chart-container">
-          <canvas #threatLevelChart></canvas>
-        </div>
-      </div>
-      
-      <div class="chart-card">
-        <div class="chart-header">
-          <h3>System Performance</h3>
-          <span class="chart-subtitle">Analysis metrics</span>
-        </div>
-        <div class="chart-container">
-          <canvas #performanceChart></canvas>
-        </div>
-      </div>
-    </div>
-  </div>
+  <!-- ═══ Meta Insights (from /dashboard endpoint) ═══ -->
+  <div class="meta-section">
 
-  <!-- Main Content Grid -->
-  <div class="main-content">
-    <!-- Recent Analyses Table -->
-    <div class="section recent-analyses-table">
-      <div class="section-header">
-        <h2>Recent Analyses</h2>
-        <a routerLink="/analysis" class="section-link">View All →</a>
-      </div>
-
-      <app-data-table
-        [data]="recentAnalysesData()"
-        [columns]="recentAnalysesColumns"
-        [config]="tableConfig"
-        [loading]="false"
-        (rowClick)="onTableRowClick($event)"
-        (pageChange)="onTablePageChange($event)"
-        (sortChange)="onTableSortChange($event)"
-        (filterChange)="onTableFilterChange($event)"
-      ></app-data-table>
+    <!-- Section header -->
+    <div class="meta-header">
+      <span class="meta-eyebrow">Meta Insights</span>
+      <span class="meta-sub" *ngIf="dashboardStats()">
+        {{ dashboardStats()!.meta.decks_analyzed | number }} decks · last {{ dashboardStats()!.meta.days }} days
+      </span>
+      <span class="meta-sub" *ngIf="statsLoading() && !dashboardStats()">Loading deck data…</span>
     </div>
 
-    <!-- Recent Activity -->
-    <div class="section recent-activity">
-      <div class="section-header">
-        <h2>Recent Analysis Activity</h2>
-        <a routerLink="/analysis" class="section-link">View All →</a>
+    <!-- Highlight bar -->
+    <div class="highlight-bar" *ngIf="dashboardStats()?.highlight?.most_played_investigator as topInv">
+      <div class="hl-cell">
+        <span class="hl-label">Most-played investigator</span>
+        <span class="hl-value">
+          <span class="faction-dot lg" [style.background]="getFactionColor(topInv.faction)"></span>
+          {{ topInv.name }}
+        </span>
+        <span class="hl-sub">{{ topInv.meta_share }}% of all decks</span>
+      </div>
+      <div class="hl-cell" *ngIf="dashboardStats()?.highlight?.dominant_faction as f">
+        <span class="hl-label">Dominant faction</span>
+        <span class="hl-value">
+          <span class="faction-dot lg" [style.background]="getFactionColor(f.faction)"></span>
+          {{ f.faction | titlecase }}
+        </span>
+        <span class="hl-sub">{{ f.share }}% meta share</span>
+      </div>
+      <div class="hl-cell" *ngIf="dashboardStats()?.highlight?.runner_up as r">
+        <span class="hl-label">Runner-up</span>
+        <span class="hl-value">
+          <span class="faction-dot lg" [style.background]="getFactionColor(r.faction)"></span>
+          {{ r.name }}
+        </span>
+        <span class="hl-sub">{{ r.meta_share }}% meta share</span>
+      </div>
+      <div class="hl-cell" *ngIf="dashboardStats()?.highlight?.avg_xp_per_deck !== undefined">
+        <span class="hl-label">Avg XP per deck</span>
+        <span class="hl-value hl-number">{{ dashboardStats()!.highlight.avg_xp_per_deck }}</span>
+        <span class="hl-sub">across all recorded decks</span>
+      </div>
+    </div>
+    <!-- Skeleton highlight bar -->
+    <div class="highlight-bar highlight-bar--skel" *ngIf="statsLoading() && !dashboardStats()">
+      <div class="hl-cell" *ngFor="let _ of [1,2,3,4]">
+        <div class="skel skel-sm"></div>
+        <div class="skel skel-lg"></div>
+        <div class="skel skel-sm"></div>
+      </div>
+    </div>
+
+    <!-- Row A: meta faction donut + top investigators -->
+    <div class="meta-row meta-row--2col">
+
+      <!-- Faction meta donut (Chart.js) -->
+      <div class="meta-card">
+        <div class="meta-card-header">
+          <h3>Faction Meta Share</h3>
+          <span class="meta-card-sub">By deck count · last {{ dashboardStats()?.meta?.days ?? 90 }} days</span>
+        </div>
+        <div class="chart-container chart-container--sm">
+          <canvas #metaFactionChart id="metaFactionChart"></canvas>
+        </div>
+        <div class="skel-chart" *ngIf="statsLoading() && !dashboardStats()"></div>
       </div>
 
-      <div class="activity-list">
-        <div *ngFor="let activity of recentActivity" class="activity-item">
-          <div class="activity-icon">
-            {{getAnalysisTypeIcon(activity.type)}}
+      <!-- Top investigators rank list -->
+      <div class="meta-card">
+        <div class="meta-card-header">
+          <h3>Top Investigators</h3>
+          <span class="meta-card-sub">Most published decks · last {{ dashboardStats()?.meta?.days ?? 90 }} days</span>
+        </div>
+
+        <!-- Skeletons -->
+        <div class="skel-list" *ngIf="statsLoading() && !dashboardStats()">
+          <div class="skel-row" *ngFor="let _ of [1,2,3,4,5,6,7,8]">
+            <div class="skel skel-xs"></div>
+            <div class="skel skel-dot"></div>
+            <div class="skel skel-med"></div>
+            <div class="skel skel-bar"></div>
+            <div class="skel skel-xs"></div>
           </div>
-          <div class="activity-content">
-            <div class="activity-main">
-              <span class="activity-type">{{activity.type | titlecase}} Analysis</span>
-              <span class="activity-cards">{{activity.cards.join(', ')}}</span>
+        </div>
+
+        <ol class="inv-rank-list" *ngIf="dashboardStats()">
+          <li *ngFor="let inv of dashboardStats()!.top_investigators; let i = index"
+              class="inv-rank-item"
+              [style.animation-delay]="(i * 50) + 'ms'">
+            <span class="rank-num">{{ i + 1 }}</span>
+            <span class="faction-dot" [style.background]="getFactionColor(inv.faction)"></span>
+            <span class="inv-name">{{ inv.name }}</span>
+            <div class="inv-bar-wrap">
+              <div class="inv-bar-fill"
+                [style.width.%]="maxMetaShare() > 0 ? (inv.meta_share / maxMetaShare() * 100) : 0"
+                [style.background]="getFactionColor(inv.faction)">
+              </div>
             </div>
-            <div class="activity-details">
-              <span class="activity-investigator">{{activity.investigator}}</span>
-              <span class="activity-time">{{getTimeAgo(activity.timestamp)}}</span>
-            </div>
-            <div class="activity-result">{{activity.result}}</div>
-          </div>
-        </div>
-
-        <div *ngIf="recentActivity.length === 0" class="empty-state">
-          <div class="empty-icon" [innerHTML]="getIcon('analysis')"></div>
-          <p>No recent analysis activity</p>
-          <a routerLink="/analysis" class="cta-link">Start your first analysis</a>
-        </div>
+            <span class="inv-pct">{{ inv.meta_share }}%</span>
+          </li>
+        </ol>
       </div>
+
     </div>
 
-    <!-- Quick Actions -->
-    <div class="section quick-actions">
-      <div class="section-header">
-        <h2>Quick Actions</h2>
+    <!-- Row B: XP distribution chart + Most included cards -->
+    <div class="meta-row meta-row--2col">
+
+      <!-- XP distribution (Chart.js bar) -->
+      <div class="meta-card">
+        <div class="meta-card-header">
+          <h3>XP Spent Distribution</h3>
+          <span class="meta-card-sub">How upgraded are decks — avg {{ dashboardStats()?.card_stats?.avg_xp_per_deck ?? '…' }} XP</span>
+        </div>
+        <div class="chart-container chart-container--sm">
+          <canvas #xpChart id="xpChart"></canvas>
+        </div>
+        <div class="skel-chart" *ngIf="statsLoading() && !dashboardStats()"></div>
       </div>
-      
-      <div class="actions-grid">
-        <a routerLink="/analysis" class="action-card">
-          <div class="action-icon" [innerHTML]="getIcon('search')"></div>
-          <div class="action-content">
-            <h3>Card Analysis</h3>
-            <p>Analyze card strength and value in different contexts</p>
+
+      <!-- Most popular cards overall -->
+      <div class="meta-card">
+        <div class="meta-card-header">
+          <h3>Most Included Cards</h3>
+          <span class="meta-card-sub">All types · last {{ dashboardStats()?.meta?.days ?? 90 }} days</span>
+        </div>
+        <div class="skel-list" *ngIf="statsLoading() && !dashboardStats()">
+          <div class="skel-row" *ngFor="let _ of [1,2,3,4,5,6,7,8,9,10]">
+            <div class="skel skel-xs"></div>
+            <div class="skel skel-tag"></div>
+            <div class="skel skel-med"></div>
+            <div class="skel skel-xs"></div>
           </div>
-        </a>
-        
-        <a routerLink="/threat-assessment" class="action-card">
-          <div class="action-icon" [innerHTML]="getIcon('threat')"></div>
-          <div class="action-content">
-            <h3>Threat Assessment</h3>
-            <p>Evaluate current game state danger levels</p>
-          </div>
-        </a>
-        
-        <a href="#" class="action-card disabled">
-          <div class="action-icon" [innerHTML]="getIcon('card')"></div>
-          <div class="action-content">
-            <h3>Browse Cards</h3>
-            <p>Explore the complete Arkham Horror card database (Coming Soon)</p>
-          </div>
-        </a>
-        
-        <a href="#" class="action-card disabled">
-          <div class="action-icon" [innerHTML]="getIcon('investigator')"></div>
-          <div class="action-content">
-            <h3>Investigators</h3>
-            <p>View investigator profiles and capabilities (Coming Soon)</p>
-          </div>
-        </a>
+        </div>
+        <ol class="card-rank-list" *ngIf="dashboardStats()">
+          <li *ngFor="let card of dashboardStats()!.most_popular_cards.slice(0,10); let i = index"
+              class="card-rank-item"
+              [style.animation-delay]="(i * 40) + 'ms'">
+            <span class="rank-num">{{ i + 1 }}</span>
+            <span class="card-type-tag" [attr.data-type]="card.type_code">{{ card.type_code }}</span>
+            <span class="card-name">{{ card.name }}</span>
+            <span class="card-xp" *ngIf="card.xp > 0">{{ card.xp }}xp</span>
+            <span class="card-pct">{{ (card.inclusion_rate * 100).toFixed(0) }}%</span>
+          </li>
+        </ol>
       </div>
+
     </div>
 
-    <!-- Featured Scenarios -->
-    <div class="section featured-scenarios">
-      <div class="section-header">
-        <h2>Featured Scenarios</h2>
-        <span class="section-subtitle">Popular scenarios for analysis testing</span>
+    <!-- Row C: by card type breakdown (3 cols) -->
+    <div class="meta-row meta-row--3col">
+
+      <div class="meta-card">
+        <div class="meta-card-header">
+          <h3>Top Assets</h3>
+          <span class="meta-card-sub">Most included assets</span>
+        </div>
+        <div class="skel-list" *ngIf="statsLoading() && !dashboardStats()">
+          <div class="skel-row" *ngFor="let _ of [1,2,3,4,5,6]"><div class="skel skel-wide"></div></div>
+        </div>
+        <ol class="card-rank-list" *ngIf="dashboardStats()">
+          <li *ngFor="let card of topCardsByType('top_assets'); let i = index" class="card-rank-item"
+              [style.animation-delay]="(i * 60) + 'ms'">
+            <span class="rank-num">{{ i + 1 }}</span>
+            <span class="card-name">{{ card.name }}</span>
+            <span class="card-xp" *ngIf="card.xp > 0">{{ card.xp }}xp</span>
+            <span class="card-pct">{{ (card.inclusion_rate * 100).toFixed(0) }}%</span>
+          </li>
+        </ol>
       </div>
-      
-      <div class="scenarios-grid">
-        <div *ngFor="let scenario of featuredScenarios" class="scenario-card">
-          <div class="scenario-header">
-            <h3>{{scenario.name}}</h3>
-            <span 
-              class="difficulty-badge" 
-              [style.background-color]="getDifficultyColor(scenario.difficulty)"
-            >
-              {{scenario.difficulty}}
+
+      <div class="meta-card">
+        <div class="meta-card-header">
+          <h3>Top Events</h3>
+          <span class="meta-card-sub">Most included events</span>
+        </div>
+        <div class="skel-list" *ngIf="statsLoading() && !dashboardStats()">
+          <div class="skel-row" *ngFor="let _ of [1,2,3,4,5,6]"><div class="skel skel-wide"></div></div>
+        </div>
+        <ol class="card-rank-list" *ngIf="dashboardStats()">
+          <li *ngFor="let card of topCardsByType('top_events'); let i = index" class="card-rank-item"
+              [style.animation-delay]="(i * 60) + 'ms'">
+            <span class="rank-num">{{ i + 1 }}</span>
+            <span class="card-name">{{ card.name }}</span>
+            <span class="card-xp" *ngIf="card.xp > 0">{{ card.xp }}xp</span>
+            <span class="card-pct">{{ (card.inclusion_rate * 100).toFixed(0) }}%</span>
+          </li>
+        </ol>
+      </div>
+
+      <div class="meta-card">
+        <div class="meta-card-header">
+          <h3>Top Skills</h3>
+          <span class="meta-card-sub">Most included skills</span>
+        </div>
+        <div class="skel-list" *ngIf="statsLoading() && !dashboardStats()">
+          <div class="skel-row" *ngFor="let _ of [1,2,3,4,5,6]"><div class="skel skel-wide"></div></div>
+        </div>
+        <ol class="card-rank-list" *ngIf="dashboardStats()">
+          <li *ngFor="let card of topCardsByType('top_skills'); let i = index" class="card-rank-item"
+              [style.animation-delay]="(i * 60) + 'ms'">
+            <span class="rank-num">{{ i + 1 }}</span>
+            <span class="card-name">{{ card.name }}</span>
+            <span class="card-pct">{{ (card.inclusion_rate * 100).toFixed(0) }}%</span>
+          </li>
+        </ol>
+      </div>
+
+    </div>
+
+    <!-- Row D: versatile cards + investigator trends -->
+    <div class="meta-row meta-row--2col">
+
+      <!-- Most versatile cards -->
+      <div class="meta-card">
+        <div class="meta-card-header">
+          <h3>Most Versatile Cards</h3>
+          <span class="meta-card-sub">Included across the most factions</span>
+        </div>
+        <div class="skel-list" *ngIf="statsLoading() && !dashboardStats()">
+          <div class="skel-row" *ngFor="let _ of [1,2,3,4,5]"><div class="skel skel-wide"></div></div>
+        </div>
+        <ul class="versatile-list" *ngIf="dashboardStats()">
+          <li *ngFor="let card of dashboardStats()!.card_stats.most_versatile; let i = index"
+              class="versatile-item" [style.animation-delay]="(i * 60) + 'ms'">
+            <span class="card-name">{{ card.name }}</span>
+            <span class="versatile-factions">
+              <span *ngFor="let f of card.factions" class="faction-dot sm" [style.background]="getFactionColor(f)" [title]="f"></span>
             </span>
-          </div>
-          <div class="scenario-campaign">{{scenario.campaign}}</div>
-          <p class="scenario-description">{{scenario.description}}</p>
-          <button class="scenario-button">Use in Analysis</button>
+            <span class="card-pct">{{ (card.inclusion_rate * 100).toFixed(0) }}%</span>
+          </li>
+          <li *ngIf="!dashboardStats()!.card_stats.most_versatile.length" class="trend-empty">No data</li>
+        </ul>
+      </div>
+
+      <!-- Investigator trends -->
+      <div class="meta-card">
+        <div class="meta-card-header">
+          <h3>Investigator Trends</h3>
+          <span class="meta-card-sub">Last 45 days vs. prior 45 days</span>
         </div>
+        <div class="skel-list" *ngIf="statsLoading() && !dashboardStats()">
+          <div class="skel-row" *ngFor="let _ of [1,2,3,4,5,6]"><div class="skel skel-wide"></div></div>
+        </div>
+        <div *ngIf="dashboardStats()" class="trending-lists">
+          <div class="trending-group">
+            <span class="trend-label trend-up">↑ Rising</span>
+            <ul class="trend-list">
+              <li *ngFor="let inv of dashboardStats()!.trending.rising" class="trend-item">
+                <span class="faction-dot" [style.background]="getFactionColor(inv.faction)"></span>
+                <span class="trend-name">{{ inv.name }}</span>
+                <span class="trend-change trend-change--up">+{{ inv.change_pct }}%</span>
+              </li>
+              <li *ngIf="!dashboardStats()!.trending.rising.length" class="trend-empty">No data</li>
+            </ul>
+          </div>
+          <div class="trending-group">
+            <span class="trend-label trend-down">↓ Falling</span>
+            <ul class="trend-list">
+              <li *ngFor="let inv of dashboardStats()!.trending.falling" class="trend-item">
+                <span class="faction-dot" [style.background]="getFactionColor(inv.faction)"></span>
+                <span class="trend-name">{{ inv.name }}</span>
+                <span class="trend-change trend-change--down">{{ inv.change_pct }}%</span>
+              </li>
+              <li *ngIf="!dashboardStats()!.trending.falling.length" class="trend-empty">No data</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+  <!-- ═══ end Meta Insights ═══ -->
+
+  <!-- Bottom grid: nav + quick scenarios -->
+  <div class="bottom-grid">
+
+    <div class="panel nav-panel">
+      <h2 class="panel-title">Navigate</h2>
+      <div class="nav-list">
+        <a routerLink="/investigators" class="nav-item">
+          <span class="nav-icon" [innerHTML]="getIcon('investigator')"></span>
+          <div class="nav-text"><strong>Investigator Archives</strong><span>Deck trends, staple cards, meta share</span></div>
+          <span class="nav-arrow">→</span>
+        </a>
+        <a routerLink="/threat-assessment" class="nav-item">
+          <span class="nav-icon" [innerHTML]="getIcon('skull')"></span>
+          <div class="nav-text"><strong>Threat Assessment</strong><span>Scenario context, chaos bag, party analysis</span></div>
+          <span class="nav-arrow">→</span>
+        </a>
+        <a routerLink="/analysis" class="nav-item">
+          <span class="nav-icon" [innerHTML]="getIcon('analysis')"></span>
+          <div class="nav-text"><strong>Card Analysis</strong><span>Card stats and usage data</span></div>
+          <span class="nav-arrow">→</span>
+        </a>
+        <a routerLink="/about" class="nav-item">
+          <span class="nav-icon" [innerHTML]="getIcon('question')"></span>
+          <div class="nav-text"><strong>About the Archives</strong><span>What this platform is and how to use it</span></div>
+          <span class="nav-arrow">→</span>
+        </a>
       </div>
     </div>
 
-    <!-- Analysis Suggestions -->
-    <div class="section analysis-suggestions">
-      <div class="section-header">
-        <h2>Suggested Analysis Targets</h2>
-        <span class="section-subtitle">Popular card combinations to analyze</span>
-      </div>
-      
-      <div class="suggestions-grid">
-        <div *ngFor="let target of analysisTargets" class="suggestion-card">
-          <h3>{{target.title}}</h3>
-          <div class="suggestion-cards">
-            <span *ngFor="let card of target.cards" class="card-tag">{{card}}</span>
+    <div class="panel scenarios-panel">
+      <h2 class="panel-title">Open in Threat Assessment</h2>
+      <p class="panel-sub">Jump straight to a scenario analysis</p>
+      <div class="scenario-links">
+        <a *ngFor="let s of quickScenarios"
+           [routerLink]="['/threat-assessment']"
+           [queryParams]="{ scenario: s.code }"
+           class="scenario-link">
+          <div class="scenario-link-main">
+            <span class="scenario-link-name">{{ s.name }}</span>
+            <span class="scenario-link-campaign">{{ s.campaign }}</span>
           </div>
-          <p class="suggestion-description">{{target.description}}</p>
-          <button class="suggestion-button">Analyze These Cards</button>
-        </div>
+          <span class="scenario-link-note">{{ s.note }}</span>
+        </a>
       </div>
     </div>
+
   </div>
+
 </div>

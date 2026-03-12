@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Response, Query
+from fastapi import APIRouter, Depends, Response, Query, HTTPException, status
 from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field, validator
 
@@ -93,6 +93,23 @@ class ScenarioComparisonRequest(BaseModel):
         return v
 
 
+class InvestigatorAnalysisRequest(BaseModel):
+    """Request for investigator vs chaos bag analysis"""
+
+    difficulty: Difficulty = Field(Difficulty.STANDARD)
+    no_of_investigators: int = Field(2, ge=1, le=4)
+    investigator_codes: List[str] = Field(
+        ..., min_items=1, max_items=4,
+        description="1-4 investigator card codes"
+    )
+
+    @validator("investigator_codes")
+    def validate_codes(cls, v):
+        if not (1 <= len(v) <= 4):
+            raise ValueError("Must provide 1-4 investigator codes")
+        return [c.lower() for c in v]
+
+
 # Response models specific to scenarios
 class ScenarioDetail(BaseModel):
     """Detailed scenario information"""
@@ -183,7 +200,7 @@ async def get_scenario_chaos_tokens(
             break
 
     if not scenario:
-        from . import HTTPException, status
+        pass  # HTTPException and status imported at top
 
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -269,7 +286,7 @@ async def compare_scenario_difficulties(
             break
 
     if not scenario:
-        from . import HTTPException, status
+        pass  # HTTPException and status imported at top
 
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -314,7 +331,7 @@ async def analyze_scenario_advanced(
             break
 
     if not scenario:
-        from . import HTTPException, status
+        pass  # HTTPException and status imported at top
 
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -367,7 +384,7 @@ async def simulate_chaos_bag(
             break
 
     if not scenario:
-        from . import HTTPException, status
+        pass  # HTTPException and status imported at top
 
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -544,4 +561,113 @@ async def compare_scenarios(
                 1 for s in scenarios_data if s["has_special_tokens"]
             ),
         },
+    }
+
+
+@router.post("/{scenario_code}/investigator-analysis", response_model=Dict[str, Any])
+async def analyze_investigators_vs_scenario(
+    scenario_code: ScenarioType,
+    request: InvestigatorAnalysisRequest,
+    scenario_service: ScenarioService = Depends(get_scenario_service),
+):
+    """
+    Analyze 1-4 investigators against the chaos bag for the given scenario/difficulty.
+    Returns per-stat success rates at key difficulty thresholds and an overall ranking.
+    """
+    # Build the raw Scenario object to access the live ChaosBag
+    scenario = await scenario_service._build_scenario(
+        scenario_code, request.difficulty, request.no_of_investigators
+    )
+    chaos_bag = scenario.chaos_manager.chaos_bag
+
+    # Pre-compute scenario context once for weighting
+    context_data = scenario.to_dict()
+    treachery = context_data.get("scenario_context", {}).get("treachery_stats", {})
+    enemy = context_data.get("scenario_context", {}).get("enemy_stats", {})
+
+    # Fetch investigator cards
+    investigator_analyses = []
+    for code in request.investigator_codes:
+        card = await scenario_service.card_repo.get_first(
+            filters={"filter_by[code][equals]": code}
+        )
+        if not card:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Investigator not found: {code}",
+            )
+
+        stats = {
+            "willpower": card.skill_willpower or 0,
+            "intellect": card.skill_intellect or 0,
+            "combat": card.skill_combat or 0,
+            "agility": card.skill_agility or 0,
+        }
+
+        # Calculate success rates at difficulty thresholds 1-5 for each stat
+        thresholds = [1, 2, 3, 4, 5]
+        success_rates: Dict[str, Dict[str, float]] = {}
+        for stat_name, stat_value in stats.items():
+            rates = {}
+            for t in thresholds:
+                rates[f"vs_{t}"] = round(chaos_bag.calculate_pass_prob(stat_value, t), 4)
+            success_rates[stat_name] = rates
+
+        ww = max(treachery.get("no_of_willpower_test", 0), 0)
+        wi = max(treachery.get("no_of_intellect_test", 0), 0)
+        wc = max(treachery.get("no_of_combat_test", 0), 0) + max(enemy.get("enemy_count", 0), 0)
+        wa = max(treachery.get("no_of_agility_test", 0), 0)
+        total_weight = (ww + wi + wc + wa) or 1
+
+        def avg_rate(rates: Dict[str, float]) -> float:
+            return sum(rates.values()) / len(rates)
+
+        wil_score = avg_rate(success_rates["willpower"])
+        int_score = avg_rate(success_rates["intellect"])
+        com_score = avg_rate(success_rates["combat"])
+        agi_score = avg_rate(success_rates["agility"])
+
+        overall_score = (
+            wil_score * ww + int_score * wi + com_score * wc + agi_score * wa
+        ) / total_weight
+
+        # Scenario fit using scenario-average test difficulty
+        avg_wil_diff = treachery.get("average_willpower_test_value", 2) or 2
+        avg_int_diff = treachery.get("average_intellect_test_value", 2) or 2
+        avg_com_diff = (enemy.get("average_enemy_fight", 2) or 2)
+        avg_agi_diff = (enemy.get("average_enemy_evade", 2) or 2)
+
+        def fit_rate(stat_val: int, avg_diff: float) -> float:
+            d = max(1, round(avg_diff))
+            return round(chaos_bag.calculate_pass_prob(stat_val, d), 4)
+
+        investigator_analyses.append({
+            "investigator_code": code,
+            "investigator_name": card.name,
+            "faction": card.faction_code or "neutral",
+            "stats": stats,
+            "hp": card.health or 0,
+            "sanity": card.sanity or 0,
+            "success_rates": success_rates,
+            "overall_score": round(overall_score, 4),
+            "scenario_fit": {
+                "investigation_rating": fit_rate(stats["intellect"], avg_int_diff),
+                "combat_rating": fit_rate(stats["combat"], avg_com_diff),
+                "evasion_rating": fit_rate(stats["agility"], avg_agi_diff),
+                "willpower_rating": fit_rate(stats["willpower"], avg_wil_diff),
+            },
+        })
+
+    # Sort by overall score and assign rank
+    investigator_analyses.sort(key=lambda x: x["overall_score"], reverse=True)
+    for i, inv in enumerate(investigator_analyses):
+        inv["rank"] = i + 1
+
+    chaos_summary = scenario.get_chaos_bag_summary()
+
+    return {
+        "scenario_code": scenario_code.value,
+        "difficulty": request.difficulty.value,
+        "chaos_bag_summary": chaos_summary,
+        "investigator_analyses": investigator_analyses,
     }

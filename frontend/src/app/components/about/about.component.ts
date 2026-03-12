@@ -16,47 +16,38 @@ export class AboutComponent {
 
   features = [
     {
-      title: 'Context-Aware Analysis',
-      description: 'GPT analyzes cards with full awareness of your investigator, campaign difficulty, and current game state.',
-      icon: 'brain'
+      title: 'Investigator Chronicles',
+      description: 'Track deck trends, staple cards, rising picks, and archetype patterns across thousands of published investigator decks. Know what the community reaches for.',
+      icon: 'investigator'
     },
     {
-      title: 'Dynamic Axioms',
-      description: 'Over 21 game mechanics axioms that adapt in real-time based on context (expert difficulty, Path to Carcosa horror focus, etc.).',
-      icon: 'settings'
+      title: 'Chaos Bag Probability',
+      description: 'Exact pass probability calculations for every investigator stat against any scenario\'s chaos bag — accounting for skull chains, bless/curse cascades, and frost mechanics.',
+      icon: 'skull'
     },
     {
-      title: 'Multi-Analysis Types',
-      description: 'Card strength, synergy analysis, and optimal timing recommendations for any situation.',
-      icon: 'target'
+      title: 'Party vs Scenario',
+      description: 'Select your investigators and see how each stat line performs against the actual bag. Ranked by scenario demand — who is best suited for this particular darkness.',
+      icon: 'combat'
     },
     {
-      title: 'Threat Assessment',
-      description: 'Real-time danger level calculation based on doom pressure, enemy threats, and investigator health.',
+      title: 'Scenario Threat Assessment',
+      description: 'Read the scenario before it reads you. Enemy density, shroud distribution, treachery test demands, doom pressure — all distilled into a living threat level.',
       icon: 'analysis'
     },
     {
-      title: 'Campaign Integration',
-      description: 'Precomputed scenario data and encounter deck analysis for accurate threat modeling.',
-      icon: 'campaign'
+      title: 'Encounter Deck Intelligence',
+      description: 'Understand what lurks in the encounter deck before it strikes. Card composition, victory points, special mechanics, and trait distribution per scenario.',
+      icon: 'auto_fail'
     },
     {
-      title: 'Investigator Roles',
-      description: 'Role-specific value adjustments (fighters prioritize damage, seekers value clues, etc.).',
-      icon: 'investigator'
+      title: 'Campaign Context',
+      description: 'Every campaign has its own chaos bag, its own test demands, its own rhythm. Analysis adapts to the full breadth of Arkham Horror\'s released content.',
+      icon: 'campaign'
     }
   ];
 
   getIcon(iconName: string): SafeHtml {
     return this.iconService.getIcon(iconName);
   }
-
-  techStack = [
-    { name: 'Angular 18', description: 'Modern reactive frontend with signals' },
-    { name: 'FastAPI', description: 'High-performance Python backend' },
-    { name: 'PostgreSQL', description: 'Robust card database with full ArkhamDB integration' },
-    { name: 'OpenAI GPT-4o', description: 'Advanced card analysis with context-aware prompts' },
-    { name: 'Domain-Driven Design', description: 'Clean architecture with separation of concerns' },
-    { name: 'Async Processing', description: 'Non-blocking analysis with rate limiting' }
-  ];
 }

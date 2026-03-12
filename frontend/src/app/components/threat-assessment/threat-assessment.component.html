@@ -120,18 +120,58 @@
         </div>
       </div>
 
+      <!-- Party Selection -->
+      <div class="form-section party-section" *ngIf="selectedScenarioContext()">
+        <h3>Party Selection</h3>
+        <p class="section-hint">Select 1–4 investigators to analyse against this scenario's chaos bag</p>
+
+        <div class="selected-investigators">
+          <div class="investigator-chip" *ngFor="let code of selectedInvestigatorCodes()">
+            <span class="chip-name">{{ getInvestigatorName(code) }}</span>
+            <button class="chip-remove" (click)="removeInvestigator(code)" type="button">✕</button>
+          </div>
+          <span class="party-empty" *ngIf="selectedInvestigatorCodes().length === 0">
+            No investigators selected
+          </span>
+        </div>
+
+        <div class="investigator-picker" *ngIf="canAddInvestigator()">
+          <select
+            class="form-input"
+            (change)="addInvestigator($any($event.target).value); $any($event.target).value = ''">
+            <option value="">Add investigator…</option>
+            <option
+              *ngFor="let inv of availableInvestigators()"
+              [value]="inv.code"
+              [disabled]="selectedInvestigatorCodes().includes(inv.code)">
+              {{ inv.name }}
+            </option>
+          </select>
+        </div>
+      </div>
+
       <div class="form-actions">
-        <button 
-          type="button" 
+        <button
+          type="button"
           (click)="assessThreat()"
           [disabled]="loading() || !threatForm.valid"
           class="assess-btn">
           <span *ngIf="loading()">Assessing...</span>
           <span *ngIf="!loading()">Assess Threat Level</span>
         </button>
-        
-        <button 
-          type="button" 
+
+        <button
+          type="button"
+          (click)="analyzeInvestigators()"
+          [disabled]="analysisLoading() || selectedInvestigatorCodes().length === 0"
+          class="assess-btn analyse-btn"
+          *ngIf="selectedScenarioContext()">
+          <span *ngIf="analysisLoading()">Analysing…</span>
+          <span *ngIf="!analysisLoading()">Analyse Party vs Chaos Bag</span>
+        </button>
+
+        <button
+          type="button"
           (click)="clearAssessment()"
           *ngIf="hasAssessment() || hasError()"
           class="clear-btn">
@@ -442,6 +482,127 @@
               <button class="spoiler-hide-btn" (click)="toggleEncounterCards()">Hide Encounter Deck</button>
             </ng-container>
           </div>
+    </div>
+
+    <!-- Investigator Analysis Results -->
+    <div class="investigator-analysis-section" *ngIf="investigatorAnalysis() as analysis">
+      <h3>Party Analysis vs Chaos Bag</h3>
+      <p class="analysis-subtitle">
+        Success rates at test difficulties 1–5 for each stat, weighted by scenario demand
+      </p>
+
+      <div class="investigator-ranking">
+        <div
+          class="investigator-rank-card"
+          *ngFor="let inv of analysis.investigator_analyses"
+          [class.rank-first]="inv.rank === 1">
+
+          <!-- Rank header -->
+          <div class="rank-header">
+            <span class="rank-badge" [class.rank-badge--gold]="inv.rank === 1">{{ inv.rank }}</span>
+            <div class="rank-name-faction">
+              <span class="rank-name">{{ inv.investigator_name }}</span>
+              <span class="rank-faction" [style.color]="getFactionColor(inv.faction)">{{ inv.faction | titlecase }}</span>
+            </div>
+            <div class="rank-vitals">
+              <span class="vital hp" title="Health">♥ {{ inv.hp }}</span>
+              <span class="vital sanity" title="Sanity">✦ {{ inv.sanity }}</span>
+            </div>
+            <span class="rank-score" [style.color]="getStatSuccessRateColor(inv.overall_score)">
+              {{ inv.overall_score * 100 | number:'1.0-0' }}%
+            </span>
+          </div>
+
+          <!-- Stat pips -->
+          <div class="stat-line">
+            <span class="stat-pip" title="Willpower">
+              <span [innerHTML]="getIcon('willpower')"></span> {{ inv.stats.willpower }}
+            </span>
+            <span class="stat-pip" title="Intellect">
+              <span [innerHTML]="getIcon('intellect')"></span> {{ inv.stats.intellect }}
+            </span>
+            <span class="stat-pip" title="Combat">
+              <span [innerHTML]="getIcon('combat')"></span> {{ inv.stats.combat }}
+            </span>
+            <span class="stat-pip" title="Agility">
+              <span [innerHTML]="getIcon('agility')"></span> {{ inv.stats.agility }}
+            </span>
+          </div>
+
+          <!-- Success rate bars per stat -->
+          <div class="success-grid">
+            <div class="success-row">
+              <span class="success-stat-label">Willpower</span>
+              <div class="success-bars">
+                <div class="success-cell" *ngFor="let rate of getStatRates(inv, 'willpower'); let i = index">
+                  <div class="bar-wrap">
+                    <div class="bar-fill" [style.height.%]="rate * 100" [style.background-color]="getStatSuccessRateColor(rate)"></div>
+                  </div>
+                  <span class="bar-pct">{{ rate * 100 | number:'1.0-0' }}%</span>
+                  <span class="bar-diff">vs {{ i + 1 }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="success-row">
+              <span class="success-stat-label">Intellect</span>
+              <div class="success-bars">
+                <div class="success-cell" *ngFor="let rate of getStatRates(inv, 'intellect'); let i = index">
+                  <div class="bar-wrap">
+                    <div class="bar-fill" [style.height.%]="rate * 100" [style.background-color]="getStatSuccessRateColor(rate)"></div>
+                  </div>
+                  <span class="bar-pct">{{ rate * 100 | number:'1.0-0' }}%</span>
+                  <span class="bar-diff">vs {{ i + 1 }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="success-row">
+              <span class="success-stat-label">Combat</span>
+              <div class="success-bars">
+                <div class="success-cell" *ngFor="let rate of getStatRates(inv, 'combat'); let i = index">
+                  <div class="bar-wrap">
+                    <div class="bar-fill" [style.height.%]="rate * 100" [style.background-color]="getStatSuccessRateColor(rate)"></div>
+                  </div>
+                  <span class="bar-pct">{{ rate * 100 | number:'1.0-0' }}%</span>
+                  <span class="bar-diff">vs {{ i + 1 }}</span>
+                </div>
+              </div>
+            </div>
+            <div class="success-row">
+              <span class="success-stat-label">Agility</span>
+              <div class="success-bars">
+                <div class="success-cell" *ngFor="let rate of getStatRates(inv, 'agility'); let i = index">
+                  <div class="bar-wrap">
+                    <div class="bar-fill" [style.height.%]="rate * 100" [style.background-color]="getStatSuccessRateColor(rate)"></div>
+                  </div>
+                  <span class="bar-pct">{{ rate * 100 | number:'1.0-0' }}%</span>
+                  <span class="bar-diff">vs {{ i + 1 }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Scenario fit row -->
+          <div class="scenario-fit">
+            <span class="fit-label">Scenario Fit:</span>
+            <span class="fit-badge" [style.color]="getStatSuccessRateColor(inv.scenario_fit.willpower_rating)">
+              <span [innerHTML]="getIcon('willpower')"></span>
+              {{ inv.scenario_fit.willpower_rating * 100 | number:'1.0-0' }}%
+            </span>
+            <span class="fit-badge" [style.color]="getStatSuccessRateColor(inv.scenario_fit.investigation_rating)">
+              <span [innerHTML]="getIcon('intellect')"></span>
+              {{ inv.scenario_fit.investigation_rating * 100 | number:'1.0-0' }}%
+            </span>
+            <span class="fit-badge" [style.color]="getStatSuccessRateColor(inv.scenario_fit.combat_rating)">
+              <span [innerHTML]="getIcon('combat')"></span>
+              {{ inv.scenario_fit.combat_rating * 100 | number:'1.0-0' }}%
+            </span>
+            <span class="fit-badge" [style.color]="getStatSuccessRateColor(inv.scenario_fit.evasion_rating)">
+              <span [innerHTML]="getIcon('agility')"></span>
+              {{ inv.scenario_fit.evasion_rating * 100 | number:'1.0-0' }}%
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Scenario Info -->

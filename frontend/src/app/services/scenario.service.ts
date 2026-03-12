@@ -185,7 +185,8 @@ export interface ChaosTokens {
 export interface Campaign {
   code: string;
   name: string;
-  scenarios: number;
+  scenario_count: number;
+  scenarios?: number; // legacy alias
 }
 
 export interface InvestigatorSuccessRates {
@@ -337,7 +338,7 @@ export class ScenarioService {
     return this.http.post<any>(`${this.apiUrl}/${scenarioCode}/simulate-chaos-bag`, params);
   }
 
-  getDashboardStats(days = 365): Observable<DashboardStats> {
+  getDashboardStats(days = 90): Observable<DashboardStats> {
     return this.http.get<DashboardStats>(`${this.dashboardUrl}?days=${days}`);
   }
 

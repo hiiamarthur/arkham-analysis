@@ -2,7 +2,7 @@
 
   <!-- Header -->
   <div class="dashboard-header">
-    <p class="header-eyebrow">The Arkham Archives</p>
+    <p class="header-eyebrow">The Arkham Analysis</p>
     <h1 class="dashboard-title">Dashboard</h1>
     <p class="dashboard-subtitle">Platform overview — data drawn from ArkhamDB and published deck records</p>
   </div>
@@ -80,26 +80,32 @@
     <div class="highlight-bar" *ngIf="dashboardStats()?.highlight?.most_played_investigator as topInv">
       <div class="hl-cell">
         <span class="hl-label">Most-played investigator</span>
-        <span class="hl-value">
+        <a class="hl-value hl-value--link"
+           [routerLink]="['/investigators']"
+           [queryParams]="{ investigator: topInv.code }">
           <span class="faction-dot lg" [style.background]="getFactionColor(topInv.faction)"></span>
           {{ topInv.name }}
-        </span>
+        </a>
         <span class="hl-sub">{{ topInv.meta_share }}% of all decks</span>
       </div>
       <div class="hl-cell" *ngIf="dashboardStats()?.highlight?.dominant_faction as f">
         <span class="hl-label">Dominant faction</span>
-        <span class="hl-value">
+        <a class="hl-value hl-value--link"
+           [routerLink]="['/investigators']"
+           [queryParams]="{ faction: f.faction }">
           <span class="faction-dot lg" [style.background]="getFactionColor(f.faction)"></span>
           {{ f.faction | titlecase }}
-        </span>
+        </a>
         <span class="hl-sub">{{ f.share }}% meta share</span>
       </div>
       <div class="hl-cell" *ngIf="dashboardStats()?.highlight?.runner_up as r">
         <span class="hl-label">Runner-up</span>
-        <span class="hl-value">
+        <a class="hl-value hl-value--link"
+           [routerLink]="['/investigators']"
+           [queryParams]="{ investigator: r.code }">
           <span class="faction-dot lg" [style.background]="getFactionColor(r.faction)"></span>
           {{ r.name }}
-        </span>
+        </a>
         <span class="hl-sub">{{ r.meta_share }}% meta share</span>
       </div>
       <div class="hl-cell" *ngIf="dashboardStats()?.highlight?.avg_xp_per_deck !== undefined">
@@ -156,7 +162,9 @@
               [style.animation-delay]="(i * 50) + 'ms'">
             <span class="rank-num">{{ i + 1 }}</span>
             <span class="faction-dot" [style.background]="getFactionColor(inv.faction)"></span>
-            <span class="inv-name">{{ inv.name }}</span>
+            <a class="inv-name inv-name--link"
+               [routerLink]="['/investigators']"
+               [queryParams]="{ investigator: inv.code }">{{ inv.name }}</a>
             <div class="inv-bar-wrap">
               <div class="inv-bar-fill"
                 [style.width.%]="maxMetaShare() > 0 ? (inv.meta_share / maxMetaShare() * 100) : 0"
@@ -205,7 +213,7 @@
               [style.animation-delay]="(i * 40) + 'ms'">
             <span class="rank-num">{{ i + 1 }}</span>
             <span class="card-type-tag" [attr.data-type]="card.type_code">{{ card.type_code }}</span>
-            <span class="card-name">{{ card.name }}</span>
+            <a class="card-name card-name--link" [routerLink]="['/analysis', card.code]">{{ card.name }}</a>
             <span class="card-xp" *ngIf="card.xp > 0">{{ card.xp }}xp</span>
             <span class="card-pct">{{ (card.inclusion_rate * 100).toFixed(0) }}%</span>
           </li>
@@ -229,7 +237,7 @@
           <li *ngFor="let card of topCardsByType('top_assets'); let i = index" class="card-rank-item"
               [style.animation-delay]="(i * 60) + 'ms'">
             <span class="rank-num">{{ i + 1 }}</span>
-            <span class="card-name">{{ card.name }}</span>
+            <a class="card-name card-name--link" [routerLink]="['/analysis', card.code]">{{ card.name }}</a>
             <span class="card-xp" *ngIf="card.xp > 0">{{ card.xp }}xp</span>
             <span class="card-pct">{{ (card.inclusion_rate * 100).toFixed(0) }}%</span>
           </li>
@@ -248,7 +256,7 @@
           <li *ngFor="let card of topCardsByType('top_events'); let i = index" class="card-rank-item"
               [style.animation-delay]="(i * 60) + 'ms'">
             <span class="rank-num">{{ i + 1 }}</span>
-            <span class="card-name">{{ card.name }}</span>
+            <a class="card-name card-name--link" [routerLink]="['/analysis', card.code]">{{ card.name }}</a>
             <span class="card-xp" *ngIf="card.xp > 0">{{ card.xp }}xp</span>
             <span class="card-pct">{{ (card.inclusion_rate * 100).toFixed(0) }}%</span>
           </li>
@@ -267,7 +275,7 @@
           <li *ngFor="let card of topCardsByType('top_skills'); let i = index" class="card-rank-item"
               [style.animation-delay]="(i * 60) + 'ms'">
             <span class="rank-num">{{ i + 1 }}</span>
-            <span class="card-name">{{ card.name }}</span>
+            <a class="card-name card-name--link" [routerLink]="['/analysis', card.code]">{{ card.name }}</a>
             <span class="card-pct">{{ (card.inclusion_rate * 100).toFixed(0) }}%</span>
           </li>
         </ol>
@@ -290,9 +298,11 @@
         <ul class="versatile-list" *ngIf="dashboardStats()">
           <li *ngFor="let card of dashboardStats()!.card_stats.most_versatile; let i = index"
               class="versatile-item" [style.animation-delay]="(i * 60) + 'ms'">
-            <span class="card-name">{{ card.name }}</span>
+            <a class="card-name card-name--link" [routerLink]="['/analysis', card.code]">{{ card.name }}</a>
             <span class="versatile-factions">
-              <span *ngFor="let f of card.factions" class="faction-dot sm" [style.background]="getFactionColor(f)" [title]="f"></span>
+              <a *ngFor="let f of card.factions" class="faction-dot sm faction-dot--link"
+                 [style.background]="getFactionColor(f)" [title]="f"
+                 [routerLink]="['/investigators']" [queryParams]="{ faction: f }"></a>
             </span>
             <span class="card-pct">{{ (card.inclusion_rate * 100).toFixed(0) }}%</span>
           </li>
@@ -315,7 +325,9 @@
             <ul class="trend-list">
               <li *ngFor="let inv of dashboardStats()!.trending.rising" class="trend-item">
                 <span class="faction-dot" [style.background]="getFactionColor(inv.faction)"></span>
-                <span class="trend-name">{{ inv.name }}</span>
+                <a class="trend-name trend-name--link"
+                   [routerLink]="['/investigators']"
+                   [queryParams]="{ investigator: inv.code }">{{ inv.name }}</a>
                 <span class="trend-change trend-change--up">+{{ inv.change_pct }}%</span>
               </li>
               <li *ngIf="!dashboardStats()!.trending.rising.length" class="trend-empty">No data</li>
@@ -326,7 +338,9 @@
             <ul class="trend-list">
               <li *ngFor="let inv of dashboardStats()!.trending.falling" class="trend-item">
                 <span class="faction-dot" [style.background]="getFactionColor(inv.faction)"></span>
-                <span class="trend-name">{{ inv.name }}</span>
+                <a class="trend-name trend-name--link"
+                   [routerLink]="['/investigators']"
+                   [queryParams]="{ investigator: inv.code }">{{ inv.name }}</a>
                 <span class="trend-change trend-change--down">{{ inv.change_pct }}%</span>
               </li>
               <li *ngIf="!dashboardStats()!.trending.falling.length" class="trend-empty">No data</li>

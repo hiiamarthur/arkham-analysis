@@ -4,7 +4,7 @@
       <span class="header-icon" [innerHTML]="getIcon('card')"></span>
       Card Analysis & Browser
     </h1>
-    <p class="subtitle">Browse cards and perform context-aware GPT analysis</p>
+    <p class="subtitle">Browse cards and inspect deck statistics</p>
   </div>
 
   <!-- Tab Navigation -->
@@ -16,10 +16,11 @@
       <span [innerHTML]="getIcon('card')"></span> Card Browser
     </button>
     <button
-      class="tab-button"
+      class="tab-button tab-button--coming-soon"
       [class.active]="activeTab() === 'gpt-analysis'"
       (click)="setActiveTab('gpt-analysis')">
-      <span [innerHTML]="getIcon('analysis')"></span> GPT Analysis
+      <span [innerHTML]="getIcon('analysis')"></span> AI Analysis
+      <span class="coming-soon-badge">Soon</span>
     </button>
   </div>
 
@@ -311,7 +312,12 @@
     <!-- Card Detail Modal -->
     <div class="card-detail-overlay" *ngIf="selectedCard()" (click)="closeCardDetail()">
       <div class="card-detail-modal-large" (click)="$event.stopPropagation()">
-        <button class="close-button" (click)="closeCardDetail()"><span [innerHTML]="getIcon('close')"></span></button>
+        <button
+          class="close-button"
+          type="button"
+          aria-label="Close card details"
+          (click)="closeCardDetail()"
+        ><span [innerHTML]="getIcon('close')"></span></button>
 
         <div class="card-detail-content" *ngIf="selectedCard() as card">
           <!-- Card Header Section -->
@@ -551,8 +557,8 @@
 
           <!-- Actions Footer -->
           <div class="modal-footer">
-            <button class="action-button primary" (click)="analyzeCardWithGPT(card)">
-              <span [innerHTML]="getIcon('gpt')"></span> Analyze with GPT
+            <button class="action-button secondary" disabled title="Coming soon">
+              AI Analysis — Coming Soon
             </button>
             <button class="action-button secondary" (click)="closeCardDetail()">
               Close
@@ -566,7 +572,12 @@
   <!-- Card Stats Modal -->
   <div class="stats-modal-overlay" *ngIf="showStatsModal()" (click)="closeStatsModal()">
     <div class="stats-modal" (click)="$event.stopPropagation()">
-      <button class="close-button" (click)="closeStatsModal()"><span [innerHTML]="getIcon('close')"></span></button>
+      <button
+        class="close-button"
+        type="button"
+        aria-label="Close card statistics"
+        (click)="closeStatsModal()"
+      ><span [innerHTML]="getIcon('close')"></span></button>
 
       <div *ngIf="statsLoading()" class="stats-loading">
         <div class="loading-skeleton">
@@ -821,5 +832,20 @@
     </div>
   </div>
 
-  <!-- GPT Analysis Tab -->
+  <!-- AI Analysis Tab (Coming Soon) -->
+  <div class="tab-content coming-soon-tab" *ngIf="activeTab() === 'gpt-analysis'">
+    <div class="coming-soon-panel">
+      <div class="cs-icon">⟁</div>
+      <h2 class="cs-title">AI Card Analysis</h2>
+      <p class="cs-body">
+        Context-aware AI analysis for every card — explaining synergies, scenario fit, and
+        upgrade paths in plain language. This feature is in development and will be available soon.
+      </p>
+      <p class="cs-body cs-body--dim">
+        In the meantime, use the Card Browser to inspect deck statistics, inclusion rates, and
+        usage trends for any card in the collection.
+      </p>
+      <button class="tab-button" (click)="setActiveTab('browser')">← Back to Card Browser</button>
+    </div>
+  </div>
 </div>

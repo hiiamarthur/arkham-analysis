@@ -12,11 +12,15 @@
   <div class="investigators-list" *ngIf="!selectedInvestigator()">
     <div class="section-header">
       <h2>All Investigators</h2>
-      <span class="section-subtitle">{{investigators().length}} investigators available</span>
+      <span class="section-subtitle" *ngIf="!factionFilter()">{{investigators().length}} investigators available</span>
+      <span class="section-subtitle" *ngIf="factionFilter()">
+        {{filteredInvestigators().length}} {{factionFilter() | titlecase}} investigators
+        <button class="faction-clear-btn" (click)="factionFilter.set(null)">✕ Clear filter</button>
+      </span>
     </div>
 
     <app-data-table
-      [data]="investigators()"
+      [data]="filteredInvestigators()"
       [columns]="investigatorColumns"
       [config]="tableConfig"
       [loading]="investigatorsLoading()"
@@ -98,7 +102,7 @@
              [title]="getMetaShareTooltip()">
           <div class="stat-icon popularity" [innerHTML]="getCustomIcon('popularity')"></div>
           <div class="stat-value" *ngIf="!statsLoading() && investigatorStats() as stats">
-            {{(stats.meta_position.meta_share * 100) | number:'1.1-1'}}%
+            {{ (stats.meta_position.meta_share * 100) | number:'1.1-1' }}%
           </div>
           <div class="stat-value" *ngIf="statsLoading()">-</div>
           <div class="stat-label">Meta Share</div>
@@ -106,8 +110,14 @@
       </div>
     </div>
 
+    <!-- No deck data notice (parallel / new investigators) -->
+    <div class="no-stats-notice" *ngIf="!statsLoading() && statsNoData()">
+      <p>No deck data found for this investigator.</p>
+      <p class="no-stats-sub">This may be a parallel variant or a newly-released investigator with limited published decks on ArkhamDB.</p>
+    </div>
+
     <!-- Performance Stats -->
-    <div class="performance-section" *ngIf="!statsLoading() && investigatorStats() as stats">
+    <div class="performance-section" *ngIf="!statsLoading() && !statsNoData() && investigatorStats() as stats">
       <h2>Investigator Analysis</h2>
 
       <!-- Overview Cards -->
@@ -347,7 +357,13 @@
 </div>
 
 <!-- Floating Help Button -->
-<button class="help-fab" (click)="toggleHelp()" [class.active]="showHelp()" title="How stats are calculated">
+<button
+  class="help-fab"
+  type="button"
+  (click)="toggleHelp()"
+  [class.active]="showHelp()"
+  [attr.aria-label]="showHelp() ? 'Close help panel' : 'Open help panel'"
+  title="How stats are calculated">
   {{ showHelp() ? '✕' : '?' }}
 </button>
 

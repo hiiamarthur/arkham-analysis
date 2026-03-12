@@ -8,11 +8,12 @@ import { InvestigatorService, InvestigatorMetadata } from '../../services/invest
 import { ReplacePipe } from '../../pipes/replace.pipe';
 import { IconService } from '../../shared/services/icon.service';
 import { SafeHtml } from '@angular/platform-browser';
+import { SearchableSelectComponent, SelectOption } from '../../shared/components/searchable-select.component';
 
 @Component({
   selector: 'app-threat-assessment',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, ReplacePipe],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, ReplacePipe, SearchableSelectComponent],
   templateUrl: './threat-assessment.component.html',
   styleUrl: './threat-assessment.component.css'
 })
@@ -34,9 +35,12 @@ export class ThreatAssessmentComponent implements OnInit {
   selectedInvestigatorCodes = signal<string[]>([]);
   investigatorAnalysis = signal<InvestigatorAnalysisResponse | null>(null);
   analysisLoading = signal(false);
+  playerCountSignal = signal<number>(2);  // mirrors the playerCount form field
 
   // Computed values
-  canAddInvestigator = computed(() => this.selectedInvestigatorCodes().length < 4);
+  canAddInvestigator = computed(() =>
+    this.selectedInvestigatorCodes().length < this.playerCountSignal()
+  );
   hasAssessment = computed(() => this.assessment() !== null);
   hasError = computed(() => this.error() !== null);
   hasScenarioContext = computed(() => this.selectedScenarioContext() !== null);
@@ -104,6 +108,16 @@ export class ThreatAssessmentComponent implements OnInit {
     this.threatForm.get('campaign')?.valueChanges.subscribe(campaign => {
       this.selectedCampaign.set(campaign);
     });
+
+    // Keep playerCountSignal in sync; trim party if player count drops
+    this.threatForm.get('playerCount')?.valueChanges.subscribe((count: number) => {
+      this.playerCountSignal.set(count);
+      const current = this.selectedInvestigatorCodes();
+      if (current.length > count) {
+        this.selectedInvestigatorCodes.set(current.slice(0, count));
+        this.investigatorAnalysis.set(null);
+      }
+    });
   }
 
   async loadScenarios(): Promise<void> {
@@ -145,6 +159,7 @@ export class ThreatAssessmentComponent implements OnInit {
           doomThreshold: context.doom_threshold,
           playerCount: context.player_count
         });
+        this.playerCountSignal.set(context.player_count);
       }
     } catch (error) {
       console.error('Failed to load scenario context:', error);
@@ -166,7 +181,7 @@ export class ThreatAssessmentComponent implements OnInit {
   addInvestigator(code: string): void {
     if (!code) return;
     const current = this.selectedInvestigatorCodes();
-    if (current.length < 4 && !current.includes(code)) {
+    if (current.length < this.playerCountSignal() && !current.includes(code)) {
       this.selectedInvestigatorCodes.set([...current, code]);
     }
   }
@@ -230,6 +245,30 @@ export class ThreatAssessmentComponent implements OnInit {
     if (!campaign) return allScenarios;
     return allScenarios.filter(s => s.campaign === campaign);
   });
+
+  // SelectOption arrays for searchable selects
+  campaignOptions = computed<SelectOption[]>(() =>
+    this.campaigns().map(c => ({ value: c.code, label: c.name }))
+  );
+
+  scenarioOptions = computed<SelectOption[]>(() =>
+    this.filteredScenarios().map(s => ({ value: s.code, label: s.name }))
+  );
+
+  difficultyOptions: SelectOption[] = [
+    { value: 'easy', label: 'Easy' },
+    { value: 'standard', label: 'Standard' },
+    { value: 'hard', label: 'Hard' },
+    { value: 'expert', label: 'Expert' },
+  ];
+
+  investigatorOptions = computed<SelectOption[]>(() =>
+    this.availableInvestigators().map(inv => ({
+      value: inv.code,
+      label: inv.name,
+      disabled: this.selectedInvestigatorCodes().includes(inv.code),
+    }))
+  );
 
   // Group encounter cards by type with quantities
   groupedEncounterCards = computed(() => {

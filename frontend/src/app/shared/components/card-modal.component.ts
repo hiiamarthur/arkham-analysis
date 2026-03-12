@@ -15,7 +15,13 @@ import { SafeHtml, DomSanitizer } from '@angular/platform-browser';
     <!-- Card Stats Modal -->
     <div class="stats-modal-overlay" *ngIf="cardModalService.showModal()" (click)="cardModalService.closeModal()">
       <div class="stats-modal" (click)="$event.stopPropagation()">
-        <button class="close-button" (click)="cardModalService.closeModal()" [innerHTML]="getIcon('close')"></button>
+        <button
+          class="close-button"
+          type="button"
+          aria-label="Close dialog"
+          (click)="cardModalService.closeModal()"
+          [innerHTML]="getIcon('close')"
+        ></button>
 
         <!-- Loading State -->
         <div *ngIf="cardModalService.loading()" class="modal-loading">

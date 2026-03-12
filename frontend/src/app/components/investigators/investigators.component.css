@@ -78,7 +78,22 @@
   font-size: 0.875rem;
   color: #94a3b8;
   font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
+
+.faction-clear-btn {
+  background: none;
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  color: #94a3b8;
+  font-size: 0.7rem;
+  padding: 0.1rem 0.4rem;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.faction-clear-btn:hover { border-color: #94a3b8; color: #e2e8f0; }
 
 /* Investigators List */
 .investigators-list {
@@ -775,6 +790,25 @@
 }
 
 /* Loading States */
+.no-stats-notice {
+  padding: 2.5rem 2rem;
+  text-align: center;
+  color: #64748b;
+  border: 1px dashed rgba(148, 163, 184, 0.2);
+  border-radius: 8px;
+  margin: 1rem 0;
+}
+
+.no-stats-notice p {
+  margin: 0 0 0.4rem;
+  font-size: 0.875rem;
+}
+
+.no-stats-sub {
+  font-size: 0.75rem !important;
+  color: #475569;
+}
+
 .stats-loading {
   display: flex;
   flex-direction: column;

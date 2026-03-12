@@ -133,7 +133,7 @@ class CardService:
 
         return result
 
-    async def get_investigator_stats(self, investigator_code: str, days: int = 365):
+    async def get_investigator_stats(self, investigator_code: str, days: int = 90):
         """Get stats for an investigator"""
         investigator = await self.card_repo.get_first(
             filters={"filter_by[code][equals]": investigator_code}
@@ -225,6 +225,11 @@ class CardService:
             signature_slots=signature_slots,
         )
         stats = investigator_stats.get_stats()
+
+        # Override investigator name from the DB card — deck-derived name falls back to
+        # the code string when there are no matching decks (e.g. parallel investigators).
+        if "investigator_info" in stats and investigator.name:
+            stats["investigator_info"]["name"] = investigator.name
 
         # Enrich stats with card names
         await self._enrich_stats_with_card_names(stats)

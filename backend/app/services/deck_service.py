@@ -26,9 +26,9 @@ class DeckService:
         Get all decks from the last N days with caching and batching
         Returns List[DeckListSchema] objects for service consumption
         """
-        # Try cache first for large requests (cache raw data, not schema objects)
+        # Try cache first for any significant request (cache raw data, not schema objects)
         raw_decks = None
-        if use_cache and days > 100:
+        if use_cache and days >= 30:
             try:
                 cache_key = f"decks_raw:last_{days}_days"
                 cached_result = await self.cache_service.get_with_key(
@@ -79,8 +79,8 @@ class DeckService:
                 f"Fetched raw_decks: type={type(raw_decks)}, len={len(raw_decks) if hasattr(raw_decks, '__len__') else 'N/A'}"
             )
 
-            # Cache the raw data (not schema objects) - DISABLED for debugging
-            if use_cache and days > 100:
+            # Cache the raw data for reuse within the same server session
+            if use_cache and days >= 30:
                 try:
                     cache_key = f"decks_raw:last_{days}_days"
                     await self.cache_service.set_with_key(

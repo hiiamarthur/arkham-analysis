@@ -16,6 +16,11 @@ const FACTION_COLORS: Record<string, string> = {
   neutral:  '#4a5568',
 };
 
+// Cthulhu theme chart defaults
+const CHART_TEXT   = '#7c7189';
+const CHART_GRID   = 'rgba(201,168,76,0.06)';
+const CHART_BORDER = '#0a080f';
+
 @Component({
   selector: 'app-dashboard',
   standalone: true,
@@ -62,7 +67,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
 
   scenariosPerCampaign = computed(() => ({
     labels: this.campaigns().map(c => this.shortenCampaignName(c.name)),
-    data:   this.campaigns().map(c => c.scenarios ?? 0),
+    data:   this.campaigns().map(c => c.scenario_count ?? c.scenarios ?? 0),
   }));
 
   quickScenarios = [
@@ -158,15 +163,16 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
         datasets: [{
           data: labels.map(k => breakdown[k]),
           backgroundColor: labels.map(k => FACTION_COLORS[k] ?? '#4a5568'),
-          borderWidth: 2, borderColor: '#0d1117',
+          borderWidth: 2, borderColor: CHART_BORDER,
+          hoverOffset: 4,
         }]
       },
       options: {
         responsive: true, maintainAspectRatio: false,
         animation: { animateRotate: true, duration: 900 },
+        cutout: '60%',
         plugins: {
-          legend: { position: 'bottom', labels: { color: '#94a3b8', font: { size: 11 }, padding: 10, usePointStyle: true } },
-          title: { display: false },
+          legend: { position: 'bottom', labels: { color: CHART_TEXT, font: { size: 11 }, padding: 10, usePointStyle: true } },
         }
       }
     }));
@@ -181,15 +187,15 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
       type: 'bar',
       data: {
         labels,
-        datasets: [{ data, backgroundColor: 'rgba(99,102,241,0.25)', borderColor: 'rgba(99,102,241,0.7)', borderWidth: 1, borderRadius: 3 }]
+        datasets: [{ data, backgroundColor: 'rgba(139,28,28,0.3)', borderColor: 'rgba(139,28,28,0.7)', borderWidth: 1, borderRadius: 3 }]
       },
       options: {
         responsive: true, maintainAspectRatio: false, indexAxis: 'y',
         animation: { duration: 800 },
         plugins: { legend: { display: false } },
         scales: {
-          x: { beginAtZero: true, ticks: { color: '#475569', font: { size: 10 }, stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.04)' } },
-          y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } }
+          x: { beginAtZero: true, ticks: { color: CHART_TEXT, font: { size: 10 }, stepSize: 1 }, grid: { color: CHART_GRID } },
+          y: { ticks: { color: '#d4cfc5', font: { size: 10 } }, grid: { display: false } }
         }
       }
     }));
@@ -220,13 +226,13 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
         animation: { animateRotate: true, duration: 1000 },
         cutout: '68%',
         plugins: {
-          legend: { position: 'right', labels: { color: '#94a3b8', font: { size: 11 }, padding: 12, usePointStyle: true,
+          legend: { position: 'right', labels: { color: CHART_TEXT, font: { size: 11 }, padding: 12, usePointStyle: true,
             generateLabels: (chart) => {
               const ds = chart.data.datasets[0];
               return (chart.data.labels as string[]).map((label, i) => ({
                 text: `${label}  ${data[i]}%`,
                 fillStyle: (ds.backgroundColor as string[])[i],
-                strokeStyle: '#0d1117',
+                strokeStyle: CHART_BORDER,
                 lineWidth: 1,
                 hidden: false,
                 index: i,
@@ -255,16 +261,16 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
         datasets: [{
           data: pcts,
           backgroundColor: [
-            'rgba(71,85,105,0.5)',
-            'rgba(99,102,241,0.4)',
-            'rgba(99,102,241,0.65)',
-            'rgba(239,68,68,0.55)',
+            'rgba(74,66,88,0.5)',
+            'rgba(201,168,76,0.25)',
+            'rgba(201,168,76,0.45)',
+            'rgba(139,28,28,0.55)',
           ],
           borderColor: [
-            'rgba(71,85,105,0.9)',
-            'rgba(99,102,241,0.9)',
-            'rgba(99,102,241,0.9)',
-            'rgba(239,68,68,0.9)',
+            'rgba(74,66,88,0.9)',
+            'rgba(201,168,76,0.7)',
+            'rgba(201,168,76,0.9)',
+            'rgba(139,28,28,0.9)',
           ],
           borderWidth: 1,
           borderRadius: 4,
@@ -278,8 +284,8 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
           tooltip: { callbacks: { label: (ctx) => ` ${ctx.parsed.y}% of decks` } }
         },
         scales: {
-          x: { ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { display: false } },
-          y: { beginAtZero: true, ticks: { color: '#475569', font: { size: 10 }, callback: v => `${v}%` }, grid: { color: 'rgba(255,255,255,0.04)' } }
+          x: { ticks: { color: '#d4cfc5', font: { size: 11 } }, grid: { display: false } },
+          y: { beginAtZero: true, ticks: { color: CHART_TEXT, font: { size: 10 }, callback: (v: any) => `${v}%` }, grid: { color: CHART_GRID } }
         }
       }
     }));

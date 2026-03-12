@@ -6,9 +6,20 @@ from fastapi import Depends, HTTPException, Query, Path, Header, status
 from typing import Optional, Dict, Any, List, Union
 from pydantic import BaseModel, Field, validator
 from enum import Enum
+from datetime import datetime, timedelta
 from app.api.deps import get_app_service, get_cache_service
 from app.services.app_service import AppService
 from app.core.config import settings
+
+
+def seconds_until_next_sunday_midnight() -> int:
+    """Returns TTL in seconds so the cache expires at next Sunday 00:00 UTC."""
+    now = datetime.utcnow()
+    days_ahead = (6 - now.weekday()) % 7 or 7
+    next_sunday = (now + timedelta(days=days_ahead)).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
+    return max(int((next_sunday - now).total_seconds()), 3600)
 
 # Import shared domain types
 from domain import CardType, Faction, Difficulty, CampaignType, ScenarioType

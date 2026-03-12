@@ -11,12 +11,11 @@ from app.services.card_service import CardService
 from app.services.deck_service import DeckService
 from app.models.arkham_model import CardModel
 from app.core.redis_client import get_redis_client
-from . import ARKHAM_HEADERS
+from . import ARKHAM_HEADERS, seconds_until_next_sunday_midnight
 
 router = APIRouter()
 
-CACHE_KEY = "dashboard:stats:v3"
-CACHE_TTL = 7200  # 2 hours
+CACHE_KEY = "dashboard:stats:v4"
 
 
 @router.get("")
@@ -121,6 +120,8 @@ async def get_dashboard_stats(
     for code in top_card_codes:
         count = card_counter[code]
         meta = card_meta.get(code, {})
+        if meta.get("subtype_code") == "basicweakness":
+            continue
         type_code = meta.get("type_code", "")
         xp = meta.get("xp") or 0
 
@@ -142,6 +143,8 @@ async def get_dashboard_stats(
         spread = card_faction_spread.get(code, set())
         if len(spread) >= 3:
             meta = card_meta.get(code, {})
+            if meta.get("subtype_code") == "basicweakness":
+                continue
             versatile_cards.append({
                 "code": code,
                 "name": meta.get("name", code),
@@ -156,8 +159,12 @@ async def get_dashboard_stats(
 
     def _card_list(counter: Counter, limit: int) -> List[Dict]:
         result = []
-        for code, count in counter.most_common(limit):
+        for code, count in counter.most_common(limit * 2):  # overfetch to allow filtering
+            if len(result) >= limit:
+                break
             meta = card_meta.get(code, {})
+            if meta.get("subtype_code") == "basicweakness":
+                continue
             result.append({
                 "code": code,
                 "name": meta.get("name", code),
@@ -217,7 +224,7 @@ async def get_dashboard_stats(
     }
 
     if redis_client.is_connected:
-        await redis_client.set(cache_key, result, expire=CACHE_TTL)
+        await redis_client.set(cache_key, result, expire=seconds_until_next_sunday_midnight())
 
     response.headers.update(ARKHAM_HEADERS)
     response.headers["X-Cache"] = "MISS"
@@ -238,6 +245,7 @@ async def _bulk_card_metadata(codes: List[str], card_service: CardService) -> Di
                 "type_code": card.type_code or "",
                 "faction_code": card.faction_code or "",
                 "xp": getattr(card, "xp", None) or 0,
+                "subtype_code": getattr(card, "subtype_code", None) or "",
             }
             for card in cards
         }

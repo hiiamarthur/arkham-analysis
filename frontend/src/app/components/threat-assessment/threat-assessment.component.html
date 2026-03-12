@@ -11,43 +11,36 @@
 
         <div class="form-row">
           <div class="input-group">
-            <label for="campaign">Campaign</label>
-            <select
-              id="campaign"
+            <label>Campaign</label>
+            <app-searchable-select
               formControlName="campaign"
-              class="form-input">
-              <option value="">All Campaigns</option>
-              <option *ngFor="let campaign of campaigns()" [value]="campaign.code">
-                {{campaign.name}}
-              </option>
-            </select>
+              [options]="campaignOptions()"
+              placeholder="All Campaigns"
+              searchPlaceholder="Search campaigns…"
+              [allowEmpty]="true">
+            </app-searchable-select>
           </div>
 
           <div class="input-group">
-            <label for="scenario">Scenario</label>
-            <select
-              id="scenario"
+            <label>Scenario</label>
+            <app-searchable-select
               formControlName="scenario"
-              class="form-input"
-              [disabled]="loadingScenarios()">
-              <option value="">Select a scenario...</option>
-              <option *ngFor="let scenario of filteredScenarios()" [value]="scenario.code">
-                {{scenario.name}}
-              </option>
-            </select>
+              [options]="scenarioOptions()"
+              placeholder="Select a scenario…"
+              searchPlaceholder="Search scenarios…"
+              [allowEmpty]="false">
+            </app-searchable-select>
           </div>
 
           <div class="input-group">
-            <label for="difficulty">Difficulty</label>
-            <select
-              id="difficulty"
+            <label>Difficulty</label>
+            <app-searchable-select
               formControlName="difficulty"
-              class="form-input">
-              <option value="easy">Easy</option>
-              <option value="standard">Standard</option>
-              <option value="hard">Hard</option>
-              <option value="expert">Expert</option>
-            </select>
+              [options]="difficultyOptions"
+              placeholder="Select difficulty"
+              searchPlaceholder="Search…"
+              [allowEmpty]="false">
+            </app-searchable-select>
           </div>
 
           <div class="input-group">
@@ -123,12 +116,21 @@
       <!-- Party Selection -->
       <div class="form-section party-section" *ngIf="selectedScenarioContext()">
         <h3>Party Selection</h3>
-        <p class="section-hint">Select 1–4 investigators to analyse against this scenario's chaos bag</p>
+        <p class="section-hint">
+          Select up to {{ playerCountSignal() }} investigator{{ playerCountSignal() === 1 ? '' : 's' }}
+          (matches player count)
+          — {{ playerCountSignal() - selectedInvestigatorCodes().length }} slot{{ (playerCountSignal() - selectedInvestigatorCodes().length) === 1 ? '' : 's' }} remaining
+        </p>
 
         <div class="selected-investigators">
           <div class="investigator-chip" *ngFor="let code of selectedInvestigatorCodes()">
             <span class="chip-name">{{ getInvestigatorName(code) }}</span>
-            <button class="chip-remove" (click)="removeInvestigator(code)" type="button">✕</button>
+            <button
+              class="chip-remove"
+              type="button"
+              aria-label="Remove investigator {{ getInvestigatorName(code) }}"
+              (click)="removeInvestigator(code)"
+            >✕</button>
           </div>
           <span class="party-empty" *ngIf="selectedInvestigatorCodes().length === 0">
             No investigators selected
@@ -136,17 +138,14 @@
         </div>
 
         <div class="investigator-picker" *ngIf="canAddInvestigator()">
-          <select
-            class="form-input"
-            (change)="addInvestigator($any($event.target).value); $any($event.target).value = ''">
-            <option value="">Add investigator…</option>
-            <option
-              *ngFor="let inv of availableInvestigators()"
-              [value]="inv.code"
-              [disabled]="selectedInvestigatorCodes().includes(inv.code)">
-              {{ inv.name }}
-            </option>
-          </select>
+          <app-searchable-select
+            [options]="investigatorOptions()"
+            placeholder="Add investigator…"
+            searchPlaceholder="Search investigators…"
+            [allowEmpty]="false"
+            [resetAfterSelect]="true"
+            (selected)="addInvestigator($event)">
+          </app-searchable-select>
         </div>
       </div>
 

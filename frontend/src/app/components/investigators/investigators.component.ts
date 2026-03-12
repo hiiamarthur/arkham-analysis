@@ -1,5 +1,6 @@
 import { Component, signal, computed, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ActivatedRoute } from '@angular/router';
 import { DataTableComponent, TableColumn, TableConfig } from '../../shared/components/data-table.component';
 import { InvestigatorService, InvestigatorStatsResponse, CardRanking, StapleCard, TrendingCard, CardSynergy, DeckArchetype, UnderusedGem } from '../../services/investigator.service';
 import { CardService, CardResponse } from '../../services/card.service';
@@ -42,6 +43,7 @@ export class InvestigatorsComponent implements OnInit {
   private arkhamIconsService = inject(ArkhamSvgIconsService);
   private iconService = inject(IconService);
   private sanitizer = inject(DomSanitizer);
+  private route = inject(ActivatedRoute);
 
   // Expose Math to template
   Math = Math;
@@ -49,22 +51,46 @@ export class InvestigatorsComponent implements OnInit {
   // Loading states
   investigatorsLoading = signal<boolean>(true);
   statsLoading = signal<boolean>(false);
+  statsNoData = signal<boolean>(false);   // true when investigator has no deck data
 
   // Selected investigator
   selectedInvestigator = signal<Investigator | null>(null);
   selectedInvestigatorCode = signal<string | null>(null);
 
+  // Faction pre-filter from query param
+  factionFilter = signal<string | null>(null);
+
   // All investigators data
   investigators = signal<Investigator[]>([]);
+
+  // Filtered investigators (by faction query param)
+  filteredInvestigators = computed(() => {
+    const faction = this.factionFilter();
+    if (!faction) return this.investigators();
+    return this.investigators().filter(inv => inv.faction.toLowerCase() === faction.toLowerCase());
+  });
 
   // Raw stats response
   investigatorStats = signal<InvestigatorStatsResponse | null>(null);
 
   ngOnInit() {
-    this.loadInvestigators();
+    const params = this.route.snapshot.queryParamMap;
+    const factionParam = params.get('faction');
+    const investigatorParam = params.get('investigator');
+
+    if (factionParam) {
+      this.factionFilter.set(factionParam);
+    }
+
+    this.loadInvestigators().then(() => {
+      if (investigatorParam) {
+        const match = this.investigators().find(inv => inv.code === investigatorParam);
+        if (match) this.onInvestigatorClick(match);
+      }
+    });
   }
 
-  async loadInvestigators() {
+  async loadInvestigators(): Promise<void> {
     this.investigatorsLoading.set(true);
     try {
       const metadata = await this.investigatorService.getAllInvestigators().toPromise();
@@ -195,15 +221,24 @@ export class InvestigatorsComponent implements OnInit {
   async onInvestigatorClick(investigator: Investigator) {
     this.selectedInvestigator.set(investigator);
     this.selectedInvestigatorCode.set(investigator.code);
+    this.statsNoData.set(false);
 
     // Load stats for this investigator
     this.statsLoading.set(true);
     try {
-      const stats = await this.investigatorService.getInvestigatorStats(investigator.code).toPromise();
-      this.investigatorStats.set(stats || null);
+      const raw = await this.investigatorService.getInvestigatorStats(investigator.code).toPromise();
+      // Backend returns {investigator_info, error} when no decks exist — not a full stats object.
+      // Detect this in TS (not the template) so we avoid accessing missing fields.
+      if (!raw || !raw.card_rankings) {
+        this.investigatorStats.set(null);
+        this.statsNoData.set(true);
+      } else {
+        this.investigatorStats.set(raw);
+      }
     } catch (error) {
       console.error('Error loading investigator stats:', error);
       this.investigatorStats.set(null);
+      this.statsNoData.set(true);
     } finally {
       this.statsLoading.set(false);
     }
@@ -218,6 +253,7 @@ export class InvestigatorsComponent implements OnInit {
     this.selectedInvestigator.set(null);
     this.selectedInvestigatorCode.set(null);
     this.investigatorStats.set(null);
+    this.statsNoData.set(false);
   }
 
   getClassColor(className: string): string {

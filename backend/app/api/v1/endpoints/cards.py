@@ -1,9 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, status, Body
 from typing import List, Optional
+import asyncio
 from app.schemas.card_schema import CardSchema
 from app.services.app_service import AppService
 from app.api.deps import get_card_service
 from app.services.card_service import CardService
+from app.core.redis_client import get_redis_client
 
 # Import shared utilities from endpoints __init__.py
 from . import (
@@ -20,7 +22,10 @@ from . import (
     CARD_NOT_FOUND,
     ARKHAM_HEADERS,
     CACHE_TTL_MEDIUM,
+    seconds_until_next_sunday_midnight,
 )
+
+INV_STATS_CACHE_KEY = "investigator:stats:v1"
 
 router = APIRouter()
 
@@ -397,13 +402,35 @@ async def get_card_stats(
 
 @router.get("/investigator/{card_code}/stats")
 async def get_investigator_stats(
-    # investigator_code: str,
     card_code: str = Depends(get_investigator_code_param),
     card_service: CardService = Depends(get_card_service),
 ):
-    print("investigator_code is", card_code)
-    """Get stats for an investigator"""
-    return await card_service.get_investigator_stats(card_code)
+    """Get deck stats for an investigator. Cached weekly in Redis (refreshes every Sunday 00:00 UTC)."""
+    redis_client = await get_redis_client()
+    cache_key = f"{INV_STATS_CACHE_KEY}:{card_code}"
+
+    if redis_client.is_connected:
+        cached = await redis_client.get(cache_key)
+        if cached:
+            return cached
+
+    try:
+        result = await asyncio.wait_for(
+            card_service.get_investigator_stats(card_code, days=90),
+            timeout=30.0,
+        )
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Stats fetch timed out — try again.")
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error loading investigator stats: {e}")
+
+    # Only cache successful full-stats responses (not "no decks" error stubs)
+    if redis_client.is_connected and not result.get("error"):
+        await redis_client.set(cache_key, result, expire=seconds_until_next_sunday_midnight())
+
+    return result
 
 
 @router.post("/bulk/score", response_model=List[ScoringResult])

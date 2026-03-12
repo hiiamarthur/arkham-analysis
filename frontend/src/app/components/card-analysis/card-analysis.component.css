@@ -75,6 +75,62 @@
   animation: fadeIn 0.3s ease;
 }
 
+.tab-button--coming-soon {
+  position: relative;
+  opacity: 0.8;
+}
+
+.coming-soon-badge {
+  display: inline-block;
+  font-size: 0.55rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  background: rgba(201, 168, 76, 0.18);
+  color: #c9a84c;
+  border: 1px solid rgba(201, 168, 76, 0.3);
+  border-radius: 3px;
+  padding: 1px 4px;
+  margin-left: 4px;
+  vertical-align: middle;
+}
+
+/* Coming Soon panel */
+.coming-soon-tab {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+.coming-soon-panel {
+  max-width: 480px;
+  text-align: center;
+  padding: 3rem 2rem;
+}
+
+.cs-icon {
+  font-size: 3rem;
+  color: rgba(201, 168, 76, 0.4);
+  margin-bottom: 1rem;
+  line-height: 1;
+}
+
+.cs-title {
+  font-size: 1.4rem;
+  color: #c8d3d5;
+  margin: 0 0 1rem;
+}
+
+.cs-body {
+  font-size: 0.875rem;
+  color: #64748b;
+  line-height: 1.65;
+  margin: 0 0 0.75rem;
+}
+
+.cs-body--dim { color: #475569; }
+
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
   to { opacity: 1; transform: translateY(0); }

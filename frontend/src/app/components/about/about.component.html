@@ -3,7 +3,7 @@
   <!-- Hero -->
   <div class="hero-section">
     <div class="hero-content">
-      <p class="hero-eyebrow">The Arkham Archives</p>
+      <p class="hero-eyebrow">The Arkham Analysis</p>
       <h1 class="hero-title">Knowledge is the only weapon<br>that matters in Arkham</h1>
       <p class="hero-subtitle">
         A companion platform for Arkham Horror: The Card Game players. Track investigator trends,
@@ -27,9 +27,9 @@
   <div class="manifesto-section">
     <div class="manifesto-inner">
       <div class="manifesto-block">
-        <h2>What is the Arkham Archives?</h2>
+        <h2>What is the Arkham Analysis?</h2>
         <p>
-          Not a deck builder. Not a collection tracker. The Arkham Archives is a reading tool —
+          Not a deck builder. Not a collection tracker. The Arkham Analysis is a reading tool —
           a way to understand the patterns behind investigator choices, the mathematics behind the chaos bag,
           and the threat profile of every scenario across every campaign.
         </p>
@@ -94,6 +94,50 @@
         <div class="step-content">
           <h3>Check the Meta</h3>
           <p>Visit the Investigator Archives. See what cards the community considers essential for your investigator, what is rising, and what hidden gems others have found.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Data sources -->
+  <div class="data-section">
+    <div class="section-header">
+      <h2>Where the Data Comes From</h2>
+      <p>Transparency about sources, freshness, and scope</p>
+    </div>
+
+    <div class="data-grid">
+      <div class="data-card">
+        <h3>ArkhamDB</h3>
+        <p>
+          Deck statistics — investigator popularity, card inclusion rates, XP trends, and faction
+          meta share — are sourced from published deck records on
+          <strong>ArkhamDB</strong>, the community's canonical deck-sharing platform.
+          The data covers the last <strong>90 days</strong> of published decks by default.
+        </p>
+      </div>
+
+      <div class="data-card">
+        <h3>Card &amp; Scenario Data</h3>
+        <p>
+          Card text, investigator stats, scenario encounter decks, and chaos bag compositions
+          are drawn from ArkhamDB's public card API and maintained locally. Scenario context
+          calculations (threat ratings, token modifiers, skill test distributions) are computed
+          server-side from that card data.
+        </p>
+      </div>
+
+      <div class="data-card data-card--highlight">
+        <h3>Data Freshness</h3>
+        <p>
+          Dashboard meta stats are cached and refreshed <strong>every Sunday at 00:00 UTC</strong>.
+          This means the deck trends, investigator rankings, and faction meta share you see
+          reflect the state of the community as of the most recent Sunday — not live data.
+          Scenario and card data updates when the local database is rebuilt.
+        </p>
+        <div class="refresh-note">
+          <span class="refresh-icon">↻</span>
+          Meta stats refresh every Sunday midnight UTC
         </div>
       </div>
     </div>

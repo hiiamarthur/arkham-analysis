@@ -11,6 +11,7 @@ class RedisClient:
     _instance: Optional["RedisClient"] = None
     _redis_client: Optional[redis.Redis] = None
     _connected: bool = False
+    _connect_attempted: bool = False
 
     def __new__(cls):
         if cls._instance is None:
@@ -18,9 +19,21 @@ class RedisClient:
         return cls._instance
 
     async def connect(self) -> None:
-        """Initialize Redis connection"""
+        """Initialize Redis connection. Redis is optional — failure is non-fatal."""
+        # Prefer REDIS_URL env var (set by Railway/Heroku Redis plugins)
+        redis_url = (
+            settings.REDIS_URL
+            or f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_DB}"
+        )
+
+        # Skip connection attempt if pointing at localhost with no explicit URL configured
+        # (avoids noisy errors when Redis simply isn't provisioned)
+        if not settings.REDIS_URL and settings.REDIS_HOST == "localhost":
+            logger.info("No Redis URL configured — running without caching")
+            return
+
+        self._connect_attempted = True
         try:
-            redis_url = f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_DB}"
             self._redis_client = redis.from_url(
                 redis_url,
                 encoding="utf-8",
@@ -30,20 +43,14 @@ class RedisClient:
                 retry_on_timeout=True,
                 max_connections=20,
             )
-            # Test connection
             await self._redis_client.ping()
             self._connected = True
-            logger.info(
-                f"Connected to Redis at {settings.REDIS_HOST}:{settings.REDIS_PORT}"
-            )
+            logger.info(f"Connected to Redis at {redis_url}")
         except Exception as e:
             logger.warning(f"Failed to connect to Redis: {e}")
             logger.info("Application will run without Redis caching")
             self._redis_client = None
             self._connected = False
-            # Don't raise the exception in development mode
-            if settings.environment == "prod":
-                raise
 
     async def disconnect(self) -> None:
         """Close Redis connection"""
@@ -177,6 +184,6 @@ redis_client = RedisClient()
 
 async def get_redis_client() -> RedisClient:
     """Get Redis client instance (for dependency injection)"""
-    if not redis_client.is_connected:
+    if not redis_client._connect_attempted:
         await redis_client.connect()
     return redis_client

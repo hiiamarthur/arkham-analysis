@@ -1,6 +1,5 @@
 from typing import Optional
-from pydantic_settings import BaseSettings
-from pydantic_settings.sources import DotEnvSettingsSource
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
 from enum import Enum
 import os
@@ -14,8 +13,9 @@ class Environment(str, Enum):
 
 
 class Settings(BaseSettings):
-    # Environment settings
+    model_config: SettingsConfigDict = SettingsConfigDict(env_file=".env", case_sensitive=True)
 
+    # Environment settings
     environment: Environment = Environment.DEVELOPMENT
     DEBUG: bool = True
 
@@ -50,8 +50,8 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str = ""
     OPENAI_MODEL: str = "gpt-3.5-turbo"
     GPT_API_URL: str = "https://api.openai.com/v1/chat/completions"
-    ORGANIZATION_ID: str | None = None
-    PROJECT_ID: str | None = None
+    ORGANIZATION_ID: Optional[str] = None
+    PROJECT_ID: Optional[str] = None
 
     # Redis Settings
     REDIS_HOST: str = "localhost"
@@ -65,16 +65,15 @@ class Settings(BaseSettings):
     CACHE_TTL_CARDS: int = 1800  # 30 minutes
     CACHE_TTL_TRAITS: int = 7200  # 2 hours
 
-    # New fields
-    database_url: str = ""
+    # Database URL
+    DATABASE_URL: Optional[str] = None
     ARKHAMDB_CARDS_URL: str = "https://arkhamdb.com/api/public/cards"
     ARKHAMDB_URL: str = "https://arkhamdb.com/api"
 
-    @property
-    def DATABASE_URL(self) -> str:
+    def get_database_url(self) -> str:
         """Get async database URL. Prefers DATABASE_URL env var (Railway), falls back to individual POSTGRES_* vars."""
-        if self.database_url:
-            url = self.database_url
+        if self.DATABASE_URL:
+            url = self.DATABASE_URL
             # Ensure asyncpg driver prefix
             if url.startswith("postgres://"):
                 url = url.replace("postgres://", "postgresql+asyncpg://", 1)
@@ -86,11 +85,10 @@ class Settings(BaseSettings):
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         )
 
-    @property
-    def SYNC_DATABASE_URL(self) -> str:
+    def get_sync_database_url(self) -> str:
         """Get synchronous database URL for migrations."""
-        if self.database_url:
-            url = self.database_url
+        if self.DATABASE_URL:
+            url = self.DATABASE_URL
             if url.startswith("postgresql+asyncpg://"):
                 url = url.replace("postgresql+asyncpg://", "postgresql://", 1)
             elif url.startswith("postgres://"):
@@ -101,44 +99,10 @@ class Settings(BaseSettings):
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
         )
 
-    class Config:
-        @classmethod
-        def customise_sources(
-            cls,
-            init_settings,
-            env_settings,
-            file_secret_settings,
-        ):
-            # Add explicit logging at the start
-            print("Customise sources called")  # Temporary print for debugging
-            print("Customise sources method called")
-
-            env = os.getenv("ENVIRONMENT", "dev")
-            env_file = f".env.{env}"
-
-            print(f"Checking for env file: {env_file}")
-            if os.path.exists(env_file):
-                print(f"Using env file: {env_file}")
-                cls.env_file = env_file
-            else:
-                print(f"Env file {env_file} not found, using .env")
-                cls.env_file = ".env"
-
-            print(f"Final env_file setting: {cls.env_file}")
-
-            return (
-                init_settings,
-                env_settings,
-                file_secret_settings,
-            )
-
 
 @lru_cache()
 def get_settings() -> Settings:
-    print("Getting settings...")
-    settings = Settings()
-    print("Settings initialized")
-    return settings
+    return Settings()
 
 
 settings = get_settings()

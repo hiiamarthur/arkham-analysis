@@ -147,7 +147,7 @@ class ArkhamApiResponse(BaseModel):
     timestamp: Optional[str] = None
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "success": True,
                 "message": "Card retrieved successfully",
@@ -180,7 +180,7 @@ class PaginatedCardResponse(BaseModel):
     total_results: int
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "cards": [
                     {

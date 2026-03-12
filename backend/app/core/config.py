@@ -72,7 +72,15 @@ class Settings(BaseSettings):
 
     @property
     def DATABASE_URL(self) -> str:
-        """Get database URL based on environment"""
+        """Get async database URL. Prefers DATABASE_URL env var (Railway), falls back to individual POSTGRES_* vars."""
+        if self.database_url:
+            url = self.database_url
+            # Ensure asyncpg driver prefix
+            if url.startswith("postgres://"):
+                url = url.replace("postgres://", "postgresql+asyncpg://", 1)
+            elif url.startswith("postgresql://"):
+                url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+            return url
         return (
             f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
@@ -80,7 +88,14 @@ class Settings(BaseSettings):
 
     @property
     def SYNC_DATABASE_URL(self) -> str:
-        """Get synchronous database URL for migrations"""
+        """Get synchronous database URL for migrations."""
+        if self.database_url:
+            url = self.database_url
+            if url.startswith("postgresql+asyncpg://"):
+                url = url.replace("postgresql+asyncpg://", "postgresql://", 1)
+            elif url.startswith("postgres://"):
+                url = url.replace("postgres://", "postgresql://", 1)
+            return url
         return (
             f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
             f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"

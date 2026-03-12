@@ -47,7 +47,7 @@ class ScenarioAnalysisRequest(BaseModel):
     )
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "scenario_code": "the_gathering",
                 "difficulty": "expert",

@@ -30,7 +30,7 @@ class CardAnalysisRequest(BaseModel):
     )
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "card_codes": ["01030", "01031", "01032"],
                 "investigator_code": "01001",
@@ -65,7 +65,7 @@ class AnalysisResponse(BaseModel):
     analysis: Optional[Dict[str, Any]] = None
 
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "success": True,
                 "message": "Analysis completed successfully",

@@ -118,7 +118,7 @@ class GameContextSchema(BaseModel):
     )
     
     class Config:
-        schema_extra = {
+        json_schema_extra = {
             "example": {
                 "current_scenario": "01104",
                 "current_act": 2,

@@ -84,10 +84,12 @@ async def health_check():
 
 
 if __name__ == "__main__":
+    import os
+    port = int(os.environ.get("PORT", 8000))
     uvicorn.run(
         "app.main:app",
         host="0.0.0.0",
-        port=8000,
-        reload=True,  # Enable hot reload
-        reload_dirs=["app"],  # Watch the app directory for changes
+        port=port,
+        reload=True,
+        reload_dirs=["app"],
     )

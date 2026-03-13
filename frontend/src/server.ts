@@ -6,7 +6,6 @@ import {
 } from '@angular/ssr/node';
 import express from 'express';
 import { join } from 'node:path';
-import { createProxyMiddleware } from 'http-proxy-middleware';
 
 const browserDistFolder = join(import.meta.dirname, '../browser');
 
@@ -30,7 +29,24 @@ const angularApp = new AngularNodeAppEngine();
  */
 const apiUrl = process.env['API_URL'];
 if (apiUrl) {
-  app.use('/v1', createProxyMiddleware({ target: apiUrl, changeOrigin: true }));
+  app.use('/v1', async (req: express.Request, res: express.Response) => {
+    try {
+      const target = `${apiUrl}/v1${req.url}`;
+      const body = req.method !== 'GET' && req.method !== 'HEAD'
+        ? JSON.stringify(req.body)
+        : undefined;
+      const upstream = await fetch(target, {
+        method: req.method,
+        headers: { 'content-type': 'application/json' },
+        body,
+      });
+      res.status(upstream.status);
+      const text = await upstream.text();
+      res.send(text);
+    } catch (err) {
+      res.status(502).send('Bad Gateway');
+    }
+  });
 }
 
 /**

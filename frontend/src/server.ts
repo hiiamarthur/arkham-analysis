@@ -32,6 +32,8 @@ const apiUrl = rawApiUrl
   ? (rawApiUrl.startsWith('http') ? rawApiUrl : `http://${rawApiUrl}`)
   : null;
 
+console.log(`[proxy] API_URL = ${apiUrl ?? '(not set)'}`);
+
 if (apiUrl) {
   app.use('/v1', (req: express.Request, res: express.Response) => {
     const target = `${apiUrl}/v1${req.url}`;
@@ -44,7 +46,10 @@ if (apiUrl) {
       body,
     })
       .then((upstream) => upstream.text().then((text) => res.status(upstream.status).send(text)))
-      .catch(() => res.status(502).send('Bad Gateway'));
+      .catch((err) => {
+        console.error(`[proxy] ${req.method} ${target} →`, err.message);
+        res.status(502).send('Bad Gateway');
+      });
   });
 }
 

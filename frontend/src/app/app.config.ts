@@ -1,16 +1,23 @@
-import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection, APP_INITIALIZER } from '@angular/core';
+import { ApplicationConfig, provideBrowserGlobalErrorListeners, provideZoneChangeDetection, APP_INITIALIZER, PLATFORM_ID } from '@angular/core';
 import { provideRouter } from '@angular/router';
 import { provideHttpClient, withFetch } from '@angular/common/http';
+import { isPlatformBrowser } from '@angular/common';
 
 import { routes } from './app.routes';
 import { provideClientHydration, withEventReplay } from '@angular/platform-browser';
 import { MetadataService } from './services/metadata.service';
 
 /**
- * Initialize app metadata (traits, encounter sets) on app startup
+ * Initialize app metadata on app startup.
+ * Skip during SSR/build to avoid hitting unavailable backend.
  */
-function initializeAppFactory(metadataService: MetadataService) {
-  return () => metadataService.initializeMetadata().toPromise();
+function initializeAppFactory(metadataService: MetadataService, platformId: object) {
+  return () => {
+    if (isPlatformBrowser(platformId)) {
+      return metadataService.initializeMetadata().toPromise();
+    }
+    return Promise.resolve();
+  };
 }
 
 export const appConfig: ApplicationConfig = {
@@ -20,11 +27,10 @@ export const appConfig: ApplicationConfig = {
     provideRouter(routes),
     provideHttpClient(withFetch()),
     provideClientHydration(withEventReplay()),
-    // Initialize metadata on app startup
     {
       provide: APP_INITIALIZER,
       useFactory: initializeAppFactory,
-      deps: [MetadataService],
+      deps: [MetadataService, PLATFORM_ID],
       multi: true
     }
   ]

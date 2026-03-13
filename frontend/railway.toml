@@ -1,0 +1,7 @@
+[build]
+buildCommand = "npm run build"
+
+[deploy]
+startCommand = "node dist/frontend/server/server.mjs"
+healthcheckPath = "/"
+healthcheckTimeout = 60

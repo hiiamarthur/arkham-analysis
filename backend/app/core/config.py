@@ -1,5 +1,6 @@
 from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import AliasChoices, Field
 from functools import lru_cache
 from enum import Enum
 import os
@@ -36,10 +37,10 @@ class Settings(BaseSettings):
     JWT_EXPIRE_DAYS: int = 30
 
     # Database Pool Settings
-    DB_POOL_SIZE: int = 20
-    DB_MAX_OVERFLOW: int = 30
+    DB_POOL_SIZE: int = Field(default=20, validation_alias=AliasChoices('DB_POOL_SIZE', 'POSTGRES_POOL_SIZE'))
+    DB_MAX_OVERFLOW: int = Field(default=30, validation_alias=AliasChoices('DB_MAX_OVERFLOW', 'POSTGRES_MAX_OVERFLOW'))
     DB_POOL_TIMEOUT: int = 60
-    DB_POOL_RECYCLE: int = 3600
+    DB_POOL_RECYCLE: int = Field(default=3600, validation_alias=AliasChoices('DB_POOL_RECYCLE', 'POSTGRES_POOL_RECYCLE'))
     DB_ECHO_LOG: bool = False
 
     # Migration Settings
@@ -64,6 +65,15 @@ class Settings(BaseSettings):
     CACHE_TTL_DEFAULT: int = 3600  # 1 hour
     CACHE_TTL_CARDS: int = 1800  # 30 minutes
     CACHE_TTL_TRAITS: int = 7200  # 2 hours
+
+    # CORS — comma-separated list of allowed origins
+    ALLOWED_ORIGINS: str = "http://localhost:4200,http://localhost:3000"
+
+    def get_allowed_origins(self) -> list[str]:
+        base = [o.strip() for o in self.ALLOWED_ORIGINS.split(",") if o.strip()]
+        # Always include local dev origins
+        dev = ["http://localhost:4200", "http://localhost:3000", "http://localhost:8080"]
+        return list(dict.fromkeys(base + dev))  # deduplicate, preserve order
 
     # Database URL
     DATABASE_URL: Optional[str] = None

@@ -25,6 +25,35 @@ const angularApp = new AngularNodeAppEngine();
  */
 
 /**
+ * Proxy /v1/* to the backend API service at runtime via API_URL env var.
+ */
+const rawApiUrl = process.env['API_URL'];
+const apiUrl = rawApiUrl
+  ? (rawApiUrl.startsWith('http') ? rawApiUrl : `http://${rawApiUrl}`)
+  : null;
+
+console.log(`[proxy] API_URL = ${apiUrl ?? '(not set)'}`);
+
+if (apiUrl) {
+  app.use('/v1', (req: express.Request, res: express.Response) => {
+    const target = `${apiUrl}/v1${req.url}`;
+    const body = req.method !== 'GET' && req.method !== 'HEAD'
+      ? JSON.stringify(req.body)
+      : undefined;
+    fetch(target, {
+      method: req.method,
+      headers: { 'content-type': 'application/json' },
+      body,
+    })
+      .then((upstream) => upstream.text().then((text) => res.status(upstream.status).send(text)))
+      .catch((err) => {
+        console.error(`[proxy] ${req.method} ${target} →`, err.message);
+        res.status(502).send('Bad Gateway');
+      });
+  });
+}
+
+/**
  * Serve static files from /browser
  */
 app.use(
@@ -52,12 +81,13 @@ app.use((req, res, next) => {
  * The server listens on the port defined by the `PORT` environment variable, or defaults to 4000.
  */
 if (isMainModule(import.meta.url)) {
-  const port = process.env['PORT'] || 4000;
+  const portKey = 'PORT';
+  const port = process.env[portKey] || 4000;
+  console.log(`[startup] PORT env = ${process.env[portKey]}, listening on ${port}`);
   app.listen(port, (error) => {
     if (error) {
       throw error;
     }
-
     console.log(`Node Express server listening on http://localhost:${port}`);
   });
 }

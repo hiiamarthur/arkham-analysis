@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface Scenario {
   code: string;
@@ -301,8 +302,8 @@ export interface DashboardStats {
   providedIn: 'root'
 })
 export class ScenarioService {
-  private apiUrl = 'http://localhost:8000/v1/scenarios';
-  private dashboardUrl = 'http://localhost:8000/v1/dashboard';
+  private apiUrl = `${environment.apiUrl}/scenarios`;
+  private dashboardUrl = `${environment.apiUrl}/dashboard`;
 
   constructor(private http: HttpClient) {}
 

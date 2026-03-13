@@ -31,6 +31,7 @@ const apiUrl = process.env['API_URL'];
 if (apiUrl) {
   app.use('/v1', async (req: express.Request, res: express.Response) => {
     try {
+      console.log('apiUrl', apiUrl);
       const target = `https://${apiUrl}/v1${req.url}`;
       const body = req.method !== 'GET' && req.method !== 'HEAD'
         ? JSON.stringify(req.body)

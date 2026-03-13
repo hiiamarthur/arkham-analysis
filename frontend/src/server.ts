@@ -27,26 +27,24 @@ const angularApp = new AngularNodeAppEngine();
 /**
  * Proxy /v1/* to the backend API service at runtime via API_URL env var.
  */
-const apiUrl = process.env['API_URL'];
+const rawApiUrl = process.env['API_URL'];
+const apiUrl = rawApiUrl
+  ? (rawApiUrl.startsWith('http') ? rawApiUrl : `http://${rawApiUrl}`)
+  : null;
+
 if (apiUrl) {
-  app.use('/v1', async (req: express.Request, res: express.Response) => {
-    try {
-      console.log('apiUrl', apiUrl);
-      const target = `https://${apiUrl}/v1${req.url}`;
-      const body = req.method !== 'GET' && req.method !== 'HEAD'
-        ? JSON.stringify(req.body)
-        : undefined;
-      const upstream = await fetch(target, {
-        method: req.method,
-        headers: { 'content-type': 'application/json' },
-        body,
-      });
-      res.status(upstream.status);
-      const text = await upstream.text();
-      res.send(text);
-    } catch (err) {
-      res.status(502).send('Bad Gateway');
-    }
+  app.use('/v1', (req: express.Request, res: express.Response) => {
+    const target = `${apiUrl}/v1${req.url}`;
+    const body = req.method !== 'GET' && req.method !== 'HEAD'
+      ? JSON.stringify(req.body)
+      : undefined;
+    fetch(target, {
+      method: req.method,
+      headers: { 'content-type': 'application/json' },
+      body,
+    })
+      .then((upstream) => upstream.text().then((text) => res.status(upstream.status).send(text)))
+      .catch(() => res.status(502).send('Bad Gateway'));
   });
 }
 

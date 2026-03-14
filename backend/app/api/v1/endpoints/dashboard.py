@@ -56,53 +56,59 @@ async def get_dashboard_stats(
     if not decks:
         return _empty_response(days)
 
-    # Investigator lookup: code → {name, faction_code}
-    inv_lookup: Dict[str, Dict] = {
-        i["code"]: {"name": i["name"], "faction_code": i.get("faction_code", "neutral")}
-        for i in investigators
-    }
+    def _crunch(decks, investigators):
+        inv_lookup: Dict[str, Dict] = {
+            i["code"]: {"name": i["name"], "faction_code": i.get("faction_code", "neutral")}
+            for i in investigators
+        }
+        now = datetime.utcnow()
+        cutoff_recent = now - timedelta(days=45)
+        cutoff_prior = now - timedelta(days=90)
 
-    now = datetime.utcnow()
-    cutoff_recent = now - timedelta(days=45)
-    cutoff_prior = now - timedelta(days=90)
+        recent_inv_counter: Counter = Counter()
+        prior_inv_counter: Counter = Counter()
+        all_inv_counter: Counter = Counter()
+        card_counter: Counter = Counter()
+        faction_counter: Counter = Counter()
+        card_faction_spread: Dict[str, Set[str]] = {}
+        xp_spent_values: List[int] = []
 
-    recent_inv_counter: Counter = Counter()
-    prior_inv_counter: Counter = Counter()
-    all_inv_counter: Counter = Counter()
-    card_counter: Counter = Counter()
-    faction_counter: Counter = Counter()
-    card_faction_spread: Dict[str, Set[str]] = {}
-    xp_spent_values: List[int] = []
+        for deck in decks:
+            inv_code = deck.investigator_code
+            all_inv_counter[inv_code] += 1
+            faction = inv_lookup.get(inv_code, {}).get("faction_code", "neutral")
+            faction_counter[faction] += 1
+            if deck.xp_spent is not None:
+                xp_spent_values.append(deck.xp_spent)
+            try:
+                created = datetime.fromisoformat(deck.date_creation.replace("Z", "+00:00"))
+                created = created.replace(tzinfo=None)
+            except Exception:
+                created = None
+            if created:
+                if created >= cutoff_recent:
+                    recent_inv_counter[inv_code] += 1
+                elif created >= cutoff_prior:
+                    prior_inv_counter[inv_code] += 1
+            for card_code in deck.slots:
+                if card_code == inv_code:
+                    continue
+                card_counter[card_code] += 1
+                if card_code not in card_faction_spread:
+                    card_faction_spread[card_code] = set()
+                card_faction_spread[card_code].add(faction)
 
-    for deck in decks:
-        inv_code = deck.investigator_code
-        all_inv_counter[inv_code] += 1
+        return (
+            recent_inv_counter, prior_inv_counter, all_inv_counter,
+            card_counter, faction_counter, card_faction_spread, xp_spent_values,
+            inv_lookup,
+        )
 
-        faction = inv_lookup.get(inv_code, {}).get("faction_code", "neutral")
-        faction_counter[faction] += 1
-
-        if deck.xp_spent is not None:
-            xp_spent_values.append(deck.xp_spent)
-
-        try:
-            created = datetime.fromisoformat(deck.date_creation.replace("Z", "+00:00"))
-            created = created.replace(tzinfo=None)
-        except Exception:
-            created = None
-
-        if created:
-            if created >= cutoff_recent:
-                recent_inv_counter[inv_code] += 1
-            elif created >= cutoff_prior:
-                prior_inv_counter[inv_code] += 1
-
-        for card_code, qty in deck.slots.items():
-            if card_code == inv_code:
-                continue
-            card_counter[card_code] += 1
-            if card_code not in card_faction_spread:
-                card_faction_spread[card_code] = set()
-            card_faction_spread[card_code].add(faction)
+    (
+        recent_inv_counter, prior_inv_counter, all_inv_counter,
+        card_counter, faction_counter, card_faction_spread, xp_spent_values,
+        inv_lookup,
+    ) = await asyncio.to_thread(_crunch, decks, investigators)
 
     total_decks = len(decks)
 

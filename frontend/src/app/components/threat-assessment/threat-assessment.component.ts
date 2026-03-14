@@ -96,13 +96,15 @@ export class ThreatAssessmentComponent implements OnInit {
     }
     if (defaultScenario) this.loadScenarioContext(defaultScenario);
 
-    // Watch for scenario/difficulty changes to reload context
-    const reloadContext = () => {
-      const scenarioCode = this.threatForm.get('scenario')?.value;
-      if (scenarioCode) this.loadScenarioContext(scenarioCode);
-    };
-    this.threatForm.get('scenario')?.valueChanges.subscribe(reloadContext);
-    this.threatForm.get('difficulty')?.valueChanges.subscribe(reloadContext);
+    // Watch for scenario changes to back-fill campaign
+    this.threatForm.get('scenario')?.valueChanges.subscribe((scenarioCode: string) => {
+      if (!scenarioCode) return;
+      const scenario = this.scenarios().find(s => s.code === scenarioCode);
+      if (scenario && this.threatForm.get('campaign')?.value !== scenario.campaign) {
+        this.threatForm.patchValue({ campaign: scenario.campaign }, { emitEvent: false });
+        this.selectedCampaign.set(scenario.campaign);
+      }
+    });
 
     // Watch for campaign changes to filter scenarios
     this.threatForm.get('campaign')?.valueChanges.subscribe(campaign => {
@@ -126,6 +128,15 @@ export class ThreatAssessmentComponent implements OnInit {
       const scenarios = await this.scenarioService.getScenarios().toPromise();
       if (scenarios) {
         this.scenarios.set(scenarios);
+        // Back-fill campaign for the currently selected scenario (handles query-param case)
+        const currentScenarioCode = this.threatForm.get('scenario')?.value;
+        if (currentScenarioCode && !this.threatForm.get('campaign')?.value) {
+          const match = scenarios.find(s => s.code === currentScenarioCode);
+          if (match) {
+            this.threatForm.patchValue({ campaign: match.campaign }, { emitEvent: false });
+            this.selectedCampaign.set(match.campaign);
+          }
+        }
       }
     } catch (error) {
       console.error('Failed to load scenarios:', error);
@@ -145,8 +156,8 @@ export class ThreatAssessmentComponent implements OnInit {
     }
   }
 
-  async loadScenarioContext(scenarioCode: string): Promise<void> {
-    this.loading.set(true);
+  async loadScenarioContext(scenarioCode: string, manageLoading = true): Promise<void> {
+    if (manageLoading) this.loading.set(true);
     try {
       const difficulty = this.threatForm.get('difficulty')?.value || 'standard';
       const playerCount = this.threatForm.get('playerCount')?.value || 2;
@@ -165,7 +176,7 @@ export class ThreatAssessmentComponent implements OnInit {
       console.error('Failed to load scenario context:', error);
       this.error.set('Failed to load scenario data');
     } finally {
-      this.loading.set(false);
+      if (manageLoading) this.loading.set(false);
     }
   }
 
@@ -383,6 +394,9 @@ export class ThreatAssessmentComponent implements OnInit {
 
     try {
       const formValue = this.threatForm.value;
+
+      // Load (or refresh) scenario context for the current scenario + difficulty
+      await this.loadScenarioContext(formValue.scenario, false);
 
       // If we have scenario context, create a mock assessment using our calculations
       const context = this.selectedScenarioContext();

@@ -194,19 +194,15 @@ export class TableExampleComponent {
 
   // Event handlers
   onRowClick(row: any) {
-    console.log('Row clicked:', row);
     alert(`Clicked on: ${row.name}`);
   }
 
   onPageChange(paginationInfo: any) {
-    console.log('Page changed:', paginationInfo);
   }
 
   onSortChange(sortInfo: any) {
-    console.log('Sort changed:', sortInfo);
   }
 
   onFilterChange(filterInfo: any) {
-    console.log('Filter changed:', filterInfo);
   }
 }

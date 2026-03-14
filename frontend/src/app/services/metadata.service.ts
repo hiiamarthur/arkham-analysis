@@ -98,11 +98,9 @@ export class MetadataService {
   initializeMetadata(): Observable<any> {
     // Check if cache is still valid
     if (this.appState.isCacheValid()) {
-      console.log('Using cached metadata');
       return of(null); // Return immediately, cache is valid
     }
 
-    console.log('Fetching fresh metadata from API');
     return this.fetchAllMetadata();
   }
 

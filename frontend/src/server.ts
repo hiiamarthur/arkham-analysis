@@ -32,8 +32,6 @@ const apiUrl = rawApiUrl
   ? (rawApiUrl.startsWith('http') ? rawApiUrl : `http://${rawApiUrl}`)
   : null;
 
-console.log(`[proxy] API_URL = ${apiUrl ?? '(not set)'}`);
-
 if (apiUrl) {
   app.use('/v1', (req: express.Request, res: express.Response) => {
     const target = `${apiUrl}/v1${req.url}`;
@@ -83,7 +81,6 @@ app.use((req, res, next) => {
 if (isMainModule(import.meta.url)) {
   const portKey = 'PORT';
   const port = process.env[portKey] || 4000;
-  console.log(`[startup] PORT env = ${process.env[portKey]}, listening on ${port}`);
   app.listen(port, (error) => {
     if (error) {
       throw error;

@@ -181,14 +181,11 @@ export class CardAnalysisComponent implements OnInit {
     // Subscribe to route parameter changes
     this.route.paramMap.subscribe(paramMap => {
       const cardCode = paramMap.get('code');
-      console.log('Route params changed, code:', cardCode);
 
       if (cardCode) {
-        console.log('Loading card details for:', cardCode);
         // Load card details and stats for the specific card
         this.loadCardDetails(cardCode);
       } else {
-        console.log('No card code, loading all cards');
         // Close modal and load all cards when component initializes
         this.showStatsModal.set(false);
         this.selectedCardStats.set(null);
@@ -600,21 +597,17 @@ export class CardAnalysisComponent implements OnInit {
   }
 
   onCardClick(card: Card): void {
-    console.log('Card clicked:', card.code);
     // Navigate to /analysis/{code} instead of opening modal
     this.router.navigate(['/analysis', card.code]).then(success => {
-      console.log('Navigation success:', success);
     });
   }
 
   closeStatsModal(): void {
-    console.log('Closing stats modal, navigating to /analysis');
     this.showStatsModal.set(false);
     this.selectedCardStats.set(null);
     this.selectedCardDetails.set(null);
     // Navigate back to /analysis without card code
     this.router.navigate(['/analysis']).then(success => {
-      console.log('Navigation to /analysis success:', success);
     });
   }
 
@@ -1082,14 +1075,12 @@ export class CardAnalysisComponent implements OnInit {
     };
 
     const iconName = slotMap[normalized] || '';
-    console.log(`getSlotIconName: "${slotType}" -> normalized: "${normalized}" -> icon: "${iconName}"`);
     return iconName;
   }
 
   // Helper method to get slot icon SVG
   getSlotIconSvg(slotType: string | undefined): SafeHtml {
     const iconName = this.getSlotIconName(slotType);
-    console.log('Slot type:', slotType, '-> Icon name:', iconName);
 
     if (!iconName) {
       return this.sanitizer.bypassSecurityTrustHtml('');
@@ -1098,14 +1089,11 @@ export class CardAnalysisComponent implements OnInit {
     // Check if icon exists
     const availableIcons = this.arkhamIconsService.getAvailableIcons();
     const hasIcon = availableIcons.includes(iconName);
-    console.log('Icon exists in service:', hasIcon);
 
     if (!hasIcon) {
-      console.log('Available slot icons:', availableIcons.filter(i => i.includes('slot')));
     }
 
     const svg = this.arkhamIconsService.getIcon(iconName);
-    console.log('SVG result:', svg ? 'Got SVG' : 'No SVG', svg.substring(0, 150));
 
     return this.sanitizer.bypassSecurityTrustHtml(svg);
   }

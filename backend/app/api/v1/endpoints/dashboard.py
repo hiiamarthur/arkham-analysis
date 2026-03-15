@@ -111,6 +111,7 @@ async def get_dashboard_stats(
     ) = await asyncio.to_thread(_crunch, decks, investigators)
 
     total_decks = len(decks)
+    now = datetime.utcnow()
 
     # Single bulk DB query for top-40 card metadata (replaces 40 individual queries)
     top_card_codes = [c for c, _ in card_counter.most_common(40)]

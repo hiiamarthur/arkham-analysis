@@ -26,6 +26,7 @@ from . import (
 )
 
 INV_STATS_CACHE_KEY = "investigator:stats:v1"
+CARD_STATS_CACHE_KEY = "card:stats:v1"
 
 router = APIRouter()
 
@@ -393,11 +394,35 @@ async def get_card_stats(
     card_code: str = Depends(get_card_code_param),
     card_service: CardService = Depends(get_card_service),
 ):
+    """Get stats for a card. Cached weekly in Redis (refreshes every Sunday 00:00 UTC)."""
+    redis_client = await get_redis_client()
+    cache_key = f"{CARD_STATS_CACHE_KEY}:{card_code}"
+
+    if redis_client.is_connected:
+        cached = await redis_client.get(cache_key)
+        if cached:
+            return cached
+
     try:
-        """Get stats for a card"""
-        return await card_service.get_card_stats(card_code)
+        result = await asyncio.wait_for(
+            card_service.get_card_stats(card_code),
+            timeout=60.0,
+        )
+    except asyncio.TimeoutError:
+        raise HTTPException(
+            status_code=504, detail="Stats fetch timed out — try again."
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error getting card stats: {e}")
+
+    if redis_client.is_connected and not result.get("error"):
+        await redis_client.set(
+            cache_key, result, expire=seconds_until_next_sunday_midnight()
+        )
+
+    return result
 
 
 @router.get("/investigator/{card_code}/stats")
@@ -420,15 +445,21 @@ async def get_investigator_stats(
             timeout=30.0,
         )
     except asyncio.TimeoutError:
-        raise HTTPException(status_code=504, detail="Stats fetch timed out — try again.")
+        raise HTTPException(
+            status_code=504, detail="Stats fetch timed out — try again."
+        )
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error loading investigator stats: {e}")
+        raise HTTPException(
+            status_code=500, detail=f"Error loading investigator stats: {e}"
+        )
 
     # Only cache successful full-stats responses (not "no decks" error stubs)
     if redis_client.is_connected and not result.get("error"):
-        await redis_client.set(cache_key, result, expire=seconds_until_next_sunday_midnight())
+        await redis_client.set(
+            cache_key, result, expire=seconds_until_next_sunday_midnight()
+        )
 
     return result
 

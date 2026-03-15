@@ -16,6 +16,13 @@ from domain.card.deck import Deck
 from domain.card.context.card_stats import CardStats
 
 
+def _next_sunday_midnight_utc() -> datetime:
+    """Returns the next Sunday 00:00 UTC datetime (same boundary as the cache TTL)."""
+    now = datetime.utcnow()
+    days_ahead = (6 - now.weekday()) % 7 or 7
+    return (now + timedelta(days=days_ahead)).replace(hour=0, minute=0, second=0, microsecond=0)
+
+
 class CardService:
     def __init__(
         self,
@@ -38,10 +45,7 @@ class CardService:
         if redis_client.is_connected:
             cached_stats = await redis_client.get(cache_key)
             if cached_stats:
-                print(f"Cache hit for card {card_id}")
                 return cached_stats
-
-        print(f"Cache miss for card {card_id}, calculating stats...")
 
         # Get card from database
         card = await self.card_repo.get_first(
@@ -56,17 +60,9 @@ class CardService:
             try:
                 # Get actual deck objects (not summary) for analysis
                 decks = await self.deck_service.get_decks_last_n_days(days)
-            except Exception as e:
-                print(f"Warning: Could not fetch deck data for card stats: {e}")
+            except Exception:
+                pass
         adapter = UnifiedCardAdapter()
-        # Create CardStats with the deck data
-
-        # Debug: Check what we actually have
-        if decks:
-            print("First deck type:", type(decks[0]))
-            print("First deck has name:", hasattr(decks[0], "name"))
-            if hasattr(decks[0], "name"):
-                print("First deck name:", decks[0].name)
 
         # Convert decks to domain objects
         converted_decks = []
@@ -101,9 +97,7 @@ class CardService:
                     )
                     converted_decks.append(converted_deck)
                 except Exception as e:
-                    print(f"Error converting deck: {e}")
-
-        print("Converted decks:", len(converted_decks))
+                    pass
 
         card_stats = CardStats(
             cast(
@@ -121,15 +115,14 @@ class CardService:
                 "decks_analyzed": len(decks),
                 "days_covered": days,
                 "trend_period": trend_period,
-                "last_updated": datetime.now().isoformat(),
-                "next_update": (datetime.now() + timedelta(days=7)).isoformat(),
+                "last_updated": datetime.utcnow().isoformat() + "Z",
+                "next_update": _next_sunday_midnight_utc().isoformat() + "Z",
             },
         }
 
-        # Cache the result (7 days TTL)
         if redis_client.is_connected:
-            cache_ttl = 60 * 60 * 24 * 7  # 7 days
-            await redis_client.set(cache_key, result, expire=cache_ttl)
+            from app.api.v1.endpoints import seconds_until_next_sunday_midnight
+            await redis_client.set(cache_key, result, expire=seconds_until_next_sunday_midnight())
 
         return result
 
@@ -137,13 +130,6 @@ class CardService:
         """Get stats for an investigator"""
         investigator = await self.card_repo.get_first(
             filters={"filter_by[code][equals]": investigator_code}
-        )
-        print(
-            "investigator is",
-            investigator.type_code if investigator else "none",
-            (investigator.type_code if investigator else "none")
-            == CardType.INVESTIGATOR.value,
-            investigator_code,
         )
         if not investigator or investigator.type_code != CardType.INVESTIGATOR.value:
             raise ValueError(f"Investigator with ID {investigator_code} not found")
@@ -153,17 +139,9 @@ class CardService:
             try:
                 # Get actual deck objects (not summary) for analysis
                 decks = await self.deck_service.get_decks_last_n_days(days)
-            except Exception as e:
-                print(f"Warning: Could not fetch deck data for card stats: {e}")
+            except Exception:
+                pass
         adapter = UnifiedCardAdapter()
-        # Create CardStats with the deck data
-
-        # Debug: Check what we actually have
-        if decks:
-            print("First deck type:", type(decks[0]))
-            print("First deck has name:", hasattr(decks[0], "name"))
-            if hasattr(decks[0], "name"):
-                print("First deck name:", decks[0].name)
 
         # Convert decks to domain objects
         converted_decks = []
@@ -198,7 +176,7 @@ class CardService:
                     )
                     converted_decks.append(converted_deck)
                 except Exception as e:
-                    print(f"Error converting deck: {e}")
+                    pass
 
         # Extract signature slots from deck_requirements
         # Structure: {"card": {"SLOT_CODE": {"CHOICE_CODE": "CHOICE_CODE", ...}}}

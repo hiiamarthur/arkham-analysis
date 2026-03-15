@@ -90,13 +90,11 @@ export class ThreatAssessmentComponent implements OnInit {
 
     // Check for scenario query param (e.g. from dashboard quick links)
     const queryScenario = this.route.snapshot.queryParamMap.get('scenario');
-    const defaultScenario = queryScenario || this.threatForm.get('scenario')?.value;
     if (queryScenario) {
       this.threatForm.patchValue({ scenario: queryScenario });
     }
-    if (defaultScenario) this.loadScenarioContext(defaultScenario);
 
-    // Watch for scenario changes to back-fill campaign
+    // Watch for scenario changes to back-fill campaign and clear stale results
     this.threatForm.get('scenario')?.valueChanges.subscribe((scenarioCode: string) => {
       if (!scenarioCode) return;
       const scenario = this.scenarios().find(s => s.code === scenarioCode);
@@ -104,6 +102,16 @@ export class ThreatAssessmentComponent implements OnInit {
         this.threatForm.patchValue({ campaign: scenario.campaign }, { emitEvent: false });
         this.selectedCampaign.set(scenario.campaign);
       }
+      this.assessment.set(null);
+      this.selectedScenarioContext.set(null);
+      this.error.set(null);
+    });
+
+    // Watch for difficulty changes and clear stale results
+    this.threatForm.get('difficulty')?.valueChanges.subscribe(() => {
+      this.assessment.set(null);
+      this.selectedScenarioContext.set(null);
+      this.error.set(null);
     });
 
     // Watch for campaign changes to filter scenarios

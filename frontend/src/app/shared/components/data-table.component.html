@@ -31,19 +31,20 @@
 
   <!-- Filters -->
   <div class="filters" *ngIf="config.showFilters">
-    <div class="filter-item" *ngFor="let column of columns">
-      <select
-        *ngIf="column.filterable"
-        class="filter-select"
-        [ngModel]="filters()[column.key] || ''"
-        (ngModelChange)="onFilterChange(column.key, $event)"
-      >
-        <option value="">All {{column.label}}</option>
-        <option *ngFor="let option of getFilterOptions(column.key)" [value]="option">
-          {{option}}
-        </option>
-      </select>
-    </div>
+    <ng-container *ngFor="let column of columns">
+      <div class="filter-item" *ngIf="column.filterable">
+        <select
+          class="filter-select"
+          [ngModel]="filters()[column.key] || ''"
+          (ngModelChange)="onFilterChange(column.key, $event)"
+        >
+          <option value="">All {{column.label}}</option>
+          <option *ngFor="let option of getFilterOptions(column.key)" [value]="option">
+            {{option}}
+          </option>
+        </select>
+      </div>
+    </ng-container>
     <button class="btn btn-outline" (click)="clearFilters()">Clear Filters</button>
   </div>
 </div>
@@ -66,10 +67,11 @@
     <!-- Table Header -->
     <thead>
       <tr>
-        <th 
+        <th
           *ngFor="let column of visibleColumns()"
           [style.width]="column.width"
           [class.sortable]="column.sortable"
+          [attr.data-priority]="column.priority || 1"
           (click)="column.sortable ? onSort(column.key) : null"
         >
           <div class="header-content">
@@ -90,6 +92,7 @@
         <td
           *ngFor="let column of visibleColumns()"
           [class]="'column-' + column.type"
+          [attr.data-priority]="column.priority || 1"
         >
           <!-- Render card name as link (using card_code from row) -->
           <app-card-code-link

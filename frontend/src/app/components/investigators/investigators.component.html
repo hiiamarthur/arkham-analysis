@@ -12,11 +12,49 @@
   <div class="investigators-list" *ngIf="!selectedInvestigator()">
     <div class="section-header">
       <h2>All Investigators</h2>
-      <span class="section-subtitle" *ngIf="!factionFilter()">{{investigators().length}} investigators available</span>
-      <span class="section-subtitle" *ngIf="factionFilter()">
-        {{filteredInvestigators().length}} {{factionFilter() | titlecase}} investigators
-        <button class="faction-clear-btn" (click)="factionFilter.set(null)">✕ Clear filter</button>
-      </span>
+      <span class="section-subtitle">{{filteredInvestigators().length}} of {{investigators().length}} investigators</span>
+    </div>
+
+    <!-- Search Filters -->
+    <div class="search-filters">
+      <div class="filter-row">
+        <div class="filter-group">
+          <label>Search</label>
+          <input
+            type="text"
+            [ngModel]="nameSearch()"
+            (ngModelChange)="nameSearch.set($event)"
+            placeholder="Search investigators..."
+            class="filter-input"
+          />
+        </div>
+        <div class="filter-group">
+          <label>Class</label>
+          <select class="filter-select"
+            [ngModel]="selectedFaction()"
+            (ngModelChange)="selectedFaction.set($event)">
+            <option value="">All Classes</option>
+            <option value="Guardian">Guardian</option>
+            <option value="Seeker">Seeker</option>
+            <option value="Rogue">Rogue</option>
+            <option value="Mystic">Mystic</option>
+            <option value="Survivor">Survivor</option>
+            <option value="Neutral">Neutral</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Expansion</label>
+          <select class="filter-select"
+            [ngModel]="selectedExpansion()"
+            (ngModelChange)="selectedExpansion.set($event)">
+            <option value="">All Expansions</option>
+            <option *ngFor="let exp of availableExpansions()" [value]="exp">{{exp}}</option>
+          </select>
+        </div>
+      </div>
+      <div class="filter-actions">
+        <button class="search-button secondary" (click)="clearFilters()">Clear Filters</button>
+      </div>
     </div>
 
     <app-data-table

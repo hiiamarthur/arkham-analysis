@@ -190,6 +190,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+  min-width: 0;
 }
 
 .filter-group label {
@@ -203,6 +204,9 @@
 .filter-input,
 .filter-select,
 .filter-input-small {
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
   background: rgba(15, 15, 27, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #c8d3d5;
@@ -1620,7 +1624,7 @@
 
 .investigator-item-compact {
   display: grid;
-  grid-template-columns: 1.5rem 1fr 3rem 2.5rem;
+  grid-template-columns: 1.5rem minmax(0, 1fr) minmax(5rem, 2fr) 2.5rem;
   align-items: center;
   gap: 0.5rem;
   padding: 0.35rem 0.5rem;
@@ -1675,74 +1679,10 @@
   font-family: system-ui, -apple-system, sans-serif;
 }
 
-/* Compact Trend Chart */
-.trend-chart-compact {
-  display: flex;
-  gap: 0.5rem;
-  align-items: flex-end;
-  height: 100px;
-  padding: 0.75rem;
-  background: rgba(200, 211, 213, 0.05);
-  border-radius: 4px;
-  border: 1px solid rgba(58, 90, 74, 0.2);
-}
-
-.trend-bar-compact {
-  flex: 1;
-  display: flex;
-  flex-direction: column-reverse;
-  align-items: center;
-  gap: 0.25rem;
-  height: 100%;
-  min-width: 20px;
-  justify-content: flex-start;
-}
-
-.trend-fill {
-  width: 100%;
-  max-height: 80px;
-  background: linear-gradient(to top, #3a5a4a, #5a7a6a);
-  border-radius: 3px 3px 0 0;
-  min-height: 4px;
-  position: relative;
-  border: 1px solid rgba(58, 90, 74, 0.5);
-  box-shadow: 0 0 8px rgba(58, 90, 74, 0.4);
-  transition: all 0.3s ease;
-}
-
-.trend-fill:hover {
-  background: linear-gradient(to top, #4a6a5a, #6a8a7a);
-  box-shadow: 0 0 12px rgba(58, 90, 74, 0.7);
-  transform: scaleY(1.05);
-}
-
-.trend-tooltip-compact {
-  display: none;
-  position: absolute;
-  bottom: 100%;
-  left: 50%;
-  transform: translateX(-50%);
-  background: rgba(10, 15, 20, 0.95);
-  padding: 0.35rem 0.6rem;
-  border-radius: 0.25rem;
-  font-size: 0.75rem;
-  white-space: nowrap;
-  color: #c8d3d5;
-  border: 1px solid rgba(58, 90, 74, 0.5);
-  margin-bottom: 4px;
-  font-weight: 600;
-}
-
-.trend-fill:hover .trend-tooltip-compact {
-  display: block;
-}
-
-.trend-month {
-  font-size: 0.7rem;
-  color: #7a8a8c;
-  writing-mode: horizontal-tb;
-  font-weight: 500;
-  text-align: center;
+/* Trend chart (Chart.js canvas) */
+.trend-chart-wrap {
+  height: 180px;
+  padding: 0.25rem 0;
 }
 
 /* Compact Footer */
@@ -2074,16 +2014,13 @@
   .investigator-item-compact {
     padding: 0.3rem 0.4rem;
     font-size: 0.8125rem;
-    grid-template-columns: 1.5rem 1fr 2.5rem 2.5rem;
+    grid-template-columns: 1.5rem minmax(0, 1fr) minmax(4rem, 2fr) 2.5rem;
   }
 
   .inv-bar-mini {
     height: 0.3rem;
   }
 
-  .trend-chart-compact {
-    height: 60px;
-  }
 
   .section-header-compact {
     font-size: 0.8125rem;

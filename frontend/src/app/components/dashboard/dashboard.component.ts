@@ -66,7 +66,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   });
 
   scenariosPerCampaign = computed(() => ({
-    labels: this.campaigns().map(c => this.shortenCampaignName(c.name)),
+    labels: this.campaigns().map(c => c.name),
     data:   this.campaigns().map(c => c.scenario_count ?? c.scenarios ?? 0),
   }));
 
@@ -195,7 +195,10 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
         plugins: { legend: { display: false } },
         scales: {
           x: { beginAtZero: true, ticks: { color: CHART_TEXT, font: { size: 10 }, stepSize: 1 }, grid: { color: CHART_GRID } },
-          y: { ticks: { color: '#d4cfc5', font: { size: 10 } }, grid: { display: false } }
+          y: { ticks: { color: '#d4cfc5', font: { size: 10 }, callback: (_, i) => {
+            const name = labels[i] ?? '';
+            return name.length > 18 ? name.slice(0, 16) + '…' : name;
+          }}, grid: { display: false } }
         }
       }
     }));
@@ -303,18 +306,6 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   maxMetaShare(): number {
     const top = this.dashboardStats()?.top_investigators?.[0];
     return top?.meta_share ?? 1;
-  }
-
-  private shortenCampaignName(name: string): string {
-    const map: Record<string, string> = {
-      'Night of the Zealot': 'NotZ', 'The Dunwich Legacy': 'Dunwich',
-      'The Path to Carcosa': 'Carcosa', 'The Forgotten Age': 'TFA',
-      'The Circle Undone': 'TCU', 'The Dream-Eaters': 'TDE',
-      'The Innsmouth Conspiracy': 'TIC', 'The Edge of the Earth': 'EotE',
-      'The Scarlet Keys': 'TSK', 'The Feast of Hemlock Vale': 'FHV',
-      'The Drowned City': 'TDC',
-    };
-    return map[name] ?? name.replace(/^The /, '').slice(0, 10);
   }
 
   getIcon(iconName: string): SafeHtml {

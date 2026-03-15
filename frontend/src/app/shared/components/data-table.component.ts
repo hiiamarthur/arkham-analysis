@@ -16,6 +16,14 @@ export interface TableColumn {
   width?: string;
   type?: 'text' | 'number' | 'date' | 'boolean' | 'custom';
   render?: (value: any, row: any) => string;
+  /**
+   * Responsive priority — controls when the column hides as the viewport narrows:
+   *   1 = always visible
+   *   2 = hidden below 640px
+   *   3 = hidden below 1024px
+   * Defaults to 1 if omitted.
+   */
+  priority?: 1 | 2 | 3;
 }
 
 export interface TableConfig {

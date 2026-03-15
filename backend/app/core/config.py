@@ -14,7 +14,7 @@ class Environment(str, Enum):
 
 
 class Settings(BaseSettings):
-    model_config: SettingsConfigDict = SettingsConfigDict(env_file=".env", case_sensitive=True)
+    model_config: SettingsConfigDict = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
 
     # Environment settings
     environment: Environment = Environment.DEVELOPMENT

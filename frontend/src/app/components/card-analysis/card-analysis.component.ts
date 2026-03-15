@@ -10,6 +10,8 @@ import { ArkhamIconsPipe } from '../../shared/pipes/arkham-icons.pipe';
 import { ArkhamSvgIconsService } from '../../shared/services/arkham-svg-icons.service';
 import { IconService } from '../../shared/services/icon.service';
 import { SafeHtml, DomSanitizer } from '@angular/platform-browser';
+import { BaseChartDirective } from 'ng2-charts';
+import { ChartData, ChartOptions } from 'chart.js';
 
 interface Card {
   code: string;
@@ -51,7 +53,7 @@ interface Card {
 @Component({
   selector: 'app-card-analysis',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, DataTableComponent, ArkhamIconsPipe],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, DataTableComponent, ArkhamIconsPipe, BaseChartDirective],
   templateUrl: './card-analysis.component.html',
   styleUrl: './card-analysis.component.css'
 })
@@ -181,14 +183,11 @@ export class CardAnalysisComponent implements OnInit {
     // Subscribe to route parameter changes
     this.route.paramMap.subscribe(paramMap => {
       const cardCode = paramMap.get('code');
-      console.log('Route params changed, code:', cardCode);
 
       if (cardCode) {
-        console.log('Loading card details for:', cardCode);
         // Load card details and stats for the specific card
         this.loadCardDetails(cardCode);
       } else {
-        console.log('No card code, loading all cards');
         // Close modal and load all cards when component initializes
         this.showStatsModal.set(false);
         this.selectedCardStats.set(null);
@@ -600,21 +599,17 @@ export class CardAnalysisComponent implements OnInit {
   }
 
   onCardClick(card: Card): void {
-    console.log('Card clicked:', card.code);
     // Navigate to /analysis/{code} instead of opening modal
     this.router.navigate(['/analysis', card.code]).then(success => {
-      console.log('Navigation success:', success);
     });
   }
 
   closeStatsModal(): void {
-    console.log('Closing stats modal, navigating to /analysis');
     this.showStatsModal.set(false);
     this.selectedCardStats.set(null);
     this.selectedCardDetails.set(null);
     // Navigate back to /analysis without card code
     this.router.navigate(['/analysis']).then(success => {
-      console.log('Navigation to /analysis success:', success);
     });
   }
 
@@ -663,17 +658,69 @@ export class CardAnalysisComponent implements OnInit {
       .slice(0, 10);
   }
 
+  /** Clamp rate (0–1) to 0–100 for bar width so scale is always 0–100%. */
+  getBarPercent(rate: number): number {
+    if (rate == null || Number.isNaN(rate)) return 0;
+    return Math.min(100, Math.max(0, rate * 100));
+  }
+
   getTrendPeriods(trendData: any): { key: string; value: any }[] {
     return Object.entries(trendData)
       .map(([key, value]) => ({ key, value }))
       .sort((a, b) => a.key.localeCompare(b.key));
   }
 
-  getTrendBarHeight(rate: number, allData: any): number {
-    // Return height directly proportional to usage_rate (0-100%)
-    // usage_rate is already a decimal (0-1), so multiply by 100 to get percentage
-    return rate * 100;
+  buildTrendChartData(trendData: any): ChartData<'bar'> {
+    const periods = this.getTrendPeriods(trendData);
+    return {
+      labels: periods.map(p => this.formatPeriod(p.key)),
+      datasets: [{
+        data: periods.map(p => +(p.value.usage_rate * 100).toFixed(2)),
+        backgroundColor: 'rgba(58, 90, 74, 0.7)',
+        borderColor: '#5a7a6a',
+        borderWidth: 1,
+        borderRadius: 3,
+        hoverBackgroundColor: 'rgba(90, 122, 106, 0.9)',
+      }]
+    };
   }
+
+  trendChartOptions: ChartOptions<'bar'> = {
+    responsive: true,
+    maintainAspectRatio: false,
+    animation: { duration: 400 },
+    scales: {
+      y: {
+        beginAtZero: true,
+        max: 100,
+        min: 0,
+        ticks: {
+          color: '#7a8a8c',
+          callback: (v) => (typeof v === 'number' ? v : 0) + '%',
+          maxTicksLimit: 6,
+          stepSize: 20,
+        },
+        grid: { color: 'rgba(255,255,255,0.06)' },
+        border: { color: 'rgba(255,255,255,0.06)' },
+      },
+      x: {
+        ticks: { color: '#7a8a8c', font: { size: 11 } },
+        grid: { display: false },
+        border: { color: 'rgba(255,255,255,0.06)' },
+      },
+    },
+    plugins: {
+      legend: { display: false },
+      tooltip: {
+        callbacks: { label: (ctx) => ` ${ctx.parsed.y}%` },
+        backgroundColor: 'rgba(10,15,20,0.95)',
+        titleColor: '#c8d3d5',
+        bodyColor: '#c8d3d5',
+        borderColor: 'rgba(58,90,74,0.5)',
+        borderWidth: 1,
+      },
+    },
+  };
 
   formatPeriod(period: string): string {
     // Format YYYY-MM to MMM'YY
@@ -829,14 +876,14 @@ export class CardAnalysisComponent implements OnInit {
 
   // Table configuration for card browser
   cardColumns: TableColumn[] = [
-    { key: 'code', label: 'Code', sortable: true, searchable: true, width: '100px' },
-    { key: 'name', label: 'Card Name', sortable: true, searchable: true },
-    { key: 'type', label: 'Type', sortable: true, filterable: true, width: '120px' },
-    { key: 'class', label: 'Class', sortable: true, filterable: true, width: '120px' },
-    { key: 'faction', label: 'Faction', sortable: true, filterable: true, width: '120px' },
-    { key: 'cost', label: 'Cost', sortable: true, type: 'number', width: '80px' },
-    { key: 'pack', label: 'Pack', sortable: true, filterable: true },
-    { key: 'traits', label: 'Traits', sortable: true, searchable: true }
+    { key: 'code',    label: 'Code',      sortable: true, searchable: true, width: '100px', priority: 3 },
+    { key: 'name',    label: 'Card Name', sortable: true, searchable: true,                 priority: 1 },
+    { key: 'type',    label: 'Type',      sortable: true, filterable: true, width: '110px', priority: 1 },
+    { key: 'faction', label: 'Faction',   sortable: true, filterable: true, width: '110px', priority: 2 },
+    { key: 'cost',    label: 'Cost',      sortable: true, type: 'number',   width: '70px',  priority: 2 },
+    { key: 'class',   label: 'Class',     sortable: true, filterable: true, width: '110px', priority: 3 },
+    { key: 'pack',    label: 'Pack',      sortable: true, filterable: true,                 priority: 3 },
+    { key: 'traits',  label: 'Traits',    sortable: true, searchable: true,                 priority: 3 },
   ];
 
   cardTableConfig: TableConfig = {
@@ -1082,14 +1129,12 @@ export class CardAnalysisComponent implements OnInit {
     };
 
     const iconName = slotMap[normalized] || '';
-    console.log(`getSlotIconName: "${slotType}" -> normalized: "${normalized}" -> icon: "${iconName}"`);
     return iconName;
   }
 
   // Helper method to get slot icon SVG
   getSlotIconSvg(slotType: string | undefined): SafeHtml {
     const iconName = this.getSlotIconName(slotType);
-    console.log('Slot type:', slotType, '-> Icon name:', iconName);
 
     if (!iconName) {
       return this.sanitizer.bypassSecurityTrustHtml('');
@@ -1098,14 +1143,11 @@ export class CardAnalysisComponent implements OnInit {
     // Check if icon exists
     const availableIcons = this.arkhamIconsService.getAvailableIcons();
     const hasIcon = availableIcons.includes(iconName);
-    console.log('Icon exists in service:', hasIcon);
 
     if (!hasIcon) {
-      console.log('Available slot icons:', availableIcons.filter(i => i.includes('slot')));
     }
 
     const svg = this.arkhamIconsService.getIcon(iconName);
-    console.log('SVG result:', svg ? 'Got SVG' : 'No SVG', svg.substring(0, 150));
 
     return this.sanitizer.bypassSecurityTrustHtml(svg);
   }

@@ -1,5 +1,6 @@
 import { Component, signal, computed, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { DataTableComponent, TableColumn, TableConfig } from '../../shared/components/data-table.component';
 import { InvestigatorService, InvestigatorStatsResponse, CardRanking, StapleCard, TrendingCard, CardSynergy, DeckArchetype, UnderusedGem } from '../../services/investigator.service';
@@ -33,7 +34,7 @@ interface Investigator {
 @Component({
   selector: 'app-investigators',
   standalone: true,
-  imports: [CommonModule, DataTableComponent, CardCodeLinkComponent, CardModalComponent],
+  imports: [CommonModule, FormsModule, DataTableComponent, CardCodeLinkComponent, CardModalComponent],
   templateUrl: './investigators.component.html',
   styleUrl: './investigators.component.css'
 })
@@ -57,17 +58,30 @@ export class InvestigatorsComponent implements OnInit {
   selectedInvestigator = signal<Investigator | null>(null);
   selectedInvestigatorCode = signal<string | null>(null);
 
-  // Faction pre-filter from query param
-  factionFilter = signal<string | null>(null);
+  // Filter signals
+  nameSearch     = signal('');
+  selectedFaction   = signal('');
+  selectedExpansion = signal('');
 
   // All investigators data
   investigators = signal<Investigator[]>([]);
 
-  // Filtered investigators (by faction query param)
+  // Filtered investigators
   filteredInvestigators = computed(() => {
-    const faction = this.factionFilter();
-    if (!faction) return this.investigators();
-    return this.investigators().filter(inv => inv.faction.toLowerCase() === faction.toLowerCase());
+    const name     = this.nameSearch().toLowerCase();
+    const faction  = this.selectedFaction();
+    const expansion = this.selectedExpansion();
+    return this.investigators().filter(inv => {
+      if (name     && !inv.name.toLowerCase().includes(name))   return false;
+      if (faction  && inv.faction !== faction)                   return false;
+      if (expansion && inv.expansion !== expansion)              return false;
+      return true;
+    });
+  });
+
+  availableExpansions = computed(() => {
+    const exps = new Set(this.investigators().map(inv => inv.expansion));
+    return Array.from(exps).sort();
   });
 
   // Raw stats response
@@ -79,7 +93,7 @@ export class InvestigatorsComponent implements OnInit {
     const investigatorParam = params.get('investigator');
 
     if (factionParam) {
-      this.factionFilter.set(factionParam);
+      this.selectedFaction.set(this.normalizeFactionName(factionParam));
     }
 
     this.loadInvestigators().then(() => {
@@ -154,40 +168,40 @@ export class InvestigatorsComponent implements OnInit {
 
   // Table columns for investigators list
   investigatorColumns: TableColumn[] = [
-    { key: 'name', label: 'Name', sortable: true, searchable: true, width: '200px' },
-    { key: 'faction', label: 'Class', sortable: true, filterable: true, width: '120px' },
-    { key: 'willpower', label: 'Willpower', sortable: true, type: 'number', width: '100px' },
-    { key: 'intellect', label: 'Intellect', sortable: true, type: 'number', width: '100px' },
-    { key: 'combat', label: 'Combat', sortable: true, type: 'number', width: '100px' },
-    { key: 'agility', label: 'Agility', sortable: true, type: 'number', width: '100px' },
-    { key: 'health', label: 'Health', sortable: true, type: 'number', width: '80px' },
-    { key: 'sanity', label: 'Sanity', sortable: true, type: 'number', width: '80px' },
-    { key: 'expansion', label: 'Expansion', sortable: true, filterable: true }
+    { key: 'name',      label: 'Name',      sortable: true, searchable: true,                  priority: 1 },
+    { key: 'faction',   label: 'Class',     sortable: true, filterable: true, width: '110px',  priority: 2 },
+    { key: 'willpower', label: 'WP',        sortable: true, type: 'number',   width: '60px',   priority: 2 },
+    { key: 'intellect', label: 'INT',       sortable: true, type: 'number',   width: '60px',   priority: 2 },
+    { key: 'combat',    label: 'COM',       sortable: true, type: 'number',   width: '60px',   priority: 2 },
+    { key: 'agility',   label: 'AGI',       sortable: true, type: 'number',   width: '60px',   priority: 2 },
+    { key: 'health',    label: 'HP',        sortable: true, type: 'number',   width: '55px',   priority: 3 },
+    { key: 'sanity',    label: 'SAN',       sortable: true, type: 'number',   width: '55px',   priority: 3 },
+    { key: 'expansion', label: 'Expansion', sortable: true, filterable: true,                  priority: 3 },
   ];
 
   // Table columns for card rankings
   cardRankingColumns: TableColumn[] = [
-    { key: 'card_name', label: 'Card Name', sortable: true, searchable: true, width: '200px' },
-    { key: 'usage_count', label: 'Usage Count', sortable: true, type: 'number', width: '120px' },
-    { key: 'usage_rate', label: 'Usage Rate', sortable: true, type: 'number', width: '120px', render: (value: number) => `${(value * 100).toFixed(1)}%` },
-    { key: 'average_quantity', label: 'Avg Qty', sortable: true, type: 'number', width: '100px' },
-    { key: 'consistency_score', label: 'Consistency', sortable: true, type: 'number', width: '120px', render: (value: number) => `${(value * 100).toFixed(1)}%` }
+    { key: 'card_name',         label: 'Card Name',  sortable: true, searchable: true,                 priority: 1 },
+    { key: 'usage_rate',        label: 'Usage Rate', sortable: true, type: 'number', width: '110px',  priority: 1, render: (v: number) => `${(v * 100).toFixed(1)}%` },
+    { key: 'usage_count',       label: 'Count',      sortable: true, type: 'number', width: '90px',   priority: 2 },
+    { key: 'average_quantity',  label: 'Avg Qty',    sortable: true, type: 'number', width: '90px',   priority: 3 },
+    { key: 'consistency_score', label: 'Consistency',sortable: true, type: 'number', width: '110px',  priority: 3, render: (v: number) => `${(v * 100).toFixed(1)}%` },
   ];
 
   // Table columns for staple cards
   stapleCardColumns: TableColumn[] = [
-    { key: 'card_name', label: 'Card Name', sortable: true, searchable: true, width: '200px' },
-    { key: 'usage_rate', label: 'Usage Rate', sortable: true, type: 'number', width: '120px', render: (value: number) => `${(value * 100).toFixed(1)}%` },
-    { key: 'staple_confidence', label: 'Confidence', sortable: true, type: 'number', width: '120px', render: (value: number) => `${(value * 100).toFixed(1)}%` },
-    { key: 'average_quantity', label: 'Avg Qty', sortable: true, type: 'number', width: '100px' }
+    { key: 'card_name',        label: 'Card Name',  sortable: true, searchable: true,                priority: 1 },
+    { key: 'usage_rate',       label: 'Usage Rate', sortable: true, type: 'number', width: '110px', priority: 1, render: (v: number) => `${(v * 100).toFixed(1)}%` },
+    { key: 'staple_confidence',label: 'Confidence', sortable: true, type: 'number', width: '110px', priority: 2, render: (v: number) => `${(v * 100).toFixed(1)}%` },
+    { key: 'average_quantity', label: 'Avg Qty',    sortable: true, type: 'number', width: '90px',  priority: 3 },
   ];
 
   // Table columns for card synergies
   synergyColumns: TableColumn[] = [
-    { key: 'card1', label: 'Card 1', sortable: true, searchable: true, width: '150px' },
-    { key: 'card2', label: 'Card 2', sortable: true, searchable: true, width: '150px' },
-    { key: 'co_occurrence_count', label: 'Times Together', sortable: true, type: 'number', width: '140px' },
-    { key: 'synergy_strength', label: 'Synergy Strength', sortable: true, type: 'number', width: '150px', render: (value: number) => `${(value * 100).toFixed(1)}%` }
+    { key: 'card1',              label: 'Card 1',         sortable: true, searchable: true, width: '150px', priority: 1 },
+    { key: 'card2',              label: 'Card 2',         sortable: true, searchable: true, width: '150px', priority: 1 },
+    { key: 'synergy_strength',   label: 'Synergy',        sortable: true, type: 'number',  width: '110px', priority: 2, render: (v: number) => `${(v * 100).toFixed(1)}%` },
+    { key: 'co_occurrence_count',label: 'Times Together', sortable: true, type: 'number',  width: '130px', priority: 3 },
   ];
 
   // Table config
@@ -195,9 +209,9 @@ export class InvestigatorsComponent implements OnInit {
     pageSize: 10,
     pageSizeOptions: [5, 10, 25, 50],
     showPagination: true,
-    showSearch: true,
+    showSearch: false,
     showColumnToggle: true,
-    showFilters: true,
+    showFilters: false,
     striped: true,
     hoverable: true,
     bordered: true,
@@ -216,6 +230,12 @@ export class InvestigatorsComponent implements OnInit {
     bordered: true,
     responsive: true
   };
+
+  clearFilters(): void {
+    this.nameSearch.set('');
+    this.selectedFaction.set('');
+    this.selectedExpansion.set('');
+  }
 
   // Event handlers
   async onInvestigatorClick(investigator: Investigator) {

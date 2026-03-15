@@ -1,12 +1,13 @@
 <nav class="navigation">
   <div class="nav-container">
     <div class="nav-brand">
-      <a routerLink="/" class="brand-link">
+      <a routerLink="/" class="brand-link" (click)="closeMenu()">
         <span class="brand-icon" [innerHTML]="getIcon('card')"></span>
         <span class="brand-text">Arkham Analysis</span>
       </a>
     </div>
 
+    <!-- Desktop menu -->
     <div class="nav-menu">
       <a
         *ngFor="let item of menuItems"
@@ -26,6 +27,31 @@
         title="View on GitHub">
         <span class="github-icon" [innerHTML]="getIcon('github')"></span>
       </a>
+
+      <!-- Hamburger button — mobile only -->
+      <button
+        class="hamburger"
+        type="button"
+        (click)="toggleMenu()"
+        [attr.aria-expanded]="menuOpen()"
+        aria-label="Toggle navigation">
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+        <span class="hamburger-bar"></span>
+      </button>
     </div>
+  </div>
+
+  <!-- Mobile dropdown -->
+  <div class="mobile-menu" [class.mobile-menu--open]="menuOpen()">
+    <a
+      *ngFor="let item of menuItems"
+      [routerLink]="item.path"
+      routerLinkActive="active"
+      class="mobile-nav-link"
+      (click)="closeMenu()">
+      <span class="nav-icon" [innerHTML]="getIcon(item.icon)"></span>
+      <span>{{item.label}}</span>
+    </a>
   </div>
 </nav>

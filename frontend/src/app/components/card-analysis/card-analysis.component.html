@@ -795,30 +795,25 @@
                 <span class="inv-rank">{{i + 1}}</span>
                 <span class="inv-name">{{getInvestigatorName(inv.code)}}</span>
                 <div class="inv-bar-mini">
-                  <div class="inv-bar-fill" [style.width.%]="inv.rate * 100"></div>
+                  <div class="inv-bar-fill" [style.width.%]="getBarPercent(inv.rate)"></div>
                 </div>
                 <span class="inv-percent">{{ inv.rate * 100 | number:'1.0-0' }}%</span>
               </div>
             </div>
           </div>
 
-          <!-- Usage Trend Chart - Compact -->
+          <!-- Usage Trend Chart -->
           <div class="stats-section-compact">
             <div class="section-header-compact" (click)="toggleUsageTrend()">
               <span><span [innerHTML]="getIcon('trend')"></span> Trend ({{stats.deck_stats.trend.periods_analyzed}}mo)</span>
               <span class="expand-icon">{{ usageTrendExpanded() ? '▼' : '▶' }}</span>
             </div>
-            <div class="trend-chart-compact" *ngIf="usageTrendExpanded()">
-              <div *ngFor="let period of getTrendPeriods(stats.deck_stats.trend.trend_data)"
-                   class="trend-bar-compact">
-                <div class="trend-fill" [style.height.%]="getTrendBarHeight(period.value.usage_rate, stats.deck_stats.trend.trend_data)">
-                  <span class="trend-tooltip-compact">
-                    {{ period.value.usage_rate * 100 | number:'1.0-0' }}%<br>
-                    <span style="font-size: 0.625rem; opacity: 0.8;">{{period.value.total_decks}} decks</span>
-                  </span>
-                </div>
-                <div class="trend-month">{{formatPeriod(period.key)}}</div>
-              </div>
+            <div class="trend-chart-wrap" *ngIf="usageTrendExpanded()">
+              <canvas baseChart
+                type="bar"
+                [data]="buildTrendChartData(stats.deck_stats.trend.trend_data)"
+                [options]="trendChartOptions">
+              </canvas>
             </div>
           </div>
 

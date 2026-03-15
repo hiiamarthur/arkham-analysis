@@ -99,7 +99,6 @@ export class AppStateService {
 
         // Check cache version - if it doesn't match, clear cache
         if (!metadata.version || metadata.version !== this.CACHE_VERSION) {
-          console.log('Cache version mismatch, clearing cache');
           this.clearCache();
           return;
         }

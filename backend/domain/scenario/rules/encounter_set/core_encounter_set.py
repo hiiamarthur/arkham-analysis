@@ -212,7 +212,7 @@ CORE_ENCOUNTER_SET = {
         "icon": "cult_of_umordoth",
         "scenarios": [ScenarioType.THE_MIDNIGHT_MASKS, ScenarioType.THE_DEVOURER_BELOW],
     },
-    "the_midnight_masks": {
+    "arkham": {
         "name": "The Midnight Masks",
         "icon": "the_midnight_masks",
         "scenarios": [

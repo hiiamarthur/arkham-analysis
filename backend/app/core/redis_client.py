@@ -20,17 +20,12 @@ class RedisClient:
 
     async def connect(self) -> None:
         """Initialize Redis connection. Redis is optional — failure is non-fatal."""
-        # Prefer REDIS_URL env var (set by Railway/Heroku Redis plugins)
+        # Prefer REDIS_URL env var (set by Railway/Heroku Redis plugins),
+        # fall back to configured host/port/db (including localhost).
         redis_url = (
             settings.REDIS_URL
             or f"redis://{settings.REDIS_HOST}:{settings.REDIS_PORT}/{settings.REDIS_DB}"
         )
-
-        # Skip connection attempt if pointing at localhost with no explicit URL configured
-        # (avoids noisy errors when Redis simply isn't provisioned)
-        if not settings.REDIS_URL and settings.REDIS_HOST == "localhost":
-            logger.info("No Redis URL configured — running without caching")
-            return
 
         self._connect_attempted = True
         try:

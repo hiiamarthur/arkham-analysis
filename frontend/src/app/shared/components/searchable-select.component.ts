@@ -9,6 +9,7 @@ import {
   HostListener,
   ElementRef,
   inject,
+  input,
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ControlValueAccessor, NG_VALUE_ACCESSOR } from '@angular/forms';
@@ -232,7 +233,7 @@ export interface SelectOption {
   `],
 })
 export class SearchableSelectComponent implements ControlValueAccessor {
-  @Input() options: SelectOption[] = [];
+  options = input<SelectOption[]>([]);
   @Input() placeholder: string = 'Select...';
   @Input() searchPlaceholder: string = 'Search...';
   @Input() allowEmpty: boolean = true;
@@ -252,14 +253,15 @@ export class SearchableSelectComponent implements ControlValueAccessor {
 
   filteredOptions = computed(() => {
     const search = this.searchText().toLowerCase().trim();
-    if (!search) return this.options;
-    return this.options.filter(o => o.label.toLowerCase().includes(search));
+    const opts = this.options();
+    if (!search) return opts;
+    return opts.filter(o => o.label.toLowerCase().includes(search));
   });
 
   selectedLabel = computed(() => {
     if (this.resetAfterSelect) return '';
     const val = this.selectedValue();
-    const opt = this.options.find(o => o.value === val);
+    const opt = this.options().find(o => o.value === val);
     return opt ? opt.label : '';
   });
 

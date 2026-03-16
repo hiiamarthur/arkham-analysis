@@ -52,6 +52,22 @@ if (apiUrl) {
 }
 
 /**
+ * Explicitly serve SEO files before Angular SSR can intercept them.
+ * express.static alone is insufficient when a CDN or proxy sits in front.
+ */
+app.get('/sitemap.xml', (_req, res) => {
+  res.setHeader('Content-Type', 'application/xml; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=86400'); // 1 day
+  res.sendFile(join(browserDistFolder, 'sitemap.xml'));
+});
+
+app.get('/robots.txt', (_req, res) => {
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Cache-Control', 'public, max-age=86400');
+  res.sendFile(join(browserDistFolder, 'robots.txt'));
+});
+
+/**
  * Serve static files from /browser
  */
 app.use(

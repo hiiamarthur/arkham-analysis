@@ -1,5 +1,5 @@
-import { DOCUMENT, isPlatformBrowser } from '@angular/common';
-import { Inject, Injectable, PLATFORM_ID } from '@angular/core';
+import { DOCUMENT } from '@angular/common';
+import { Inject, Injectable } from '@angular/core';
 import { Meta, Title } from '@angular/platform-browser';
 
 export type SeoMetaInput = {
@@ -11,6 +11,9 @@ export type SeoMetaInput = {
   noIndex?: boolean;
 };
 
+const BASE_URL = 'https://arkham-analysis.arthurlau.dev';
+const DEFAULT_IMAGE = `${BASE_URL}/favicon.svg`;
+
 @Injectable({ providedIn: 'root' })
 export class SeoService {
   private readonly defaultTitle = 'Arkham Analysis';
@@ -21,13 +24,14 @@ export class SeoService {
     private readonly title: Title,
     private readonly meta: Meta,
     @Inject(DOCUMENT) private readonly document: Document,
-    @Inject(PLATFORM_ID) private readonly platformId: object,
   ) {}
 
   update(input: SeoMetaInput): void {
     const computedTitle = input.title ? `${input.title} · ${this.defaultTitle}` : this.defaultTitle;
     const computedDescription = input.description ?? this.defaultDescription;
     const robots = input.noIndex ? 'noindex,nofollow' : (input.robots ?? 'index,follow');
+    const image = input.image ?? DEFAULT_IMAGE;
+    const canonical = this.getCanonicalUrl(input);
 
     this.title.setTitle(computedTitle);
     this.setName('description', computedDescription);
@@ -38,18 +42,22 @@ export class SeoService {
     this.setProperty('og:type', 'website');
     this.setProperty('og:title', computedTitle);
     this.setProperty('og:description', computedDescription);
-    this.setProperty('og:url', this.getCanonicalUrl(input));
-    if (input.image) this.setProperty('og:image', input.image);
+    this.setProperty('og:image', image);
+    this.setProperty('og:image:width', '512');
+    this.setProperty('og:image:height', '512');
+    if (canonical) this.setProperty('og:url', canonical);
 
-    // Twitter
-    this.setName('twitter:card', 'summary');
+    // Twitter — summary_large_image shows the image prominently in tweets
+    this.setName('twitter:card', 'summary_large_image');
     this.setName('twitter:title', computedTitle);
     this.setName('twitter:description', computedDescription);
-    if (input.image) this.setName('twitter:image', input.image);
+    this.setName('twitter:image', image);
 
-    // Canonical
-    const canonical = this.getCanonicalUrl(input);
+    // Canonical link tag
     if (canonical) this.setCanonicalLink(canonical);
+
+    // Per-page WebPage JSON-LD for structured data
+    if (canonical) this.updatePageJsonLd(computedTitle, computedDescription, canonical);
   }
 
   private setName(name: string, content: string | null | undefined): void {
@@ -64,10 +72,8 @@ export class SeoService {
 
   private getCanonicalUrl(input: SeoMetaInput): string | null {
     if (input.canonicalUrl) return input.canonicalUrl;
-    if (!isPlatformBrowser(this.platformId)) return null;
     const href = this.document?.location?.href;
     if (!href) return null;
-    // Strip hash fragments for canonical
     return href.split('#')[0];
   }
 
@@ -80,5 +86,25 @@ export class SeoService {
     }
     linkEl.setAttribute('href', url);
   }
-}
 
+  private updatePageJsonLd(title: string, description: string, url: string): void {
+    const id = 'page-json-ld';
+    let scriptEl = this.document.getElementById(id) as HTMLScriptElement | null;
+    if (!scriptEl) {
+      scriptEl = this.document.createElement('script');
+      scriptEl.type = 'application/ld+json';
+      scriptEl.id = id;
+      this.document.head.appendChild(scriptEl);
+    }
+    scriptEl.textContent = JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      '@id': url,
+      'name': title,
+      'description': description,
+      'url': url,
+      'isPartOf': { '@id': `${BASE_URL}/#website` },
+      'publisher': { '@id': `${BASE_URL}/#organization` },
+    });
+  }
+}

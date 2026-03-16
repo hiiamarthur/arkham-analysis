@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://arkham-analysis.up.railway.app/sitemap.xml
+Sitemap: https://arkham-analysis.arthurlau.dev/sitemap.xml

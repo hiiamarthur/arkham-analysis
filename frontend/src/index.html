@@ -9,18 +9,61 @@
   <meta name="robots" content="index,follow">
   <meta name="referrer" content="strict-origin-when-cross-origin">
   <meta name="color-scheme" content="dark light">
+  <meta name="keywords" content="Arkham Horror LCG, Arkham Horror card game, AHLCG analytics, deck statistics, investigator stats, scenario threat assessment, ArkhamDB, card analysis, chaos bag">
+  <!-- Google Search Console: replace content value with your verification code from search.google.com/search-console -->
+  <!-- <meta name="google-site-verification" content="REPLACE_WITH_YOUR_CODE"> -->
 
   <!-- Open Graph / Twitter defaults (overridden per-route in-app) -->
   <meta property="og:site_name" content="Arkham Analysis">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Arkham Analysis">
   <meta property="og:description" content="Arkham Horror: The Card Game analytics — deck statistics, card analysis, and scenario threat assessment.">
-  <meta property="og:image" content="/favicon.ico">
-  <meta name="twitter:card" content="summary">
+  <meta property="og:image" content="https://arkham-analysis.arthurlau.dev/favicon.svg">
+  <meta property="og:url" content="https://arkham-analysis.arthurlau.dev">
+  <meta name="twitter:image" content="https://arkham-analysis.arthurlau.dev/favicon.svg">
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Arkham Analysis">
   <meta name="twitter:description" content="Arkham Horror: The Card Game analytics — deck statistics, card analysis, and scenario threat assessment.">
+  <!-- Icons & theme -->
   <link rel="icon" type="image/svg+xml" href="favicon.svg">
   <link rel="alternate icon" type="image/x-icon" href="favicon.ico">
+  <meta name="application-name" content="Arkham Analysis">
+  <meta name="theme-color" content="#0a080f">
+
+  <!-- JSON-LD structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebSite",
+        "@id": "https://arkham-analysis.arthurlau.dev/#website",
+        "name": "Arkham Analysis",
+        "url": "https://arkham-analysis.arthurlau.dev",
+        "description": "Arkham Horror: The Card Game analytics — deck statistics, card analysis, and scenario threat assessment.",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": {
+            "@type": "EntryPoint",
+            "urlTemplate": "https://arkham-analysis.arthurlau.dev/analysis?q={search_term_string}"
+          },
+          "query-input": "required name=search_term_string"
+        }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://arkham-analysis.arthurlau.dev/#organization",
+        "name": "Arkham Analysis",
+        "url": "https://arkham-analysis.arthurlau.dev",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://arkham-analysis.arthurlau.dev/favicon.svg"
+        },
+        "description": "Community analytics platform for Arkham Horror: The Card Game — deck trends, card statistics, and scenario threat assessments."
+      }
+    ]
+  }
+  </script>
 
   <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-K33GQ1JB56"></script>

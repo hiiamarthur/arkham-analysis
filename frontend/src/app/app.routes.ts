@@ -11,7 +11,7 @@ export const routes: Routes = [
     loadComponent: () => import('./components/dashboard/dashboard.component').then(m => m.DashboardComponent),
     data: {
       title: 'Dashboard',
-      description: 'Platform overview — investigator pool stats, scenario coverage, and meta insights from published decks.'
+      description: 'Arkham Horror LCG analytics dashboard — live meta insights, top investigators, faction share, and card trends from thousands of published ArkhamDB decks.'
     }
   },
   {
@@ -19,7 +19,7 @@ export const routes: Routes = [
     loadComponent: () => import('./components/card-analysis/card-analysis.component').then(m => m.CardAnalysisComponent),
     data: {
       title: 'Card Analysis',
-      description: 'Browse cards, inspect deck performance, and run context-aware analysis.'
+      description: 'Browse every Arkham Horror LCG card — filter by faction, type, trait, and cost. View deck inclusion rates, usage trends, and investigator synergies.'
     }
   },
   {
@@ -27,7 +27,7 @@ export const routes: Routes = [
     loadComponent: () => import('./components/card-analysis/card-analysis.component').then(m => m.CardAnalysisComponent),
     data: {
       title: 'Card Analysis',
-      description: 'Card details and deck statistics.'
+      description: 'Arkham Horror LCG card statistics — deck inclusion rate, usage trends, top investigators, and synergy data sourced from ArkhamDB.'
     }
   },
   {
@@ -35,7 +35,7 @@ export const routes: Routes = [
     loadComponent: () => import('./components/threat-assessment/threat-assessment.component').then(m => m.ThreatAssessmentComponent),
     data: {
       title: 'Threat Assessment',
-      description: 'Quickly estimate scenario danger level against your party and chaos bag context.'
+      description: 'Arkham Horror LCG scenario threat calculator — assess chaos bag danger, scenario difficulty, and party composition for any campaign and investigator setup.'
     }
   },
   {
@@ -43,7 +43,7 @@ export const routes: Routes = [
     loadComponent: () => import('./components/investigators/investigators.component').then(m => m.InvestigatorsComponent),
     data: {
       title: 'Investigators',
-      description: 'Browse investigators and view competitive deck statistics, trends, and build recommendations.'
+      description: 'All Arkham Horror LCG investigators — meta share, staple cards, deck archetypes, rising trends, and build recommendations from competitive ArkhamDB deck data.'
     }
   },
   {
@@ -51,7 +51,7 @@ export const routes: Routes = [
     loadComponent: () => import('./components/about/about.component').then(m => m.AboutComponent),
     data: {
       title: 'About',
-      description: 'What Arkham Analysis is, where the data comes from, and how to interpret the stats.'
+      description: 'About Arkham Analysis — an open analytics platform for Arkham Horror: The Card Game, powered by ArkhamDB deck data. Learn how stats are calculated and how to use the tools.'
     }
   },
   {

@@ -41,6 +41,7 @@ class CardSchema(BaseSchema):
     name: str | None = None
     real_name: str | None = None
     subname: str | None = None
+    xp: int | None = None
     cost: int | None = None
     text: str | None = None
     real_text: str | None = None
@@ -191,6 +192,7 @@ class CardSchema(BaseSchema):
             name=card_model.name,
             real_name=card_model.real_name,
             subname=card_model.subname,
+            xp=card_model.xp,
             cost=card_model.cost,
             text=card_model.text,
             real_text=card_model.real_text,

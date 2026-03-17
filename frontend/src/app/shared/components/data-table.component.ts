@@ -310,6 +310,10 @@ export class DataTableComponent implements OnInit, OnDestroy, OnChanges {
     return pages;
   }
 
+  xpDots(xp: number): string {
+    return '●'.repeat(Math.min(xp, 5));
+  }
+
   renderCellValue(row: any, column: TableColumn): string {
     const value = this.getCellValue(row, column.key);
 

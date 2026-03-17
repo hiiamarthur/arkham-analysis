@@ -285,3 +285,5 @@ class CardModel(BaseModel):
         back_populates="card",
         lazy="noload",  # Use explicit loading to avoid lazy loading issues
     )
+
+    xp: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)

@@ -12,6 +12,8 @@ export interface InvestigatorMetadata {
 export interface CardRanking {
   card_code: string;
   card_name?: string;
+  card_xp?: number | null;
+  card_subname?: string | null;
   usage_count: number;
   usage_rate: number;
   average_quantity: number;

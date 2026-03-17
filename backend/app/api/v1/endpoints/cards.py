@@ -25,7 +25,7 @@ from . import (
     seconds_until_next_sunday_midnight,
 )
 
-INV_STATS_CACHE_KEY = "investigator:stats:v1"
+INV_STATS_CACHE_KEY = "investigator:stats:v2"
 CARD_STATS_CACHE_KEY = "card:stats:v1"
 
 router = APIRouter()
@@ -257,9 +257,10 @@ async def search_cards(
             CardSummary(
                 code=card.code,
                 name=card.name,
+                subname=card.subname,
                 faction_code=card.faction_code,
                 type_code=card.type_code,
-                xp=0,  # XP not available in CardSchema
+                xp=card.xp,
                 cost=card.cost,
                 pack_code=card.pack_code,
                 traits=[trait.name for trait in card.traits],
@@ -309,19 +310,23 @@ async def get_card(
     card_service: CardService = Depends(get_card_service),
 ):
     """Get a single Arkham Horror card by code"""
+    import logging
+
+    logger = logging.getLogger(__name__)
     try:
         card = await app_service.get_card(card_code)
 
-        # Investigator stats are available via /investigator/{code}/stats endpoint
-
-        # Set Arkham-specific headers
         response.headers.update(ARKHAM_HEADERS)
         response.headers["Cache-Control"] = f"public, max-age={CACHE_TTL_MEDIUM}"
         response.headers["ETag"] = f'"{card_code}"'
 
         return card
-    except Exception:
-        raise CARD_NOT_FOUND  # ✅ Shared exception
+    except HTTPException as e:
+        print("error xd", e)
+        raise CARD_NOT_FOUND
+    except Exception as e:
+        logger.error(f"Unexpected error fetching card {card_code}: {e}", exc_info=True)
+        raise
 
 
 @router.get("/encounter/{encounter}/cards", response_model=PaginatedCardResponse)
@@ -345,6 +350,9 @@ async def get_cards_by_encounter(
             type_code=card.type_code,
             xp=card.xp,
             cost=card.cost,
+            pack_code=card.pack_code,
+            traits=[trait.name for trait in card.traits],
+            illustrator=card.illustrator,
         )
         for card in cards
     ]

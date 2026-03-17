@@ -94,9 +94,10 @@ export interface CardSearchParams {
 export interface CardSummary {
   code: string;
   name: string;
+  subname?: string | null;
   faction_code: string;
   type_code: string;
-  xp: number;
+  xp: number | null;
   cost: number | null;
   pack_code: string;
   traits: string[];

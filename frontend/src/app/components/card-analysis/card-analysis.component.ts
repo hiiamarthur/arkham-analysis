@@ -16,12 +16,18 @@ import { ChartData, ChartOptions } from 'chart.js';
 interface Card {
   code: string;
   name: string;
+  subname?: string | null;
+  // Data-table card_name format fields
+  cardCode?: string;
+  cardName?: string;
+  cardXp?: number | null;
+  cardSubname?: string | null;
   type: string;
   class: string;
   cost: number | null;
   faction: string;
   pack: string;
-  xp?: number;
+  xp?: number | null;
   flavor?: string;
   skillWillpower?: number;
   skillIntellect?: number;
@@ -259,8 +265,13 @@ export class CardAnalysisComponent implements OnInit {
         const cards: Card[] = response.cards.map(apiCard => ({
           code: apiCard.code,
           name: apiCard.name,
+          subname: apiCard.subname,
+          card_code: apiCard.code,
+          card_name: apiCard.name,
+          card_xp: apiCard.xp,
+          card_subname: apiCard.subname,
           type: apiCard.type_code,
-          class: apiCard.faction_code, // Using faction_code as class for now
+          class: apiCard.faction_code,
           cost: apiCard.cost,
           faction: apiCard.faction_code,
           pack: apiCard.pack_code || '',
@@ -876,8 +887,8 @@ export class CardAnalysisComponent implements OnInit {
 
   // Table configuration for card browser
   cardColumns: TableColumn[] = [
-    { key: 'code',    label: 'Code',      sortable: true, searchable: true, width: '100px', priority: 3 },
-    { key: 'name',    label: 'Card Name', sortable: true, searchable: true,                 priority: 1 },
+    { key: 'code',      label: 'Code',      sortable: true, searchable: true, width: '100px', priority: 3 },
+    { key: 'card_name', label: 'Card Name', sortable: true, searchable: true,                 priority: 1 },
     { key: 'type',    label: 'Type',      sortable: true, filterable: true, width: '110px', priority: 1 },
     { key: 'faction', label: 'Faction',   sortable: true, filterable: true, width: '110px', priority: 2 },
     { key: 'cost',    label: 'Cost',      sortable: true, type: 'number',   width: '70px',  priority: 2 },

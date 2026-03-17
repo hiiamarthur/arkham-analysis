@@ -278,6 +278,8 @@ class CardService:
 
         # Batch fetch all card names in a single query
         card_name_map = {}
+        card_xp_map = {}
+        card_subname_map = {}
         if card_codes:
             try:
                 cards = await self.card_repo.get_all(
@@ -285,6 +287,8 @@ class CardService:
                     items_per_page=len(card_codes) + 10,
                 )
                 card_name_map = {card.code: card.name for card in cards if card.name}
+                card_xp_map = {card.code: card.xp for card in cards if card.xp is not None}
+                card_subname_map = {card.code: card.subname for card in cards if card.subname}
             except Exception as e:
                 print(f"Warning: Could not batch fetch card names: {e}")
 
@@ -293,11 +297,15 @@ class CardService:
             for card in stats["card_rankings"]:
                 if "card_code" in card:
                     card["card_name"] = card_name_map.get(card["card_code"], card["card_code"])
+                    card["card_xp"] = card_xp_map.get(card["card_code"])
+                    card["card_subname"] = card_subname_map.get(card["card_code"])
 
         if "staple_cards" in stats:
             for card in stats["staple_cards"]:
                 if "card_code" in card:
                     card["card_name"] = card_name_map.get(card["card_code"], card["card_code"])
+                    card["card_xp"] = card_xp_map.get(card["card_code"])
+                    card["card_subname"] = card_subname_map.get(card["card_code"])
 
         for key in ["rising_cards", "falling_cards"]:
             if key in stats:

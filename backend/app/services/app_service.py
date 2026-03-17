@@ -229,7 +229,7 @@ class AppService:
 
         try:
             raw_cards = await self.arkhamdb_service.fetch_all_card_data(
-                params={"encounter": encounter}
+                params={"encounter": encounter}, use_cache=False
             )
             cards = []
 
@@ -494,6 +494,25 @@ class AppService:
                 "bonded_cards.bonded_card",
             ],
         )
+
+        if not cardData:
+            # Card not in local DB — fetch from ArkhamDB and seed it on-demand
+            try:
+                raw = await self.arkhamdb_service.fetch_card_by_code(card_id)
+                await self._create_card(raw, self.db)
+                await self.db.commit()
+                # Re-fetch from DB to get full relationships
+                cardData = await self.card_repo.get_first(
+                    filters={"filter_by[code][equals]": card_id},
+                    include=[
+                        "traits",
+                        "encounter_sets",
+                        "linked_card",
+                        "bonded_cards.bonded_card",
+                    ],
+                )
+            except Exception as e:
+                logger.warning(f"Could not fetch card {card_id} from ArkhamDB: {e}")
 
         if not cardData:
             raise HTTPException(status_code=404, detail="Card not found")

@@ -181,4 +181,18 @@ export class InvestigatorService {
   getInvestigatorStats(investigatorCode: string): Observable<InvestigatorStatsResponse> {
     return this.http.get<InvestigatorStatsResponse>(`${this.apiUrl}/investigator/${investigatorCode}/stats`);
   }
+
+  /**
+   * Get top cards for an investigator with server-side XP filter and limit
+   */
+  getInvestigatorTopCards(
+    investigatorCode: string,
+    params: { min_xp?: number | null; max_xp?: number | null; q?: string; limit?: number }
+  ): Observable<{ investigator_code: string; cards: CardRanking[]; total: number; filters: any }> {
+    const query: Record<string, string> = { limit: String(params.limit ?? 20) };
+    if (params.min_xp != null) query['min_xp'] = String(params.min_xp);
+    if (params.max_xp != null) query['max_xp'] = String(params.max_xp);
+    if (params.q) query['q'] = params.q;
+    return this.http.get<any>(`${this.apiUrl}/investigator/${investigatorCode}/top-cards`, { params: query });
+  }
 }

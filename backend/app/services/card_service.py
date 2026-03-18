@@ -214,6 +214,125 @@ class CardService:
 
         return stats
 
+    async def get_investigator_card_rankings(
+        self,
+        investigator_code: str,
+        days: int = 90,
+        min_xp: Optional[int] = None,
+        max_xp: Optional[int] = None,
+        query: Optional[str] = None,
+        limit: int = 20,
+    ) -> dict:
+        """Compute only card rankings for an investigator with server-side filtering."""
+        RANKINGS_CACHE_KEY = f"investigator:card_rankings:v1:{investigator_code}"
+        redis_client = await get_redis_client()
+
+        # Try raw rankings cache first (unfiltered, unenriched)
+        raw_rankings = None
+        if redis_client.is_connected:
+            raw_rankings = await redis_client.get(RANKINGS_CACHE_KEY)
+
+        if raw_rankings is None:
+            investigator = await self.card_repo.get_first(
+                filters={"filter_by[code][equals]": investigator_code}
+            )
+            if not investigator or investigator.type_code != CardType.INVESTIGATOR.value:
+                raise ValueError(f"Investigator {investigator_code} not found")
+
+            decks = []
+            if self.deck_service:
+                try:
+                    decks = await self.deck_service.get_decks_last_n_days(days)
+                except Exception:
+                    pass
+
+            adapter = UnifiedCardAdapter()
+            converted_decks = []
+            for deck in decks:
+                if hasattr(deck, "name") and deck.name:
+                    try:
+                        converted_decks.append(Deck.from_dict({
+                            "name": deck.name,
+                            "date_creation": getattr(deck, "date_creation", ""),
+                            "date_update": getattr(deck, "date_update", ""),
+                            "investigator_code": getattr(deck, "investigator_code", ""),
+                            "investigator_name": getattr(deck, "investigator_name", ""),
+                            "slots": getattr(deck, "slots", {}),
+                            "sideSlots": getattr(deck, "sideSlots", {}) if isinstance(getattr(deck, "sideSlots", {}), dict) else {},
+                            "ignoreDeckLimitSlots": getattr(deck, "ignoreDeckLimitSlots", None),
+                            "xp_spent": getattr(deck, "xp_spent", None),
+                            "xp_adjustment": getattr(deck, "xp_adjustment", None),
+                            "exile_string": getattr(deck, "exile_string", None),
+                            "taboo_id": getattr(deck, "taboo_id", None),
+                            "meta": getattr(deck, "meta", ""),
+                            "tags": getattr(deck, "tags", ""),
+                            "previous_deck": getattr(deck, "previous_deck", None),
+                            "next_deck": getattr(deck, "next_deck", None),
+                        }))
+                    except Exception:
+                        pass
+
+            signature_slots: dict = {}
+            deck_req = investigator.deck_requirements
+            if isinstance(deck_req, dict):
+                card_req = deck_req.get("card", {})
+                if isinstance(card_req, dict):
+                    for slot_code, choices in card_req.items():
+                        if isinstance(choices, dict):
+                            signature_slots[slot_code] = list(choices.keys())
+                        elif isinstance(choices, str):
+                            signature_slots[slot_code] = [choices]
+                        else:
+                            signature_slots[slot_code] = [slot_code]
+
+            investigator_stats = InvestigatorStats(
+                cast(InvestigatorCard, adapter.schema_to_domain(schema=CardSchema.from_model(investigator))),
+                converted_decks,
+                signature_slots=signature_slots,
+            )
+            raw_rankings = investigator_stats._get_card_rankings()
+
+            # Enrich with card names / xp / subname
+            card_codes = [c["card_code"] for c in raw_rankings]
+            if card_codes:
+                try:
+                    cards = await self.card_repo.get_all(
+                        filter_by={"filter_by[code][in]": card_codes},
+                        items_per_page=len(card_codes) + 10,
+                    )
+                    name_map = {c.code: c.name for c in cards if c.name}
+                    xp_map = {c.code: c.xp for c in cards if c.xp is not None}
+                    subname_map = {c.code: c.subname for c in cards if c.subname}
+                    for card in raw_rankings:
+                        code = card["card_code"]
+                        card["card_name"] = name_map.get(code, code)
+                        card["card_xp"] = xp_map.get(code)
+                        card["card_subname"] = subname_map.get(code)
+                except Exception as e:
+                    print(f"Warning: Could not enrich card rankings: {e}")
+
+            if redis_client.is_connected:
+                from app.api.v1.endpoints import seconds_until_next_sunday_midnight
+                await redis_client.set(RANKINGS_CACHE_KEY, raw_rankings, expire=seconds_until_next_sunday_midnight())
+
+        # Apply server-side filters
+        results = raw_rankings
+        if min_xp is not None:
+            results = [c for c in results if (c.get("card_xp") or 0) >= min_xp]
+        if max_xp is not None:
+            results = [c for c in results if (c.get("card_xp") or 0) <= max_xp]
+        if query:
+            q = query.lower()
+            results = [c for c in results if q in (c.get("card_name") or c["card_code"]).lower()]
+
+        total = len(results)
+        return {
+            "investigator_code": investigator_code,
+            "cards": results[:limit],
+            "total": total,
+            "filters": {"min_xp": min_xp, "max_xp": max_xp, "query": query, "limit": limit},
+        }
+
     async def _enrich_stats_with_card_names(self, stats: dict):
         """Add card names to all card_code fields in stats"""
         # Collect all unique card codes

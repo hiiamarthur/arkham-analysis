@@ -117,7 +117,7 @@ class InvestigatorStats:
         rankings = []
         total_decks = len(self.decks)
 
-        for card_code, usage_count in card_usage.most_common(50):  # Top 50 cards
+        for card_code, usage_count in card_usage.most_common():  # All cards, caller applies limit
             quantities = card_counts[card_code]
             usage_rate = usage_count / total_decks
             avg_quantity = sum(quantities) / len(quantities)

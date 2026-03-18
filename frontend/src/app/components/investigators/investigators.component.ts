@@ -84,6 +84,15 @@ export class InvestigatorsComponent implements OnInit {
     return Array.from(exps).sort();
   });
 
+  // Top cards — independent section with own API call
+  topCardsXpLabel = signal<'all' | '0' | '1+'>('all');
+  topCardsLimit = signal<number>(20);
+  topCards = signal<CardRanking[]>([]);
+  topCardsTotal = signal<number>(0);
+  topCardsLoading = signal<boolean>(false);
+  topCardsSearch = signal<string>('');
+  private topCardsSearchTimer: ReturnType<typeof setTimeout> | null = null;
+
   // Raw stats response
   investigatorStats = signal<InvestigatorStatsResponse | null>(null);
 
@@ -254,6 +263,8 @@ export class InvestigatorsComponent implements OnInit {
         this.statsNoData.set(true);
       } else {
         this.investigatorStats.set(raw);
+        this.resetTopCardsFilters();
+        this.loadTopCards(investigator.code);
       }
     } catch (error) {
       console.error('Error loading investigator stats:', error);
@@ -269,11 +280,56 @@ export class InvestigatorsComponent implements OnInit {
     }, 100);
   }
 
+  resetTopCardsFilters() {
+    this.topCardsXpLabel.set('all');
+    this.topCardsLimit.set(20);
+    this.topCardsSearch.set('');
+    this.topCards.set([]);
+    this.topCardsTotal.set(0);
+  }
+
+  loadTopCards(code?: string) {
+    const investigatorCode = code ?? this.selectedInvestigatorCode();
+    if (!investigatorCode) return;
+    const label = this.topCardsXpLabel();
+    const params: { min_xp?: number; max_xp?: number; q?: string; limit: number } = { limit: this.topCardsLimit() };
+    if (label === '0') params.max_xp = 0;
+    if (label === '1+') params.min_xp = 1;
+    const q = this.topCardsSearch().trim();
+    if (q) params.q = q;
+    this.topCardsLoading.set(true);
+    this.investigatorService.getInvestigatorTopCards(investigatorCode, params).subscribe({
+      next: (res) => {
+        this.topCards.set(res.cards);
+        this.topCardsTotal.set(res.total);
+        this.topCardsLoading.set(false);
+      },
+      error: () => this.topCardsLoading.set(false),
+    });
+  }
+
+  setTopCardsXp(label: 'all' | '0' | '1+') {
+    this.topCardsXpLabel.set(label);
+    this.loadTopCards();
+  }
+
+  onTopCardsSearch(value: string) {
+    this.topCardsSearch.set(value);
+    if (this.topCardsSearchTimer) clearTimeout(this.topCardsSearchTimer);
+    this.topCardsSearchTimer = setTimeout(() => this.loadTopCards(), 400);
+  }
+
+  setTopCardsLimit(limit: number) {
+    this.topCardsLimit.set(limit);
+    this.loadTopCards();
+  }
+
   backToList() {
     this.selectedInvestigator.set(null);
     this.selectedInvestigatorCode.set(null);
     this.investigatorStats.set(null);
     this.statsNoData.set(false);
+    this.resetTopCardsFilters();
   }
 
   getClassColor(className: string): string {

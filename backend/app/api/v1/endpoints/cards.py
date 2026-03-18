@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Response, status, Body
+from fastapi import APIRouter, Depends, HTTPException, Response, status, Body, Query
 from typing import List, Optional
 import asyncio
 from app.schemas.card_schema import CardSchema
@@ -468,6 +468,38 @@ async def get_investigator_stats(
         await redis_client.set(
             cache_key, result, expire=seconds_until_next_sunday_midnight()
         )
+
+    return result
+
+
+@router.get("/investigator/{card_code}/top-cards")
+async def get_investigator_top_cards(
+    card_code: str = Depends(get_investigator_code_param),
+    card_service: CardService = Depends(get_card_service),
+    min_xp: Optional[int] = Query(None, ge=0, le=5, description="Minimum XP (1 = upgraded only)"),
+    max_xp: Optional[int] = Query(None, ge=0, le=5, description="Maximum XP (0 = level 0 only)"),
+    q: Optional[str] = Query(None, description="Search card name"),
+    limit: int = Query(20, ge=1, le=100, description="Number of cards to return"),
+):
+    """Get top cards for an investigator with server-side XP and search filtering."""
+    try:
+        result = await asyncio.wait_for(
+            card_service.get_investigator_card_rankings(
+                investigator_code=card_code,
+                days=90,
+                min_xp=min_xp,
+                max_xp=max_xp,
+                query=q,
+                limit=limit,
+            ),
+            timeout=30.0,
+        )
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Request timed out — try again.")
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error loading top cards: {e}")
 
     return result
 

@@ -211,12 +211,39 @@
 
       <!-- Card Rankings -->
       <div class="section-card" *ngIf="stats.card_rankings.length > 0">
-        <h3><span [innerHTML]="getCustomIcon('trophy')"></span> Top Cards (by Usage)</h3>
+        <div class="section-card-header">
+          <h3><span [innerHTML]="getCustomIcon('trophy')"></span> Top Cards (by Usage)</h3>
+          <div class="top-cards-controls">
+            <div class="xp-filter-tabs">
+              <button class="xp-tab" [class.active]="topCardsXpLabel() === 'all'" (click)="setTopCardsXp('all')">All</button>
+              <button class="xp-tab" [class.active]="topCardsXpLabel() === '0'" (click)="setTopCardsXp('0')">Level 0</button>
+              <button class="xp-tab" [class.active]="topCardsXpLabel() === '1+'" (click)="setTopCardsXp('1+')">XP 1+</button>
+            </div>
+            <select class="limit-select" [value]="topCardsLimit()" (change)="setTopCardsLimit(+$any($event.target).value)">
+              <option value="10">Top 10</option>
+              <option value="20">Top 20</option>
+              <option value="50">Top 50</option>
+              <option value="100">Top 100</option>
+            </select>
+          </div>
+        </div>
+        <div class="top-cards-search">
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search cards..."
+            [value]="topCardsSearch()"
+            (input)="onTopCardsSearch($any($event.target).value)"
+          />
+          <span class="results-count" *ngIf="topCardsTotal() > 0">
+            {{topCards().length}} of {{topCardsTotal()}} cards
+          </span>
+        </div>
         <app-data-table
-          [data]="stats.card_rankings"
+          [data]="topCards()"
           [columns]="cardRankingColumns"
           [config]="smallTableConfig"
-          [loading]="false"
+          [loading]="topCardsLoading()"
         ></app-data-table>
       </div>
 

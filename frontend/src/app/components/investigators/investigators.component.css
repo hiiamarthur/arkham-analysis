@@ -1332,3 +1332,23 @@
   color: #64748b;
   white-space: nowrap;
 }
+
+/* Card Pool section */
+.card-pool-section { margin-top: 2rem; }
+
+.card-pool-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.card-pool-filters .search-input { flex: 1; min-width: 180px; }
+
+.pool-total {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: #94a3b8;
+  margin-left: 0.4rem;
+}

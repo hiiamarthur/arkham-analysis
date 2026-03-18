@@ -472,6 +472,26 @@ async def get_investigator_stats(
     return result
 
 
+@router.get("/investigator/{card_code}/card-pool")
+async def get_investigator_card_pool(
+    card_code: str = Depends(get_investigator_code_param),
+    card_service: CardService = Depends(get_card_service),
+):
+    """Return all cards legally usable by this investigator (mirrors ArkhamDB do: search)."""
+    try:
+        result = await asyncio.wait_for(
+            card_service.get_investigator_card_pool(card_code),
+            timeout=30.0,
+        )
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Request timed out.")
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error loading card pool: {e}")
+    return result
+
+
 @router.get("/investigator/{card_code}/top-cards")
 async def get_investigator_top_cards(
     card_code: str = Depends(get_investigator_code_param),

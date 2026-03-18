@@ -220,6 +220,44 @@ class AppService:
             logger.error(f"Stacktrace: {traceback.format_exc()}")
             await db_session.rollback()
 
+    async def _fill_missing_imagesrc(self, db_session) -> None:
+        """Third pass: fetch imagesrc from individual card API for any card still missing it."""
+        try:
+            result = await db_session.execute(
+                select(CardModel.code).where(CardModel.imagesrc == None)  # noqa: E711
+            )
+            missing_codes = [row[0] for row in result.all()]
+            if not missing_codes:
+                return
+
+            logger.info(f"Fetching imagesrc for {len(missing_codes)} cards via individual API")
+            from sqlalchemy import update
+            import httpx
+
+            async with httpx.AsyncClient(timeout=10.0) as client:
+                for code in missing_codes:
+                    try:
+                        resp = await client.get(
+                            f"{self.arkhamdb_service.base_url}/api/public/card/{code}"
+                        )
+                        if resp.status_code == 200:
+                            data = resp.json()
+                            imagesrc = data.get("imagesrc")
+                            if imagesrc:
+                                await db_session.execute(
+                                    update(CardModel)
+                                    .where(CardModel.code == code)
+                                    .values(imagesrc=imagesrc)
+                                )
+                    except Exception:
+                        pass  # Non-fatal: card just keeps null imagesrc
+
+            await db_session.commit()
+            logger.info("imagesrc fill-in complete")
+
+        except Exception as e:
+            logger.error(f"Error filling missing imagesrc: {e}")
+
     async def fetch_cards(self, encounter: int = 0) -> List[CardSchema]:
         """Fetch and sync cards from ArkhamDB"""
         # Invalidate related cache entries before fetching new data
@@ -410,6 +448,9 @@ class AppService:
 
                 # Second pass: Handle bonded card relationships
                 await self._process_bonded_cards(raw_cards, db)
+
+                # Third pass: fill in missing imagesrc by fetching individual card API
+                await self._fill_missing_imagesrc(db)
 
             # Return empty list since cards are too long to return
             # The cards have been processed and stored in the database

@@ -23,7 +23,7 @@ export interface TableColumn {
    *   3 = hidden below 1024px
    * Defaults to 1 if omitted.
    */
-  priority?: 1 | 2 | 3;
+  priority?: 1 | 2 | 3 | 4 ;
 }
 
 export interface TableConfig {

@@ -816,6 +816,196 @@ class CardService:
             print(f"Error getting investigators: {e}")
             return []
 
+    async def get_investigator_card_pool(self, investigator_code: str) -> dict:
+        """
+        Return all cards legally usable by the investigator based on their deck_options.
+        Mirrors ArkhamDB's  do:<code>  search.
+
+        Supported option types:
+          - faction + level       (most common)
+          - trait  + level
+          - uses   + level        (matched via card text)
+          - option_select         (player-choice pool — all branches included for display)
+          - not + trait           (exclusion)
+          - limit / error         (informational, ignored for pool display)
+        """
+        from sqlalchemy import select
+        from app.models.arkham_model import TraitModel, card_traits as card_traits_table
+
+        ENCOUNTER_TYPE_CODES = {
+            "act", "agenda", "location", "treachery", "enemy",
+            "investigator", "scenario", "story",
+        }
+
+        investigator = await self.card_repo.get_first(
+            filters={"filter_by[code][equals]": investigator_code}
+        )
+        if not investigator or investigator.type_code != CardType.INVESTIGATOR.value:
+            raise ValueError(f"Investigator {investigator_code} not found")
+
+        raw_options = investigator.deck_options
+        deck_options: list = list(raw_options) if isinstance(raw_options, list) else []
+
+        # Flatten option_select branches into the main list
+        flat_options: list = []
+        for opt in deck_options:
+            if "option_select" in opt:
+                for branch in opt["option_select"]:
+                    flat_options.append(branch)
+            else:
+                flat_options.append(opt)
+
+        # Separate inclusion rules from exclusion rules
+        inclusion_rules = [o for o in flat_options if not o.get("not")]
+        exclusion_rules = [o for o in flat_options if o.get("not")]
+
+        # Fetch all deckable player cards:
+        #   - not an encounter/scenario type
+        #   - deck_limit > 0  (excludes bonded cards=0 and scenario assets=NULL)
+        #   - either no restriction, or the restriction explicitly names this investigator
+        from sqlalchemy import cast
+        from sqlalchemy.dialects.postgresql import JSONB
+
+        stmt = (
+            select(
+                CardModel.code,
+                CardModel.name,
+                CardModel.subname,
+                CardModel.faction_code,
+                CardModel.type_code,
+                CardModel.xp,
+                CardModel.text,
+                CardModel.cost,
+                CardModel.real_slot,
+                CardModel.pack_name,
+                CardModel.imagesrc,
+                CardModel.deck_limit,
+                CardModel.is_unique,
+                CardModel.permanent,
+            )
+            .where(CardModel.type_code.notin_(ENCOUNTER_TYPE_CODES))
+            .where(CardModel.faction_code != None)  # noqa: E711
+            .where(CardModel.deck_limit > 0)
+            .where(CardModel.encounter_code == None)  # noqa: E711  — exclude story assets
+            .where(
+                (CardModel.restrictions == None)  # noqa: E711
+                | (
+                    cast(CardModel.restrictions, JSONB)["investigator"][investigator_code].isnot(None)
+                )
+            )
+        )
+        result = await self.db.execute(stmt)
+        all_cards = result.mappings().all()
+
+        # Also fetch trait names per card (batch)
+        trait_stmt = (
+            select(
+                card_traits_table.c.card_code,
+                TraitModel.name,
+            )
+            .join(TraitModel, TraitModel.name == card_traits_table.c.trait_name)
+        )
+        trait_result = await self.db.execute(trait_stmt)
+        card_trait_map: dict[str, set[str]] = {}
+        for row in trait_result:
+            card_trait_map.setdefault(row.card_code, set()).add(row.name.lower())
+
+        def card_xp(card) -> int:
+            return card["xp"] if card["xp"] is not None else 0
+
+        def matches_option(card, opt: dict) -> bool:
+            """Return True if the card satisfies this single deck_option rule."""
+            xp = card_xp(card)
+            level = opt.get("level", {})
+            min_xp = level.get("min", 0)
+            max_xp = level.get("max", 5)
+
+            # XP range check
+            if not (min_xp <= xp <= max_xp):
+                return False
+
+            # Faction match
+            if "faction" in opt:
+                if card["faction_code"] not in opt["faction"]:
+                    return False
+
+            # Trait match (card must have ALL specified traits)
+            if "trait" in opt:
+                card_traits_lower = card_trait_map.get(card["code"], set())
+                if not all(t.lower() in card_traits_lower for t in opt["trait"]):
+                    return False
+
+            # Type match
+            if "type" in opt:
+                if card["type_code"] not in opt["type"]:
+                    return False
+
+            # Uses match (via card text — crude but works for common cases)
+            if "uses" in opt:
+                card_text = (card["text"] or "").lower()
+                if not any(f"uses ({u}" in card_text or f"uses\n({u}" in card_text
+                           for u in opt["uses"]):
+                    return False
+
+            # If no positive selector matched (only level was checked), skip
+            if not any(k in opt for k in ("faction", "trait", "type", "uses")):
+                return False
+
+            return True
+
+        def excluded(card) -> bool:
+            for excl in exclusion_rules:
+                if "trait" in excl:
+                    card_traits_lower = card_trait_map.get(card["code"], set())
+                    if any(t.lower() in card_traits_lower for t in excl["trait"]):
+                        return True
+            return False
+
+        # Build pool: union of all inclusion rules minus exclusions
+        pool_codes: set[str] = set()
+        for card in all_cards:
+            if excluded(card):
+                continue
+            for rule in inclusion_rules:
+                # Skip pure limit/error rules that have no selector
+                if "error" in rule and not any(
+                    k in rule for k in ("faction", "trait", "type", "uses")
+                ):
+                    continue
+                if matches_option(card, rule):
+                    pool_codes.add(card["code"])
+                    break
+
+        # Build response list preserving order (sorted by name)
+        pool = [
+            {
+                "code": c["code"],
+                "name": c["name"],
+                "subname": c["subname"],
+                "faction_code": c["faction_code"],
+                "type_code": c["type_code"],
+                "xp": card_xp(c),
+                "cost": c["cost"],
+                "real_slot": c["real_slot"],
+                "pack_name": c["pack_name"],
+                "imagesrc": c["imagesrc"],
+                "deck_limit": c["deck_limit"],
+                "is_unique": c["is_unique"],
+                "permanent": c["permanent"],
+                "traits": sorted(card_trait_map.get(c["code"], set())),
+            }
+            for c in all_cards
+            if c["code"] in pool_codes
+        ]
+        pool.sort(key=lambda c: (c["name"] or ""))
+
+        return {
+            "investigator_code": investigator_code,
+            "investigator_name": investigator.name,
+            "total": len(pool),
+            "cards": pool,
+        }
+
     async def get_all_encounter_sets(self) -> List[dict]:
         """
         Get all unique encounter sets.

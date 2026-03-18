@@ -58,6 +58,23 @@ export interface DeckArchetype {
   archetype_id: string;
 }
 
+export interface CardPoolEntry {
+  code: string;
+  name: string;
+  subname?: string | null;
+  faction_code: string;
+  type_code: string;
+  xp: number;
+  cost?: number | null;
+  real_slot?: string | null;
+  pack_name?: string | null;
+  imagesrc?: string | null;
+  deck_limit?: number | null;
+  is_unique?: boolean | null;
+  permanent?: boolean | null;
+  traits: string[];
+}
+
 export interface UnderusedGem {
   card_code: string;
   card_name?: string;
@@ -180,6 +197,18 @@ export class InvestigatorService {
    */
   getInvestigatorStats(investigatorCode: string): Observable<InvestigatorStatsResponse> {
     return this.http.get<InvestigatorStatsResponse>(`${this.apiUrl}/investigator/${investigatorCode}/stats`);
+  }
+
+  /**
+   * Get the full legal card pool for an investigator (based on deck_options)
+   */
+  getInvestigatorCardPool(investigatorCode: string): Observable<{
+    investigator_code: string;
+    investigator_name: string;
+    total: number;
+    cards: CardPoolEntry[];
+  }> {
+    return this.http.get<any>(`${this.apiUrl}/investigator/${investigatorCode}/card-pool`);
   }
 
   /**

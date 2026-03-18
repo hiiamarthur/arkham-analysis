@@ -407,6 +407,53 @@
       <div class="loading-spinner"></div>
       <p>Loading investigator statistics...</p>
     </div>
+
+    <!-- Card Pool -->
+    <div class="section-card card-pool-section" *ngIf="cardPoolLoading() || cardPoolTotal() > 0">
+      <div class="section-card-header">
+        <h3><span [innerHTML]="getCustomIcon('trophy')"></span> Card Pool
+          <span class="pool-total" *ngIf="cardPoolTotal() > 0">({{cardPoolTotal()}} cards)</span>
+        </h3>
+      </div>
+      <div class="card-pool-filters" *ngIf="!cardPoolLoading()">
+        <!-- Search -->
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search cards..."
+          [value]="cardPoolSearch()"
+          (input)="cardPoolSearch.set($any($event.target).value)"
+        />
+        <!-- XP tabs -->
+        <div class="xp-filter-tabs">
+          <button class="xp-tab" [class.active]="cardPoolXpFilter() === 'all'" (click)="cardPoolXpFilter.set('all')">All XP</button>
+          <button class="xp-tab" [class.active]="cardPoolXpFilter() === '0'"   (click)="cardPoolXpFilter.set('0')">Level 0</button>
+          <button class="xp-tab" [class.active]="cardPoolXpFilter() === '1+'"  (click)="cardPoolXpFilter.set('1+')">XP 1+</button>
+        </div>
+        <!-- Faction -->
+        <select class="limit-select" [value]="cardPoolFactionFilter()" (change)="cardPoolFactionFilter.set($any($event.target).value)">
+          <option value="">All Classes</option>
+          <option value="guardian">Guardian</option>
+          <option value="seeker">Seeker</option>
+          <option value="rogue">Rogue</option>
+          <option value="mystic">Mystic</option>
+          <option value="survivor">Survivor</option>
+          <option value="neutral">Neutral</option>
+        </select>
+        <!-- Type -->
+        <select class="limit-select" [value]="cardPoolTypeFilter()" (change)="cardPoolTypeFilter.set($any($event.target).value)">
+          <option value="">All Types</option>
+          <option *ngFor="let t of cardPoolAvailableTypes()" [value]="t">{{t | titlecase}}</option>
+        </select>
+        <span class="results-count">{{filteredCardPool().length}} shown</span>
+      </div>
+      <app-data-table
+        [data]="filteredCardPool()"
+        [columns]="cardPoolColumns"
+        [config]="smallTableConfig"
+        [loading]="cardPoolLoading()"
+      ></app-data-table>
+    </div>
   </div>
 
   <!-- Card Modal -->

@@ -8,8 +8,8 @@ from domain.card.taboo_version import TabooVersion
 
 class BondedCardSchema(BaseSchema):
     code: str
+    name: str
     count: int
-    card: CardSchema | None = None
 
 
 class DeckListSchema(BaseSchema):
@@ -255,8 +255,8 @@ class CardSchema(BaseSchema):
             bonded_cards=[
                 BondedCardSchema(
                     code=bonded.bonded_card_code,
+                    name=bonded.bonded_card.name if bonded.bonded_card and bonded.bonded_card.name else bonded.bonded_card_code,
                     count=bonded.count,
-                    card=cls.from_model(bonded.bonded_card, _processed_codes),
                 )
                 for bonded in (card_model.bonded_cards or [])
             ],

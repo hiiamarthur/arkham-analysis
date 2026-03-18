@@ -2,6 +2,7 @@ import { Component, signal, computed, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, FormArray } from '@angular/forms';
 import { Router, ActivatedRoute, RouterModule } from '@angular/router';
+import { Location } from '@angular/common';
 import { AnalysisService, CardAnalysisRequest, AnalysisResponse } from '../../services/analysis.service';
 import { DataTableComponent, TableColumn, TableConfig } from '../../shared/components/data-table.component';
 import { CardService, CardResponse, CardStatsResponse } from '../../services/card.service';
@@ -158,6 +159,7 @@ export class CardAnalysisComponent implements OnInit {
   private sanitizer = inject(DomSanitizer);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
+  private location = inject(Location);
 
   constructor(
     private fb: FormBuilder,
@@ -619,9 +621,7 @@ export class CardAnalysisComponent implements OnInit {
     this.showStatsModal.set(false);
     this.selectedCardStats.set(null);
     this.selectedCardDetails.set(null);
-    // Navigate back to /analysis without card code
-    this.router.navigate(['/analysis']).then(success => {
-    });
+    this.location.back();
   }
 
   toggleTopInvestigators(): void {

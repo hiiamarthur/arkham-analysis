@@ -46,6 +46,7 @@ export interface CardResponse {
   meta_share?: number;
   total_decks?: number;  // Total decks for this investigator
   total_decks_analyzed?: number;  // Total decks in meta
+  bonded_cards?: Array<{ code: string; name: string; count: number }>;
 }
 
 export interface CardSearchParams {

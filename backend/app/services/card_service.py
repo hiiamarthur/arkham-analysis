@@ -872,6 +872,8 @@ class CardService:
                 CardModel.name,
                 CardModel.subname,
                 CardModel.faction_code,
+                CardModel.faction2_code,
+                CardModel.faction3_code,
                 CardModel.type_code,
                 CardModel.xp,
                 CardModel.text,
@@ -924,9 +926,16 @@ class CardService:
             if not (min_xp <= xp <= max_xp):
                 return False
 
-            # Faction match
+            # Faction match — card qualifies if ANY of its factions is in the allowed list
             if "faction" in opt:
-                if card["faction_code"] not in opt["faction"]:
+                card_factions = {
+                    f for f in [
+                        card["faction_code"],
+                        card.get("faction2_code"),
+                        card.get("faction3_code"),
+                    ] if f
+                }
+                if not card_factions & set(opt["faction"]):
                     return False
 
             # Trait match (card must have ALL specified traits)

@@ -29,6 +29,8 @@ export interface StapleCard extends CardRanking {
 export interface TrendingCard {
   card_code: string;
   card_name?: string;
+  card_xp?: number | null;
+  card_subname?: string | null;
   old_usage_rate: number;
   new_usage_rate: number;
   change_rate: number;
@@ -49,6 +51,8 @@ export interface CardSynergy {
 export interface DeckArchetype {
   archetype_signature: string[];
   archetype_signature_names?: string[];
+  archetype_signature_xp?: (number | null)[];
+  archetype_signature_subnames?: (string | null)[];
   deck_count: number;
   percentage: number;
   archetype_id: string;
@@ -57,6 +61,8 @@ export interface DeckArchetype {
 export interface UnderusedGem {
   card_code: string;
   card_name?: string;
+  card_xp?: number | null;
+  card_subname?: string | null;
   usage_rate: number;
   consistency_score: number;
   gem_potential: number;
@@ -128,14 +134,24 @@ export interface InvestigatorStatsResponse {
   build_recommendations: {
     must_include: string[];
     must_include_names?: string[];
+    must_include_xp?: (number | null)[];
+    must_include_subnames?: (string | null)[];
     must_include_replacements?: { [slotCode: string]: string[] };
     must_include_replacements_names?: { [slotCode: string]: string[] };
+    must_include_replacements_xp?: { [slotCode: string]: (number | null)[] };
+    must_include_replacements_subnames?: { [slotCode: string]: (string | null)[] };
     core_recommendations: string[];
     core_recommendations_names?: string[];
+    core_recommendations_xp?: (number | null)[];
+    core_recommendations_subnames?: (string | null)[];
     hidden_gems: string[];
     hidden_gems_names?: string[];
+    hidden_gems_xp?: (number | null)[];
+    hidden_gems_subnames?: (string | null)[];
     trending_picks: string[];
     trending_picks_names?: string[];
+    trending_picks_xp?: (number | null)[];
+    trending_picks_subnames?: (string | null)[];
     build_advice: string[];
     meta_considerations: {
       optimization_priority: string;

@@ -1240,3 +1240,6 @@
     margin-left: 0;
   }
 }
+.card-main-name { font-weight: 500; }
+.card-subname { color: rgba(255,255,255,0.5); font-size: 0.8em; font-style: italic; font-weight: 400; }
+.xp-dots { display: inline-block; letter-spacing: 1px; font-size: 0.7em; color: #d6ad60; vertical-align: middle; line-height: 1; }

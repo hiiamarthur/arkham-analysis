@@ -312,12 +312,16 @@ class CardService:
                 for card in stats[key]:
                     if "card_code" in card:
                         card["card_name"] = card_name_map.get(card["card_code"], card["card_code"])
+                        card["card_xp"] = card_xp_map.get(card["card_code"])
+                        card["card_subname"] = card_subname_map.get(card["card_code"])
 
         for key in ["underused_gems", "overused_cards"]:
             if key in stats:
                 for card in stats[key]:
                     if "card_code" in card:
                         card["card_name"] = card_name_map.get(card["card_code"], card["card_code"])
+                        card["card_xp"] = card_xp_map.get(card["card_code"])
+                        card["card_subname"] = card_subname_map.get(card["card_code"])
 
         if "card_synergies" in stats:
             for synergy in stats["card_synergies"]:
@@ -333,21 +337,30 @@ class CardService:
 
         if "deck_archetypes" in stats:
             for archetype in stats["deck_archetypes"]:
-                archetype["archetype_signature_names"] = [
-                    card_name_map.get(code, code)
-                    for code in archetype.get("archetype_signature", [])
-                ]
+                codes = archetype.get("archetype_signature", [])
+                archetype["archetype_signature_names"] = [card_name_map.get(c, c) for c in codes]
+                archetype["archetype_signature_xp"] = [card_xp_map.get(c) for c in codes]
+                archetype["archetype_signature_subnames"] = [card_subname_map.get(c) for c in codes]
 
         if "build_recommendations" in stats:
             rec = stats["build_recommendations"]
             for key in ["must_include", "core_recommendations", "hidden_gems", "trending_picks"]:
-                rec[f"{key}_names"] = [
-                    card_name_map.get(code, code) for code in rec.get(key, [])
-                ]
-            # Enrich replacement names
+                codes = rec.get(key, [])
+                rec[f"{key}_names"] = [card_name_map.get(c, c) for c in codes]
+                rec[f"{key}_xp"] = [card_xp_map.get(c) for c in codes]
+                rec[f"{key}_subnames"] = [card_subname_map.get(c) for c in codes]
+            # Enrich replacement names/xp/subnames
             replacements = rec.get("must_include_replacements", {})
             rec["must_include_replacements_names"] = {
                 slot_code: [card_name_map.get(c, c) for c in alt_codes]
+                for slot_code, alt_codes in replacements.items()
+            }
+            rec["must_include_replacements_xp"] = {
+                slot_code: [card_xp_map.get(c) for c in alt_codes]
+                for slot_code, alt_codes in replacements.items()
+            }
+            rec["must_include_replacements_subnames"] = {
+                slot_code: [card_subname_map.get(c) for c in alt_codes]
                 for slot_code, alt_codes in replacements.items()
             }
 

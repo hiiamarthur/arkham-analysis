@@ -299,6 +299,19 @@ export class InvestigatorsComponent implements OnInit {
     return this.iconService.getIcon(iconType);
   }
 
+  xpDots(xp: number | null | undefined): string {
+    if (!xp) return '';
+    return '●'.repeat(Math.min(xp, 5));
+  }
+
+  getItemXp(arr: (number | null)[] | undefined, i: number): number | null {
+    return arr?.[i] ?? null;
+  }
+
+  getItemStr(arr: (string | null)[] | undefined, i: number): string | null {
+    return arr?.[i] ?? null;
+  }
+
   // Get meta share tooltip text
   getMetaShareTooltip(): string {
     const stats = this.investigatorStats();

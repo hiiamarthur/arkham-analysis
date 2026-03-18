@@ -25,7 +25,7 @@ from . import (
     seconds_until_next_sunday_midnight,
 )
 
-INV_STATS_CACHE_KEY = "investigator:stats:v2"
+INV_STATS_CACHE_KEY = "investigator:stats:v3"
 CARD_STATS_CACHE_KEY = "card:stats:v1"
 
 router = APIRouter()

@@ -866,6 +866,14 @@ class CardService:
         from sqlalchemy import cast
         from sqlalchemy.dialects.postgresql import JSONB
 
+        # Fetch the investigator's own traits for restrictions.trait matching
+        inv_trait_result = await self.db.execute(
+            select(TraitModel.name)
+            .join(card_traits_table, TraitModel.name == card_traits_table.c.trait_name)
+            .where(card_traits_table.c.card_code == investigator_code)
+        )
+        investigator_traits: set[str] = {row[0].lower() for row in inv_trait_result}
+
         stmt = (
             select(
                 CardModel.code,
@@ -884,16 +892,20 @@ class CardService:
                 CardModel.deck_limit,
                 CardModel.is_unique,
                 CardModel.permanent,
+                CardModel.restrictions,
             )
             .where(CardModel.type_code.notin_(ENCOUNTER_TYPE_CODES))
             .where(CardModel.faction_code != None)  # noqa: E711
             .where(CardModel.deck_limit > 0)
             .where(CardModel.encounter_code == None)  # noqa: E711  — exclude story assets
+            .where(CardModel.subtype_code == None)  # noqa: E711  — exclude basicweakness / weakness
+            .where(CardModel.xp != None)  # noqa: E711  — exclude campaign reward cards (xp=NULL)
             .where(
+                # Exclude signature/personal cards (restrictions.investigator present)
+                # Those are mandatory deck_requirements, not selectable pool cards.
+                # Cards with restrictions.trait only (e.g. Library Pass) still pass.
                 (CardModel.restrictions == None)  # noqa: E711
-                | (
-                    cast(CardModel.restrictions, JSONB)["investigator"][investigator_code].isnot(None)
-                )
+                | (cast(CardModel.restrictions, JSONB)["investigator"].is_(None))
             )
         )
         result = await self.db.execute(stmt)
@@ -970,10 +982,20 @@ class CardService:
                         return True
             return False
 
+        def passes_restrictions_trait(card) -> bool:
+            """Cards with restrictions.trait require the investigator to have a matching trait."""
+            r = card.get("restrictions")
+            if not r or "trait" not in r:
+                return True
+            required = {t.lower() for t in r["trait"]}
+            return bool(required & investigator_traits)
+
         # Build pool: union of all inclusion rules minus exclusions
         pool_codes: set[str] = set()
         for card in all_cards:
             if excluded(card):
+                continue
+            if not passes_restrictions_trait(card):
                 continue
             for rule in inclusion_rules:
                 # Skip pure limit/error rules that have no selector

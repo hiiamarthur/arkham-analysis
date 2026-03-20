@@ -178,6 +178,8 @@ class CardModel(BaseModel):
     faction2_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
     faction3_code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     faction3_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    subtype_code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    subtype_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
     alternate_of_code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     alternate_of_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
     pack_code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)

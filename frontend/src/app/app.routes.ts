@@ -47,6 +47,22 @@ export const routes: Routes = [
     }
   },
   {
+    path: 'investigators/:code',
+    loadComponent: () => import('./components/investigators/investigators.component').then(m => m.InvestigatorsComponent),
+    data: {
+      title: 'Investigators',
+      description: 'All Arkham Horror LCG investigators — meta share, staple cards, deck archetypes, rising trends, and build recommendations from competitive ArkhamDB deck data.'
+    }
+  },
+  {
+    path: 'pool-playground',
+    loadComponent: () => import('./components/pool-compare/pool-compare.component').then(m => m.PoolCompareComponent),
+    data: {
+      title: 'Pool Playground',
+      description: 'Compare card pools between Arkham Horror LCG investigators — find shared cards, intersections, and exclusive picks to plan multi-investigator parties.'
+    }
+  },
+  {
     path: 'about',
     loadComponent: () => import('./components/about/about.component').then(m => m.AboutComponent),
     data: {

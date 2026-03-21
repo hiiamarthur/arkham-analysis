@@ -211,12 +211,39 @@
 
       <!-- Card Rankings -->
       <div class="section-card" *ngIf="stats.card_rankings.length > 0">
-        <h3><span [innerHTML]="getCustomIcon('trophy')"></span> Top Cards (by Usage)</h3>
+        <div class="section-card-header">
+          <h3><span [innerHTML]="getCustomIcon('trophy')"></span> Top Cards (by Usage)</h3>
+          <div class="top-cards-controls">
+            <div class="xp-filter-tabs">
+              <button class="xp-tab" [class.active]="topCardsXpLabel() === 'all'" (click)="setTopCardsXp('all')">All</button>
+              <button class="xp-tab" [class.active]="topCardsXpLabel() === '0'" (click)="setTopCardsXp('0')">Level 0</button>
+              <button class="xp-tab" [class.active]="topCardsXpLabel() === '1+'" (click)="setTopCardsXp('1+')">XP 1+</button>
+            </div>
+            <select class="limit-select" [value]="topCardsLimit()" (change)="setTopCardsLimit(+$any($event.target).value)">
+              <option value="10">Top 10</option>
+              <option value="20">Top 20</option>
+              <option value="50">Top 50</option>
+              <option value="100">Top 100</option>
+            </select>
+          </div>
+        </div>
+        <div class="top-cards-search">
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Search cards..."
+            [value]="topCardsSearch()"
+            (input)="onTopCardsSearch($any($event.target).value)"
+          />
+          <span class="results-count" *ngIf="topCardsTotal() > 0">
+            {{topCards().length}} of {{topCardsTotal()}} cards
+          </span>
+        </div>
         <app-data-table
-          [data]="stats.card_rankings"
+          [data]="topCards()"
           [columns]="cardRankingColumns"
           [config]="smallTableConfig"
-          [loading]="false"
+          [loading]="topCardsLoading()"
         ></app-data-table>
       </div>
 
@@ -237,7 +264,7 @@
           <h3><span [innerHTML]="getCustomIcon('rising')"></span> Rising Cards (Trending Up)</h3>
           <div class="trending-list">
             <div class="trending-item" *ngFor="let card of stats.rising_cards">
-              <app-card-code-link [cardCode]="card.card_code">{{card.card_name || card.card_code}}</app-card-code-link>
+              <app-card-code-link [cardCode]="card.card_code"><span class="card-main-name">{{card.card_name || card.card_code}}</span><ng-container *ngIf="card.card_subname"> <span class="card-subname">{{card.card_subname}}</span></ng-container><ng-container *ngIf="card.card_xp != null && card.card_xp > 0"> <span class="xp-dots" [title]="card.card_xp + ' XP'">{{xpDots(card.card_xp)}}</span></ng-container></app-card-code-link>
               <span class="trend-change positive">+{{(card.change_rate * 100) | number:'1.0-0'}}%</span>
               <span class="usage-rate">{{(card.new_usage_rate * 100) | number:'1.0-0'}}% usage</span>
             </div>
@@ -248,7 +275,7 @@
           <h3><span [innerHTML]="getCustomIcon('falling')"></span> Falling Cards (Trending Down)</h3>
           <div class="trending-list">
             <div class="trending-item" *ngFor="let card of stats.falling_cards">
-              <app-card-code-link [cardCode]="card.card_code">{{card.card_name || card.card_code}}</app-card-code-link>
+              <app-card-code-link [cardCode]="card.card_code"><span class="card-main-name">{{card.card_name || card.card_code}}</span><ng-container *ngIf="card.card_subname"> <span class="card-subname">{{card.card_subname}}</span></ng-container><ng-container *ngIf="card.card_xp != null && card.card_xp > 0"> <span class="xp-dots" [title]="card.card_xp + ' XP'">{{xpDots(card.card_xp)}}</span></ng-container></app-card-code-link>
               <span class="trend-change negative">{{(card.change_rate * 100) | number:'1.0-0'}}%</span>
               <span class="usage-rate">{{(card.new_usage_rate * 100) | number:'1.0-0'}}% usage</span>
             </div>
@@ -265,8 +292,7 @@
               <div class="archetype-signature-cards">
                 <app-card-code-link
                   *ngFor="let cardName of (archetype.archetype_signature_names || archetype.archetype_signature); let j = index"
-                  [cardCode]="archetype.archetype_signature[j]">
-                  {{cardName}}
+                  [cardCode]="archetype.archetype_signature[j]"><span class="card-main-name">{{cardName}}</span><ng-container *ngIf="getItemStr(archetype.archetype_signature_subnames, j) as sub"> <span class="card-subname">{{sub}}</span></ng-container><ng-container *ngIf="getItemXp(archetype.archetype_signature_xp, j) as xp"> <span class="xp-dots" [title]="xp + ' XP'">{{xpDots(xp)}}</span></ng-container>
                 </app-card-code-link>
               </div>
               <div class="archetype-meta">
@@ -284,7 +310,7 @@
         <div class="gems-list">
           <div class="gem-item" *ngFor="let gem of stats.underused_gems">
             <span class="gem-icon" [innerHTML]="getCustomIcon('gem')"></span>
-            <app-card-code-link [cardCode]="gem.card_code">{{gem.card_name || gem.card_code}}</app-card-code-link>
+            <app-card-code-link [cardCode]="gem.card_code"><span class="card-main-name">{{gem.card_name || gem.card_code}}</span><ng-container *ngIf="gem.card_subname"> <span class="card-subname">{{gem.card_subname}}</span></ng-container><ng-container *ngIf="gem.card_xp != null && gem.card_xp > 0"> <span class="xp-dots" [title]="gem.card_xp + ' XP'">{{xpDots(gem.card_xp)}}</span></ng-container></app-card-code-link>
             <span class="gem-stats">
               {{(gem.usage_rate * 100) | number:'1.0-0'}}% usage,
               {{(gem.consistency_score * 100) | number:'1.0-0'}}% consistency
@@ -303,18 +329,14 @@
           <p class="section-note">These cards are required in every deck. If replacements exist, you may use any one option per slot.</p>
           <div class="must-include-list">
             <div class="must-include-slot" *ngFor="let code of stats.build_recommendations.must_include; let i = index">
-              <app-card-code-link class="card-badge must-include" [cardCode]="code">
-                {{(stats.build_recommendations.must_include_names?.[i]) || code}}
-              </app-card-code-link>
+              <app-card-code-link class="card-badge must-include" [cardCode]="code"><span class="card-main-name">{{(stats.build_recommendations.must_include_names?.[i]) || code}}</span><ng-container *ngIf="getItemStr(stats.build_recommendations.must_include_subnames, i) as sub"> <span class="card-subname">{{sub}}</span></ng-container><ng-container *ngIf="getItemXp(stats.build_recommendations.must_include_xp, i) as xp"> <span class="xp-dots" [title]="xp + ' XP'">{{xpDots(xp)}}</span></ng-container></app-card-code-link>
               <ng-container *ngIf="stats.build_recommendations.must_include_replacements?.[code] as alts">
                 <ng-container *ngIf="alts.length > 0">
                   <span class="or-divider">or</span>
                   <app-card-code-link
                     class="card-badge must-include alt"
                     *ngFor="let altCode of alts; let j = index"
-                    [cardCode]="altCode">
-                    {{(stats.build_recommendations.must_include_replacements_names?.[code]?.[j]) || altCode}}
-                  </app-card-code-link>
+                    [cardCode]="altCode"><span class="card-main-name">{{(stats.build_recommendations.must_include_replacements_names?.[code]?.[j]) || altCode}}</span><ng-container *ngIf="getItemStr(stats.build_recommendations.must_include_replacements_subnames?.[code], j) as sub"> <span class="card-subname">{{sub}}</span></ng-container><ng-container *ngIf="getItemXp(stats.build_recommendations.must_include_replacements_xp?.[code], j) as xp"> <span class="xp-dots" [title]="xp + ' XP'">{{xpDots(xp)}}</span></ng-container></app-card-code-link>
                 </ng-container>
               </ng-container>
             </div>
@@ -326,8 +348,7 @@
           <div class="card-codes-list">
             <app-card-code-link class="card-badge"
               *ngFor="let code of stats.build_recommendations.core_recommendations; let i = index"
-              [cardCode]="code">
-              {{(stats.build_recommendations.core_recommendations_names?.[i]) || code}}
+              [cardCode]="code"><span class="card-main-name">{{(stats.build_recommendations.core_recommendations_names?.[i]) || code}}</span><ng-container *ngIf="getItemStr(stats.build_recommendations.core_recommendations_subnames, i) as sub"> <span class="card-subname">{{sub}}</span></ng-container><ng-container *ngIf="getItemXp(stats.build_recommendations.core_recommendations_xp, i) as xp"> <span class="xp-dots" [title]="xp + ' XP'">{{xpDots(xp)}}</span></ng-container>
             </app-card-code-link>
           </div>
         </div>
@@ -337,8 +358,7 @@
           <div class="card-codes-list">
             <app-card-code-link class="card-badge gem"
               *ngFor="let code of stats.build_recommendations.hidden_gems; let i = index"
-              [cardCode]="code">
-              {{(stats.build_recommendations.hidden_gems_names?.[i]) || code}}
+              [cardCode]="code"><span class="card-main-name">{{(stats.build_recommendations.hidden_gems_names?.[i]) || code}}</span><ng-container *ngIf="getItemStr(stats.build_recommendations.hidden_gems_subnames, i) as sub"> <span class="card-subname">{{sub}}</span></ng-container><ng-container *ngIf="getItemXp(stats.build_recommendations.hidden_gems_xp, i) as xp"> <span class="xp-dots" [title]="xp + ' XP'">{{xpDots(xp)}}</span></ng-container>
             </app-card-code-link>
           </div>
         </div>
@@ -348,8 +368,7 @@
           <div class="card-codes-list">
             <app-card-code-link class="card-badge trending"
               *ngFor="let code of stats.build_recommendations.trending_picks; let i = index"
-              [cardCode]="code">
-              {{(stats.build_recommendations.trending_picks_names?.[i]) || code}}
+              [cardCode]="code"><span class="card-main-name">{{(stats.build_recommendations.trending_picks_names?.[i]) || code}}</span><ng-container *ngIf="getItemStr(stats.build_recommendations.trending_picks_subnames, i) as sub"> <span class="card-subname">{{sub}}</span></ng-container><ng-container *ngIf="getItemXp(stats.build_recommendations.trending_picks_xp, i) as xp"> <span class="xp-dots" [title]="xp + ' XP'">{{xpDots(xp)}}</span></ng-container>
             </app-card-code-link>
           </div>
         </div>
@@ -387,6 +406,60 @@
     <div class="stats-loading" *ngIf="statsLoading()">
       <div class="loading-spinner"></div>
       <p>Loading investigator statistics...</p>
+    </div>
+
+    <!-- Card Pool -->
+    <div class="section-card card-pool-section" *ngIf="cardPoolLoading() || cardPoolTotal() > 0">
+      <div class="section-card-header">
+        <h3><span [innerHTML]="getCustomIcon('trophy')"></span> Card Pool
+          <span class="pool-total" *ngIf="cardPoolTotal() > 0">({{cardPoolTotal()}} cards)</span>
+        </h3>
+        <div class="deck-restrictions" *ngIf="cardPoolRestrictions().length > 0">
+          <span class="restriction-label">Forbidden:</span>
+          <span class="restriction-badge" *ngFor="let r of cardPoolRestrictions()">
+            No {{r.traits.join(' / ')}}
+            <span *ngIf="r.level"> (Lvl {{r.level.min}}–{{r.level.max}})</span>
+          </span>
+        </div>
+      </div>
+      <div class="card-pool-filters" *ngIf="!cardPoolLoading()">
+        <!-- Search -->
+        <input
+          type="text"
+          class="search-input"
+          placeholder="Search cards..."
+          [value]="cardPoolSearch()"
+          (input)="cardPoolSearch.set($any($event.target).value)"
+        />
+        <!-- XP tabs -->
+        <div class="xp-filter-tabs">
+          <button class="xp-tab" [class.active]="cardPoolXpFilter() === 'all'" (click)="cardPoolXpFilter.set('all')">All XP</button>
+          <button class="xp-tab" [class.active]="cardPoolXpFilter() === '0'"   (click)="cardPoolXpFilter.set('0')">Level 0</button>
+          <button class="xp-tab" [class.active]="cardPoolXpFilter() === '1+'"  (click)="cardPoolXpFilter.set('1+')">XP 1+</button>
+        </div>
+        <!-- Faction -->
+        <select class="limit-select" [value]="cardPoolFactionFilter()" (change)="cardPoolFactionFilter.set($any($event.target).value)">
+          <option value="">All Classes</option>
+          <option value="guardian">Guardian</option>
+          <option value="seeker">Seeker</option>
+          <option value="rogue">Rogue</option>
+          <option value="mystic">Mystic</option>
+          <option value="survivor">Survivor</option>
+          <option value="neutral">Neutral</option>
+        </select>
+        <!-- Type -->
+        <select class="limit-select" [value]="cardPoolTypeFilter()" (change)="cardPoolTypeFilter.set($any($event.target).value)">
+          <option value="">All Types</option>
+          <option *ngFor="let t of cardPoolAvailableTypes()" [value]="t">{{t | titlecase}}</option>
+        </select>
+        <span class="results-count">{{filteredCardPool().length}} shown</span>
+      </div>
+      <app-data-table
+        [data]="filteredCardPool()"
+        [columns]="cardPoolColumns"
+        [config]="smallTableConfig"
+        [loading]="cardPoolLoading()"
+      ></app-data-table>
     </div>
   </div>
 

@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, OnChanges, SimpleChanges, signal, computed, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { CustomInputComponent } from './text-field.component';
 import { CardCodeLinkComponent } from './card-code-link.component';
 import { IconService } from '../services/icon.service';
@@ -23,7 +24,7 @@ export interface TableColumn {
    *   3 = hidden below 1024px
    * Defaults to 1 if omitted.
    */
-  priority?: 1 | 2 | 3;
+  priority?: 1 | 2 | 3 | 4 ;
 }
 
 export interface TableConfig {
@@ -49,7 +50,7 @@ export interface PaginationInfo {
 @Component({
   selector: 'app-data-table',
   standalone: true,
-  imports: [CommonModule, FormsModule, CustomInputComponent, CardCodeLinkComponent],
+  imports: [CommonModule, FormsModule, RouterModule, CustomInputComponent, CardCodeLinkComponent],
   templateUrl: './data-table.component.html',
   styleUrl: './data-table.component.css'
 })
@@ -308,6 +309,10 @@ export class DataTableComponent implements OnInit, OnDestroy, OnChanges {
     if (total > 1) pages.push(total);
 
     return pages;
+  }
+
+  xpDots(xp: number): string {
+    return '●'.repeat(Math.min(xp, 5));
   }
 
   renderCellValue(row: any, column: TableColumn): string {

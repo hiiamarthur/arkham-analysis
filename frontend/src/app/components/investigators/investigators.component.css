@@ -1240,3 +1240,138 @@
     margin-left: 0;
   }
 }
+.card-main-name { font-weight: 500; }
+.card-subname { color: rgba(255,255,255,0.5); font-size: 0.8em; font-style: italic; font-weight: 400; }
+.xp-dots { display: inline-block; letter-spacing: 1px; font-size: 0.7em; color: #d6ad60; vertical-align: middle; line-height: 1; }
+
+.section-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.section-card-header h3 {
+  margin: 0;
+}
+
+.xp-filter-tabs {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.xp-tab {
+  padding: 0.25rem 0.75rem;
+  border: 1px solid rgba(100, 116, 139, 0.3);
+  border-radius: 4px;
+  background: transparent;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.xp-tab:hover {
+  border-color: #d6ad60;
+  color: #d6ad60;
+}
+
+.xp-tab.active {
+  background: rgba(214, 173, 96, 0.15);
+  border-color: #d6ad60;
+  color: #d6ad60;
+  font-weight: 600;
+}
+
+.top-cards-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.limit-select {
+  padding: 0.25rem 0.5rem;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(100, 116, 139, 0.3);
+  border-radius: 4px;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.limit-select:focus {
+  outline: none;
+  border-color: #d6ad60;
+}
+
+.top-cards-search {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.search-input {
+  flex: 1;
+  padding: 0.35rem 0.75rem;
+  background: rgba(15, 23, 42, 0.8);
+  border: 1px solid rgba(100, 116, 139, 0.3);
+  border-radius: 4px;
+  color: #e2e8f0;
+  font-size: 0.85rem;
+}
+
+.search-input::placeholder { color: #475569; }
+.search-input:focus { outline: none; border-color: rgba(100, 116, 139, 0.6); }
+
+.results-count {
+  font-size: 0.75rem;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+/* Card Pool section */
+.card-pool-section { margin-top: 2rem; }
+
+.card-pool-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.card-pool-filters .search-input { flex: 1; min-width: 180px; }
+
+.pool-total {
+  font-size: 0.85rem;
+  font-weight: 400;
+  color: #94a3b8;
+  margin-left: 0.4rem;
+}
+
+.deck-restrictions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+}
+
+.restriction-label {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.restriction-badge {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+  border-radius: 4px;
+  padding: 0.15rem 0.5rem;
+  white-space: nowrap;
+}

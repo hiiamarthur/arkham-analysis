@@ -12,6 +12,7 @@ import re
 
 @dataclass
 class PlayerCard(BaseCard):
+    real_text: Optional[str] = None
     cost: int = 0
     level: int = 0
     skill_willpower: int = 0

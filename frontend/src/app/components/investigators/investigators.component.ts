@@ -1,9 +1,9 @@
 import { Component, signal, computed, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { DataTableComponent, TableColumn, TableConfig } from '../../shared/components/data-table.component';
-import { InvestigatorService, InvestigatorStatsResponse, CardRanking, StapleCard, TrendingCard, CardSynergy, DeckArchetype, UnderusedGem } from '../../services/investigator.service';
+import { InvestigatorService, InvestigatorStatsResponse, CardRanking, StapleCard, TrendingCard, CardSynergy, DeckArchetype, UnderusedGem, CardPoolEntry } from '../../services/investigator.service';
 import { CardService, CardResponse } from '../../services/card.service';
 import { CardCodeLinkComponent } from '../../shared/components/card-code-link.component';
 import { CardModalComponent } from '../../shared/components/card-modal.component';
@@ -45,6 +45,7 @@ export class InvestigatorsComponent implements OnInit {
   private iconService = inject(IconService);
   private sanitizer = inject(DomSanitizer);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   // Expose Math to template
   Math = Math;
@@ -84,13 +85,52 @@ export class InvestigatorsComponent implements OnInit {
     return Array.from(exps).sort();
   });
 
+  // Top cards — independent section with own API call
+  topCardsXpLabel = signal<'all' | '0' | '1+'>('all');
+  topCardsLimit = signal<number>(20);
+  topCards = signal<CardRanking[]>([]);
+  topCardsTotal = signal<number>(0);
+  topCardsLoading = signal<boolean>(false);
+  topCardsSearch = signal<string>('');
+  private topCardsSearchTimer: ReturnType<typeof setTimeout> | null = null;
+
   // Raw stats response
   investigatorStats = signal<InvestigatorStatsResponse | null>(null);
+
+  // Card pool
+  cardPool = signal<CardPoolEntry[]>([]);
+  cardPoolTotal = signal<number>(0);
+  cardPoolLoading = signal<boolean>(false);
+  cardPoolRestrictions = signal<Array<{ traits: string[]; level?: { min: number; max: number } }>>([]);
+  cardPoolSearch = signal<string>('');
+  cardPoolXpFilter = signal<'all' | '0' | '1+'>('all');
+  cardPoolFactionFilter = signal<string>('');
+  cardPoolTypeFilter = signal<string>('');
+
+  filteredCardPool = computed(() => {
+    let cards = this.cardPool();
+    const q = this.cardPoolSearch().toLowerCase().trim();
+    const xp = this.cardPoolXpFilter();
+    const faction = this.cardPoolFactionFilter();
+    const type = this.cardPoolTypeFilter();
+    if (q) cards = cards.filter(c => (c.name || '').toLowerCase().includes(q));
+    if (xp === '0') cards = cards.filter(c => c.xp === 0);
+    if (xp === '1+') cards = cards.filter(c => c.xp >= 1);
+    if (faction) cards = cards.filter(c => c.faction_code === faction || c.faction2_code === faction || c.faction3_code === faction);
+    if (type) cards = cards.filter(c => c.type_code === type);
+    return cards;
+  });
+
+  cardPoolAvailableTypes = computed(() => {
+    const types = new Set(this.cardPool().map(c => c.type_code));
+    return Array.from(types).sort();
+  });
 
   ngOnInit() {
     const params = this.route.snapshot.queryParamMap;
     const factionParam = params.get('faction');
-    const investigatorParam = params.get('investigator');
+    // Support both /investigators/:code (path param) and ?investigator=code (legacy query param)
+    const investigatorParam = this.route.snapshot.paramMap.get('code') ?? params.get('investigator');
 
     if (factionParam) {
       this.selectedFaction.set(this.normalizeFactionName(factionParam));
@@ -99,7 +139,7 @@ export class InvestigatorsComponent implements OnInit {
     this.loadInvestigators().then(() => {
       if (investigatorParam) {
         const match = this.investigators().find(inv => inv.code === investigatorParam);
-        if (match) this.onInvestigatorClick(match);
+        if (match) this.onInvestigatorClick(match, /* updateUrl */ false);
       }
     });
   }
@@ -179,6 +219,17 @@ export class InvestigatorsComponent implements OnInit {
     { key: 'expansion', label: 'Expansion', sortable: true, filterable: true,                  priority: 3 },
   ];
 
+  // Table columns for card pool
+  cardPoolColumns: TableColumn[] = [
+    { key: 'card_name',    label: 'Name',     sortable: true, searchable: true,                priority: 1 },
+    { key: 'faction_code', label: 'Class',    sortable: true, filterable: true, width: '95px', priority: 2 },
+    { key: 'type_code',    label: 'Type',     sortable: true,                   width: '95px', priority: 2 },
+    { key: 'xp',           label: 'XP',       sortable: true, type: 'number',   width: '55px', priority: 2 },
+    { key: 'cost',         label: 'Cost',     sortable: true, type: 'number',   width: '60px', priority: 3 },
+    { key: 'real_slot',    label: 'Slot',     sortable: true,                   width: '100px', priority: 3 },
+    { key: 'pack_name',    label: 'Pack',     sortable: true,                                  priority: 4 },
+  ];
+
   // Table columns for card rankings
   cardRankingColumns: TableColumn[] = [
     { key: 'card_name',         label: 'Card Name',  sortable: true, searchable: true,                 priority: 1 },
@@ -238,7 +289,10 @@ export class InvestigatorsComponent implements OnInit {
   }
 
   // Event handlers
-  async onInvestigatorClick(investigator: Investigator) {
+  async onInvestigatorClick(investigator: Investigator, updateUrl = true) {
+    if (updateUrl) {
+      this.router.navigate(['/investigators', investigator.code], { replaceUrl: false });
+    }
     this.selectedInvestigator.set(investigator);
     this.selectedInvestigatorCode.set(investigator.code);
     this.statsNoData.set(false);
@@ -254,7 +308,12 @@ export class InvestigatorsComponent implements OnInit {
         this.statsNoData.set(true);
       } else {
         this.investigatorStats.set(raw);
+        this.resetTopCardsFilters();
+        this.loadTopCards(investigator.code);
       }
+      // Card pool loads independently of stats
+      this.resetCardPoolFilters();
+      this.loadCardPool(investigator.code);
     } catch (error) {
       console.error('Error loading investigator stats:', error);
       this.investigatorStats.set(null);
@@ -269,11 +328,91 @@ export class InvestigatorsComponent implements OnInit {
     }, 100);
   }
 
+  resetTopCardsFilters() {
+    this.topCardsXpLabel.set('all');
+    this.topCardsLimit.set(20);
+    this.topCardsSearch.set('');
+    this.topCards.set([]);
+    this.topCardsTotal.set(0);
+  }
+
+  loadTopCards(code?: string) {
+    const investigatorCode = code ?? this.selectedInvestigatorCode();
+    if (!investigatorCode) return;
+    const label = this.topCardsXpLabel();
+    const params: { min_xp?: number; max_xp?: number; q?: string; limit: number } = { limit: this.topCardsLimit() };
+    if (label === '0') params.max_xp = 0;
+    if (label === '1+') params.min_xp = 1;
+    const q = this.topCardsSearch().trim();
+    if (q) params.q = q;
+    this.topCardsLoading.set(true);
+    this.investigatorService.getInvestigatorTopCards(investigatorCode, params).subscribe({
+      next: (res) => {
+        this.topCards.set(res.cards);
+        this.topCardsTotal.set(res.total);
+        this.topCardsLoading.set(false);
+      },
+      error: () => this.topCardsLoading.set(false),
+    });
+  }
+
+  setTopCardsXp(label: 'all' | '0' | '1+') {
+    this.topCardsXpLabel.set(label);
+    this.loadTopCards();
+  }
+
+  onTopCardsSearch(value: string) {
+    this.topCardsSearch.set(value);
+    if (this.topCardsSearchTimer) clearTimeout(this.topCardsSearchTimer);
+    this.topCardsSearchTimer = setTimeout(() => this.loadTopCards(), 400);
+  }
+
+  setTopCardsLimit(limit: number) {
+    this.topCardsLimit.set(limit);
+    this.loadTopCards();
+  }
+
+  loadCardPool(code: string) {
+    this.cardPoolLoading.set(true);
+    this.cardPool.set([]);
+    this.cardPoolTotal.set(0);
+    this.investigatorService.getInvestigatorCardPool(code).subscribe({
+      next: (res) => {
+        // Map to data-table shape: card_code + card_name for the name-column special case
+        const mapped = res.cards.map(c => ({
+          ...c,
+          card_code: c.code,
+          card_name: c.name,
+          card_subname: c.subname,
+          card_xp: c.xp,
+          related_cards: c.related_cards,
+        }));
+        this.cardPool.set(mapped as any);
+        this.cardPoolTotal.set(res.total);
+        this.cardPoolRestrictions.set(res.deck_restrictions ?? []);
+        this.cardPoolLoading.set(false);
+      },
+      error: () => this.cardPoolLoading.set(false),
+    });
+  }
+
+  resetCardPoolFilters() {
+    this.cardPoolSearch.set('');
+    this.cardPoolXpFilter.set('all');
+    this.cardPoolFactionFilter.set('');
+    this.cardPoolTypeFilter.set('');
+    this.cardPool.set([]);
+    this.cardPoolTotal.set(0);
+    this.cardPoolRestrictions.set([]);
+  }
+
   backToList() {
     this.selectedInvestigator.set(null);
     this.selectedInvestigatorCode.set(null);
     this.investigatorStats.set(null);
     this.statsNoData.set(false);
+    this.resetTopCardsFilters();
+    this.resetCardPoolFilters();
   }
 
   getClassColor(className: string): string {
@@ -297,6 +436,19 @@ export class InvestigatorsComponent implements OnInit {
   // Custom SVG icons for non-game-specific stats
   getCustomIcon(iconType: string): SafeHtml {
     return this.iconService.getIcon(iconType);
+  }
+
+  xpDots(xp: number | null | undefined): string {
+    if (!xp) return '';
+    return '●'.repeat(Math.min(xp, 5));
+  }
+
+  getItemXp(arr: (number | null)[] | undefined, i: number): number | null {
+    return arr?.[i] ?? null;
+  }
+
+  getItemStr(arr: (string | null)[] | undefined, i: number): string | null {
+    return arr?.[i] ?? null;
   }
 
   // Get meta share tooltip text

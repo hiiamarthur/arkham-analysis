@@ -174,6 +174,13 @@ class CardModel(BaseModel):
     type_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
     faction_code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     faction_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    faction2_code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    faction2_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    faction3_code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    faction3_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    subtype_code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    subtype_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    tags: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
     alternate_of_code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     alternate_of_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
     pack_code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
@@ -285,3 +292,5 @@ class CardModel(BaseModel):
         back_populates="card",
         lazy="noload",  # Use explicit loading to avoid lazy loading issues
     )
+
+    xp: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)

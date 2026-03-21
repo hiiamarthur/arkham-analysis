@@ -32,6 +32,39 @@ export class ArkhamSvgIconsService {
     return this.getDefaultIcon(iconName);
   }
 
+  /**
+   * Returns the icon SVG with scale and translation corrections applied from ICON_DATA.
+   * For icons without scale/translation metadata the output is identical to getIcon().
+   */
+  getNormalizedIcon(iconName: string): string {
+    const key = iconName.toLowerCase();
+    const svg = this.getIcon(key);
+    const data = ICON_DATA[key];
+
+    if (!data || data.path.includes('<')) return svg;
+
+    const viewBoxMatch = svg.match(/viewBox="([^"]+)"/);
+    if (!viewBoxMatch) return svg;
+
+    const [minX, minY, w, h] = viewBoxMatch[1].trim().split(/[\s,]+/).map(Number);
+    const scale = data.scale ?? 1;
+    const TARGET = 28 / scale;
+    const padX = (TARGET - w) / 2;
+    const padY = (TARGET - h) / 2;
+    let vbMinX = minX - padX;
+    let vbMinY = minY - padY;
+
+    if (data.translation) {
+      const [tx, ty] = data.translation.trim().split(/[\s,]+/).map(Number);
+      vbMinX += tx;
+      vbMinY += ty;
+    }
+
+    return svg
+      .replace(/viewBox="[^"]+"/, `viewBox="${vbMinX} ${vbMinY} ${TARGET} ${TARGET}"`)
+      .replace(/<svg /, '<svg overflow="visible" ');
+  }
+
   hasIcon(iconName: string): boolean {
     return iconName.toLowerCase() in this.iconMap;
   }

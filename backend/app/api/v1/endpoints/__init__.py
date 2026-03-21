@@ -162,9 +162,10 @@ class CardSummary(BaseModel):
 
     code: str
     name: str
+    subname: Optional[str] = None
     faction_code: Optional[str]
     type_code: str
-    xp: Optional[int] = 0
+    xp: Optional[int] = None
     cost: Optional[int]
     traits: Optional[List[str]]
     pack_code: Optional[str]

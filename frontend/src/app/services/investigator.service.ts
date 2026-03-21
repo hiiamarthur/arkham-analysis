@@ -12,6 +12,8 @@ export interface InvestigatorMetadata {
 export interface CardRanking {
   card_code: string;
   card_name?: string;
+  card_xp?: number | null;
+  card_subname?: string | null;
   usage_count: number;
   usage_rate: number;
   average_quantity: number;
@@ -27,6 +29,8 @@ export interface StapleCard extends CardRanking {
 export interface TrendingCard {
   card_code: string;
   card_name?: string;
+  card_xp?: number | null;
+  card_subname?: string | null;
   old_usage_rate: number;
   new_usage_rate: number;
   change_rate: number;
@@ -47,14 +51,40 @@ export interface CardSynergy {
 export interface DeckArchetype {
   archetype_signature: string[];
   archetype_signature_names?: string[];
+  archetype_signature_xp?: (number | null)[];
+  archetype_signature_subnames?: (string | null)[];
   deck_count: number;
   percentage: number;
   archetype_id: string;
 }
 
+export interface CardPoolEntry {
+  code: string;
+  name: string;
+  subname?: string | null;
+  faction_code: string;
+  faction2_code?: string | null;
+  faction3_code?: string | null;
+  type_code: string;
+  xp: number;
+  cost?: number | null;
+  real_slot?: string | null;
+  pack_name?: string | null;
+  imagesrc?: string | null;
+  deck_limit?: number | null;
+  is_unique?: boolean | null;
+  permanent?: boolean | null;
+  traits: string[];
+  text?: string | null;
+  flavor?: string | null;
+  related_cards?: Array<{ code: string; name: string; pack_name: string }> | null;
+}
+
 export interface UnderusedGem {
   card_code: string;
   card_name?: string;
+  card_xp?: number | null;
+  card_subname?: string | null;
   usage_rate: number;
   consistency_score: number;
   gem_potential: number;
@@ -126,14 +156,24 @@ export interface InvestigatorStatsResponse {
   build_recommendations: {
     must_include: string[];
     must_include_names?: string[];
+    must_include_xp?: (number | null)[];
+    must_include_subnames?: (string | null)[];
     must_include_replacements?: { [slotCode: string]: string[] };
     must_include_replacements_names?: { [slotCode: string]: string[] };
+    must_include_replacements_xp?: { [slotCode: string]: (number | null)[] };
+    must_include_replacements_subnames?: { [slotCode: string]: (string | null)[] };
     core_recommendations: string[];
     core_recommendations_names?: string[];
+    core_recommendations_xp?: (number | null)[];
+    core_recommendations_subnames?: (string | null)[];
     hidden_gems: string[];
     hidden_gems_names?: string[];
+    hidden_gems_xp?: (number | null)[];
+    hidden_gems_subnames?: (string | null)[];
     trending_picks: string[];
     trending_picks_names?: string[];
+    trending_picks_xp?: (number | null)[];
+    trending_picks_subnames?: (string | null)[];
     build_advice: string[];
     meta_considerations: {
       optimization_priority: string;
@@ -162,5 +202,32 @@ export class InvestigatorService {
    */
   getInvestigatorStats(investigatorCode: string): Observable<InvestigatorStatsResponse> {
     return this.http.get<InvestigatorStatsResponse>(`${this.apiUrl}/investigator/${investigatorCode}/stats`);
+  }
+
+  /**
+   * Get the full legal card pool for an investigator (based on deck_options)
+   */
+  getInvestigatorCardPool(investigatorCode: string): Observable<{
+    investigator_code: string;
+    investigator_name: string;
+    deck_restrictions: Array<{ traits: string[]; level?: { min: number; max: number } }>;
+    total: number;
+    cards: CardPoolEntry[];
+  }> {
+    return this.http.get<any>(`${this.apiUrl}/investigator/${investigatorCode}/card-pool`);
+  }
+
+  /**
+   * Get top cards for an investigator with server-side XP filter and limit
+   */
+  getInvestigatorTopCards(
+    investigatorCode: string,
+    params: { min_xp?: number | null; max_xp?: number | null; q?: string; limit?: number }
+  ): Observable<{ investigator_code: string; cards: CardRanking[]; total: number; filters: any }> {
+    const query: Record<string, string> = { limit: String(params.limit ?? 20) };
+    if (params.min_xp != null) query['min_xp'] = String(params.min_xp);
+    if (params.max_xp != null) query['max_xp'] = String(params.max_xp);
+    if (params.q) query['q'] = params.q;
+    return this.http.get<any>(`${this.apiUrl}/investigator/${investigatorCode}/top-cards`, { params: query });
   }
 }

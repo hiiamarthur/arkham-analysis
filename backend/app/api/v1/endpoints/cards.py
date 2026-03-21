@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Response, status, Body
+from fastapi import APIRouter, Depends, HTTPException, Response, status, Body, Query
 from typing import List, Optional
 import asyncio
 from app.schemas.card_schema import CardSchema
@@ -25,8 +25,8 @@ from . import (
     seconds_until_next_sunday_midnight,
 )
 
-INV_STATS_CACHE_KEY = "investigator:stats:v1"
-CARD_STATS_CACHE_KEY = "card:stats:v1"
+INV_STATS_CACHE_KEY = "investigator:stats:v5"
+CARD_STATS_CACHE_KEY = "card:stats:v3"
 
 router = APIRouter()
 
@@ -64,15 +64,12 @@ async def get_all_investigators(
 ):
     """
     Get a list of all investigators with their codes and names.
-    Results are cached for performance.
     """
     try:
         investigators = await card_service.get_all_investigators()
 
         response.headers.update(ARKHAM_HEADERS)
-        response.headers["Cache-Control"] = (
-            "public, max-age=86400"  # Cache for 24 hours
-        )
+        response.headers["Cache-Control"] = "no-cache"
 
         return investigators
     except Exception as e:
@@ -257,9 +254,10 @@ async def search_cards(
             CardSummary(
                 code=card.code,
                 name=card.name,
+                subname=card.subname,
                 faction_code=card.faction_code,
                 type_code=card.type_code,
-                xp=0,  # XP not available in CardSchema
+                xp=card.xp,
                 cost=card.cost,
                 pack_code=card.pack_code,
                 traits=[trait.name for trait in card.traits],
@@ -309,19 +307,23 @@ async def get_card(
     card_service: CardService = Depends(get_card_service),
 ):
     """Get a single Arkham Horror card by code"""
+    import logging
+
+    logger = logging.getLogger(__name__)
     try:
         card = await app_service.get_card(card_code)
 
-        # Investigator stats are available via /investigator/{code}/stats endpoint
-
-        # Set Arkham-specific headers
         response.headers.update(ARKHAM_HEADERS)
         response.headers["Cache-Control"] = f"public, max-age={CACHE_TTL_MEDIUM}"
         response.headers["ETag"] = f'"{card_code}"'
 
         return card
-    except Exception:
-        raise CARD_NOT_FOUND  # ✅ Shared exception
+    except HTTPException as e:
+        print("error xd", e)
+        raise CARD_NOT_FOUND
+    except Exception as e:
+        logger.error(f"Unexpected error fetching card {card_code}: {e}", exc_info=True)
+        raise
 
 
 @router.get("/encounter/{encounter}/cards", response_model=PaginatedCardResponse)
@@ -345,6 +347,9 @@ async def get_cards_by_encounter(
             type_code=card.type_code,
             xp=card.xp,
             cost=card.cost,
+            pack_code=card.pack_code,
+            traits=[trait.name for trait in card.traits],
+            illustrator=card.illustrator,
         )
         for card in cards
     ]
@@ -441,7 +446,7 @@ async def get_investigator_stats(
 
     try:
         result = await asyncio.wait_for(
-            card_service.get_investigator_stats(card_code, days=90),
+            card_service.get_investigator_stats(card_code, days=365),
             timeout=30.0,
         )
     except asyncio.TimeoutError:
@@ -460,6 +465,62 @@ async def get_investigator_stats(
         await redis_client.set(
             cache_key, result, expire=seconds_until_next_sunday_midnight()
         )
+
+    return result
+
+
+@router.get("/investigator/{card_code}/card-pool")
+async def get_investigator_card_pool(
+    card_code: str = Depends(get_investigator_code_param),
+    card_service: CardService = Depends(get_card_service),
+):
+    """Return all cards legally usable by this investigator (mirrors ArkhamDB do: search)."""
+    try:
+        result = await asyncio.wait_for(
+            card_service.get_investigator_card_pool(card_code),
+            timeout=30.0,
+        )
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Request timed out.")
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error loading card pool: {e}")
+    return result
+
+
+@router.get("/investigator/{card_code}/top-cards")
+async def get_investigator_top_cards(
+    card_code: str = Depends(get_investigator_code_param),
+    card_service: CardService = Depends(get_card_service),
+    min_xp: Optional[int] = Query(
+        None, ge=0, le=5, description="Minimum XP (1 = upgraded only)"
+    ),
+    max_xp: Optional[int] = Query(
+        None, ge=0, le=5, description="Maximum XP (0 = level 0 only)"
+    ),
+    q: Optional[str] = Query(None, description="Search card name"),
+    limit: int = Query(20, ge=1, le=100, description="Number of cards to return"),
+):
+    """Get top cards for an investigator with server-side XP and search filtering."""
+    try:
+        result = await asyncio.wait_for(
+            card_service.get_investigator_card_rankings(
+                investigator_code=card_code,
+                days=365,
+                min_xp=min_xp,
+                max_xp=max_xp,
+                query=q,
+                limit=limit,
+            ),
+            timeout=30.0,
+        )
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Request timed out — try again.")
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error loading top cards: {e}")
 
     return result
 

@@ -7,12 +7,25 @@ from ..player_card import PlayerCard
 
 class CardStats:
     def __init__(
-        self, card: PlayerCard, decks: List[Deck], trend_period: str = "month"
+        self,
+        card: PlayerCard,
+        decks: List[Deck],
+        trend_period: str = "month",
+        extra_codes: Optional[List[str]] = None,
     ):
         print("__init__len", len(decks))
         self.decks = decks
         self.card = card
         self.trend_period = trend_period
+        # Additional card codes (reprints) to count as the same card when computing stats.
+        self.extra_codes: List[str] = extra_codes or []
+
+    def _deck_has_card(self, deck: Deck, codes: Optional[List[str]] = None) -> bool:
+        """Return True if the deck includes any of the given codes (defaults to this card + extra_codes)."""
+        check = codes if codes is not None else [self.card.code] + self.extra_codes
+        slots = deck.slots
+        side = dict(deck.sideSlots) if deck.sideSlots else {}
+        return any(c in slots or c in side for c in check)
 
     def get_deck_stats(self, trend_period: str = "month"):
         return {
@@ -38,12 +51,7 @@ class CardStats:
         }
 
     def get_popularity(self):
-        included_deck = [
-            deck
-            for deck in self.decks
-            if self.card.code in deck.slots.keys()
-            or self.card.code in dict(deck.sideSlots).keys()
-        ]
+        included_deck = [deck for deck in self.decks if self._deck_has_card(deck)]
         print("len", len(included_deck), len(self.decks))
         return {
             "overall_usage_rate": (
@@ -156,10 +164,7 @@ class CardStats:
         # Calculate usage rate for each period
         for period_key, period_decks in period_groups.items():
             decks_with_card = [
-                deck
-                for deck in period_decks
-                if self.card.code in deck.slots.keys()
-                or self.card.code in dict(deck.sideSlots).keys()
+                deck for deck in period_decks if self._deck_has_card(deck)
             ]
             usage_rate = len(decks_with_card) / len(period_decks) if period_decks else 0
             period_usage[period_key] = {

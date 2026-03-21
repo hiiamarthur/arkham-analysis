@@ -95,11 +95,20 @@
           [attr.data-priority]="column.priority || 1"
         >
           <!-- Render card name as link (using card_code from row) -->
-          <app-card-code-link
-            *ngIf="column.key === 'card_name' && row.card_code"
-            [cardCode]="row.card_code">
-            {{getCellValue(row, column.key) || row.card_code}}
-          </app-card-code-link>
+          <ng-container *ngIf="column.key === 'card_name' && row.card_code">
+            <app-card-code-link [cardCode]="row.card_code">
+              <span class="card-main-name">{{getCellValue(row, column.key) || row.card_code}}</span><ng-container *ngIf="row.card_subname"> <span class="card-subname">{{row.card_subname}}</span></ng-container><ng-container *ngIf="row.card_xp != null && row.card_xp > 0"> <span class="xp-dots" [title]="row.card_xp + ' XP'">{{xpDots(row.card_xp)}}</span></ng-container>
+            </app-card-code-link>
+            <div class="related-cards-chips" *ngIf="row.related_cards?.length">
+              <a
+                *ngFor="let rc of row.related_cards"
+                class="related-card-chip"
+                [routerLink]="['/analysis', rc.code]"
+                [title]="rc.name + ' (' + rc.pack_name + ')'"
+                (click)="$event.stopPropagation()"
+              >{{ rc.pack_name }}</a>
+            </div>
+          </ng-container>
           <!-- Render card1 with name -->
           <app-card-code-link
             *ngIf="column.key === 'card1'"

@@ -100,6 +100,7 @@ export class InvestigatorsComponent implements OnInit {
   cardPool = signal<CardPoolEntry[]>([]);
   cardPoolTotal = signal<number>(0);
   cardPoolLoading = signal<boolean>(false);
+  cardPoolRestrictions = signal<Array<{ traits: string[]; level?: { min: number; max: number } }>>([]);
   cardPoolSearch = signal<string>('');
   cardPoolXpFilter = signal<'all' | '0' | '1+'>('all');
   cardPoolFactionFilter = signal<string>('');
@@ -114,7 +115,7 @@ export class InvestigatorsComponent implements OnInit {
     if (q) cards = cards.filter(c => (c.name || '').toLowerCase().includes(q));
     if (xp === '0') cards = cards.filter(c => c.xp === 0);
     if (xp === '1+') cards = cards.filter(c => c.xp >= 1);
-    if (faction) cards = cards.filter(c => c.faction_code === faction);
+    if (faction) cards = cards.filter(c => c.faction_code === faction || c.faction2_code === faction || c.faction3_code === faction);
     if (type) cards = cards.filter(c => c.type_code === type);
     return cards;
   });
@@ -382,6 +383,7 @@ export class InvestigatorsComponent implements OnInit {
         }));
         this.cardPool.set(mapped as any);
         this.cardPoolTotal.set(res.total);
+        this.cardPoolRestrictions.set(res.deck_restrictions ?? []);
         this.cardPoolLoading.set(false);
       },
       error: () => this.cardPoolLoading.set(false),
@@ -395,6 +397,7 @@ export class InvestigatorsComponent implements OnInit {
     this.cardPoolTypeFilter.set('');
     this.cardPool.set([]);
     this.cardPoolTotal.set(0);
+    this.cardPoolRestrictions.set([]);
   }
 
   backToList() {

@@ -63,6 +63,8 @@ export interface CardPoolEntry {
   name: string;
   subname?: string | null;
   faction_code: string;
+  faction2_code?: string | null;
+  faction3_code?: string | null;
   type_code: string;
   xp: number;
   cost?: number | null;
@@ -205,6 +207,7 @@ export class InvestigatorService {
   getInvestigatorCardPool(investigatorCode: string): Observable<{
     investigator_code: string;
     investigator_name: string;
+    deck_restrictions: Array<{ traits: string[]; level?: { min: number; max: number } }>;
     total: number;
     cards: CardPoolEntry[];
   }> {

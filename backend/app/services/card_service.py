@@ -9,6 +9,7 @@ from app.adapters.card_adapters import UnifiedCardAdapter
 from app.schemas.card_schema import CardSchema
 from app.core.redis_client import get_redis_client
 from domain.card.investigator_card import InvestigatorCard
+from domain.card.faction import Faction
 from domain.card.context import InvestigatorStats
 from domain.card.card_type import CardType
 from domain.card import PlayerCard
@@ -20,7 +21,9 @@ def _next_sunday_midnight_utc() -> datetime:
     """Returns the next Sunday 00:00 UTC datetime (same boundary as the cache TTL)."""
     now = datetime.utcnow()
     days_ahead = (6 - now.weekday()) % 7 or 7
-    return (now + timedelta(days=days_ahead)).replace(hour=0, minute=0, second=0, microsecond=0)
+    return (now + timedelta(days=days_ahead)).replace(
+        hour=0, minute=0, second=0, microsecond=0
+    )
 
 
 class CardService:
@@ -122,7 +125,10 @@ class CardService:
 
         if redis_client.is_connected:
             from app.api.v1.endpoints import seconds_until_next_sunday_midnight
-            await redis_client.set(cache_key, result, expire=seconds_until_next_sunday_midnight())
+
+            await redis_client.set(
+                cache_key, result, expire=seconds_until_next_sunday_midnight()
+            )
 
         return result
 
@@ -236,7 +242,10 @@ class CardService:
             investigator = await self.card_repo.get_first(
                 filters={"filter_by[code][equals]": investigator_code}
             )
-            if not investigator or investigator.type_code != CardType.INVESTIGATOR.value:
+            if (
+                not investigator
+                or investigator.type_code != CardType.INVESTIGATOR.value
+            ):
                 raise ValueError(f"Investigator {investigator_code} not found")
 
             decks = []
@@ -251,24 +260,44 @@ class CardService:
             for deck in decks:
                 if hasattr(deck, "name") and deck.name:
                     try:
-                        converted_decks.append(Deck.from_dict({
-                            "name": deck.name,
-                            "date_creation": getattr(deck, "date_creation", ""),
-                            "date_update": getattr(deck, "date_update", ""),
-                            "investigator_code": getattr(deck, "investigator_code", ""),
-                            "investigator_name": getattr(deck, "investigator_name", ""),
-                            "slots": getattr(deck, "slots", {}),
-                            "sideSlots": getattr(deck, "sideSlots", {}) if isinstance(getattr(deck, "sideSlots", {}), dict) else {},
-                            "ignoreDeckLimitSlots": getattr(deck, "ignoreDeckLimitSlots", None),
-                            "xp_spent": getattr(deck, "xp_spent", None),
-                            "xp_adjustment": getattr(deck, "xp_adjustment", None),
-                            "exile_string": getattr(deck, "exile_string", None),
-                            "taboo_id": getattr(deck, "taboo_id", None),
-                            "meta": getattr(deck, "meta", ""),
-                            "tags": getattr(deck, "tags", ""),
-                            "previous_deck": getattr(deck, "previous_deck", None),
-                            "next_deck": getattr(deck, "next_deck", None),
-                        }))
+                        converted_decks.append(
+                            Deck.from_dict(
+                                {
+                                    "name": deck.name,
+                                    "date_creation": getattr(deck, "date_creation", ""),
+                                    "date_update": getattr(deck, "date_update", ""),
+                                    "investigator_code": getattr(
+                                        deck, "investigator_code", ""
+                                    ),
+                                    "investigator_name": getattr(
+                                        deck, "investigator_name", ""
+                                    ),
+                                    "slots": getattr(deck, "slots", {}),
+                                    "sideSlots": (
+                                        getattr(deck, "sideSlots", {})
+                                        if isinstance(
+                                            getattr(deck, "sideSlots", {}), dict
+                                        )
+                                        else {}
+                                    ),
+                                    "ignoreDeckLimitSlots": getattr(
+                                        deck, "ignoreDeckLimitSlots", None
+                                    ),
+                                    "xp_spent": getattr(deck, "xp_spent", None),
+                                    "xp_adjustment": getattr(
+                                        deck, "xp_adjustment", None
+                                    ),
+                                    "exile_string": getattr(deck, "exile_string", None),
+                                    "taboo_id": getattr(deck, "taboo_id", None),
+                                    "meta": getattr(deck, "meta", ""),
+                                    "tags": getattr(deck, "tags", ""),
+                                    "previous_deck": getattr(
+                                        deck, "previous_deck", None
+                                    ),
+                                    "next_deck": getattr(deck, "next_deck", None),
+                                }
+                            )
+                        )
                     except Exception:
                         pass
 
@@ -286,7 +315,12 @@ class CardService:
                             signature_slots[slot_code] = [slot_code]
 
             investigator_stats = InvestigatorStats(
-                cast(InvestigatorCard, adapter.schema_to_domain(schema=CardSchema.from_model(investigator))),
+                cast(
+                    InvestigatorCard,
+                    adapter.schema_to_domain(
+                        schema=CardSchema.from_model(investigator)
+                    ),
+                ),
                 converted_decks,
                 signature_slots=signature_slots,
             )
@@ -313,7 +347,12 @@ class CardService:
 
             if redis_client.is_connected:
                 from app.api.v1.endpoints import seconds_until_next_sunday_midnight
-                await redis_client.set(RANKINGS_CACHE_KEY, raw_rankings, expire=seconds_until_next_sunday_midnight())
+
+                await redis_client.set(
+                    RANKINGS_CACHE_KEY,
+                    raw_rankings,
+                    expire=seconds_until_next_sunday_midnight(),
+                )
 
         # Apply server-side filters
         results = raw_rankings
@@ -323,14 +362,23 @@ class CardService:
             results = [c for c in results if (c.get("card_xp") or 0) <= max_xp]
         if query:
             q = query.lower()
-            results = [c for c in results if q in (c.get("card_name") or c["card_code"]).lower()]
+            results = [
+                c
+                for c in results
+                if q in (c.get("card_name") or c["card_code"]).lower()
+            ]
 
         total = len(results)
         return {
             "investigator_code": investigator_code,
             "cards": results[:limit],
             "total": total,
-            "filters": {"min_xp": min_xp, "max_xp": max_xp, "query": query, "limit": limit},
+            "filters": {
+                "min_xp": min_xp,
+                "max_xp": max_xp,
+                "query": query,
+                "limit": limit,
+            },
         }
 
     async def _enrich_stats_with_card_names(self, stats: dict):
@@ -387,7 +435,12 @@ class CardService:
         # From build recommendations
         if "build_recommendations" in stats:
             rec = stats["build_recommendations"]
-            for key in ["must_include", "core_recommendations", "hidden_gems", "trending_picks"]:
+            for key in [
+                "must_include",
+                "core_recommendations",
+                "hidden_gems",
+                "trending_picks",
+            ]:
                 for code in rec.get(key, []):
                     card_codes.add(code)
             # From must_include_replacements (dict of slot_code -> [alt_codes])
@@ -406,8 +459,12 @@ class CardService:
                     items_per_page=len(card_codes) + 10,
                 )
                 card_name_map = {card.code: card.name for card in cards if card.name}
-                card_xp_map = {card.code: card.xp for card in cards if card.xp is not None}
-                card_subname_map = {card.code: card.subname for card in cards if card.subname}
+                card_xp_map = {
+                    card.code: card.xp for card in cards if card.xp is not None
+                }
+                card_subname_map = {
+                    card.code: card.subname for card in cards if card.subname
+                }
             except Exception as e:
                 print(f"Warning: Could not batch fetch card names: {e}")
 
@@ -415,14 +472,18 @@ class CardService:
         if "card_rankings" in stats:
             for card in stats["card_rankings"]:
                 if "card_code" in card:
-                    card["card_name"] = card_name_map.get(card["card_code"], card["card_code"])
+                    card["card_name"] = card_name_map.get(
+                        card["card_code"], card["card_code"]
+                    )
                     card["card_xp"] = card_xp_map.get(card["card_code"])
                     card["card_subname"] = card_subname_map.get(card["card_code"])
 
         if "staple_cards" in stats:
             for card in stats["staple_cards"]:
                 if "card_code" in card:
-                    card["card_name"] = card_name_map.get(card["card_code"], card["card_code"])
+                    card["card_name"] = card_name_map.get(
+                        card["card_code"], card["card_code"]
+                    )
                     card["card_xp"] = card_xp_map.get(card["card_code"])
                     card["card_subname"] = card_subname_map.get(card["card_code"])
 
@@ -430,7 +491,9 @@ class CardService:
             if key in stats:
                 for card in stats[key]:
                     if "card_code" in card:
-                        card["card_name"] = card_name_map.get(card["card_code"], card["card_code"])
+                        card["card_name"] = card_name_map.get(
+                            card["card_code"], card["card_code"]
+                        )
                         card["card_xp"] = card_xp_map.get(card["card_code"])
                         card["card_subname"] = card_subname_map.get(card["card_code"])
 
@@ -438,32 +501,51 @@ class CardService:
             if key in stats:
                 for card in stats[key]:
                     if "card_code" in card:
-                        card["card_name"] = card_name_map.get(card["card_code"], card["card_code"])
+                        card["card_name"] = card_name_map.get(
+                            card["card_code"], card["card_code"]
+                        )
                         card["card_xp"] = card_xp_map.get(card["card_code"])
                         card["card_subname"] = card_subname_map.get(card["card_code"])
 
         if "card_synergies" in stats:
             for synergy in stats["card_synergies"]:
                 if "card1" in synergy:
-                    synergy["card1_name"] = card_name_map.get(synergy["card1"], synergy["card1"])
+                    synergy["card1_name"] = card_name_map.get(
+                        synergy["card1"], synergy["card1"]
+                    )
                 if "card2" in synergy:
-                    synergy["card2_name"] = card_name_map.get(synergy["card2"], synergy["card2"])
+                    synergy["card2_name"] = card_name_map.get(
+                        synergy["card2"], synergy["card2"]
+                    )
 
         if "card_efficiency_ratings" in stats:
             for card in stats["card_efficiency_ratings"]:
                 if "card_code" in card:
-                    card["card_name"] = card_name_map.get(card["card_code"], card["card_code"])
+                    card["card_name"] = card_name_map.get(
+                        card["card_code"], card["card_code"]
+                    )
 
         if "deck_archetypes" in stats:
             for archetype in stats["deck_archetypes"]:
                 codes = archetype.get("archetype_signature", [])
-                archetype["archetype_signature_names"] = [card_name_map.get(c, c) for c in codes]
-                archetype["archetype_signature_xp"] = [card_xp_map.get(c) for c in codes]
-                archetype["archetype_signature_subnames"] = [card_subname_map.get(c) for c in codes]
+                archetype["archetype_signature_names"] = [
+                    card_name_map.get(c, c) for c in codes
+                ]
+                archetype["archetype_signature_xp"] = [
+                    card_xp_map.get(c) for c in codes
+                ]
+                archetype["archetype_signature_subnames"] = [
+                    card_subname_map.get(c) for c in codes
+                ]
 
         if "build_recommendations" in stats:
             rec = stats["build_recommendations"]
-            for key in ["must_include", "core_recommendations", "hidden_gems", "trending_picks"]:
+            for key in [
+                "must_include",
+                "core_recommendations",
+                "hidden_gems",
+                "trending_picks",
+            ]:
                 codes = rec.get(key, [])
                 rec[f"{key}_names"] = [card_name_map.get(c, c) for c in codes]
                 rec[f"{key}_xp"] = [card_xp_map.get(c) for c in codes]
@@ -777,6 +859,7 @@ class CardService:
         """
         from sqlalchemy import select, text
         from app.models.arkham_model import TraitModel
+
         try:
             # Query traits table directly — much faster than loading all cards
             stmt = select(TraitModel.name).distinct().order_by(TraitModel.name)
@@ -803,11 +886,17 @@ class CardService:
             investigators = []
             for card in cards:
                 if card.code and card.name:
-                    investigators.append({
-                        "code": card.code,
-                        "name": card.name,
-                        "faction_code": card.faction_code if hasattr(card, 'faction_code') else None,
-                    })
+                    investigators.append(
+                        {
+                            "code": card.code,
+                            "name": card.name,
+                            "faction_code": (
+                                card.faction_code
+                                if hasattr(card, "faction_code")
+                                else None
+                            ),
+                        }
+                    )
 
             # Sort by name
             investigators.sort(key=lambda x: x["name"])
@@ -833,8 +922,14 @@ class CardService:
         from app.models.arkham_model import TraitModel, card_traits as card_traits_table
 
         ENCOUNTER_TYPE_CODES = {
-            "act", "agenda", "location", "treachery", "enemy",
-            "investigator", "scenario", "story",
+            "act",
+            "agenda",
+            "location",
+            "treachery",
+            "enemy",
+            "investigator",
+            "scenario",
+            "story",
         }
 
         investigator = await self.card_repo.get_first(
@@ -843,21 +938,18 @@ class CardService:
         if not investigator or investigator.type_code != CardType.INVESTIGATOR.value:
             raise ValueError(f"Investigator {investigator_code} not found")
 
-        raw_options = investigator.deck_options
-        deck_options: list = list(raw_options) if isinstance(raw_options, list) else []
-
-        # Flatten option_select branches into the main list
-        flat_options: list = []
-        for opt in deck_options:
-            if "option_select" in opt:
-                for branch in opt["option_select"]:
-                    flat_options.append(branch)
-            else:
-                flat_options.append(opt)
-
-        # Separate inclusion rules from exclusion rules
-        inclusion_rules = [o for o in flat_options if not o.get("not")]
-        exclusion_rules = [o for o in flat_options if o.get("not")]
+        raw_deck_options = investigator.deck_options
+        inv_card = InvestigatorCard(
+            code=investigator.code,
+            name=investigator.name or "",
+            traits=[],
+            faction=Faction.NEUTRAL,
+            text="",
+            deck_options=(
+                list(raw_deck_options) if isinstance(raw_deck_options, list) else []
+            ),
+        )
+        inclusion_rules, exclusion_rules = inv_card.expand_pool_rules()
 
         # Fetch all deckable player cards:
         #   - not an encounter/scenario type
@@ -885,6 +977,7 @@ class CardService:
                 CardModel.type_code,
                 CardModel.xp,
                 CardModel.text,
+                CardModel.real_text,
                 CardModel.cost,
                 CardModel.real_slot,
                 CardModel.pack_name,
@@ -893,13 +986,20 @@ class CardService:
                 CardModel.is_unique,
                 CardModel.permanent,
                 CardModel.restrictions,
+                CardModel.tags,
             )
             .where(CardModel.type_code.notin_(ENCOUNTER_TYPE_CODES))
             .where(CardModel.faction_code != None)  # noqa: E711
             .where(CardModel.deck_limit > 0)
-            .where(CardModel.encounter_code == None)  # noqa: E711  — exclude story assets
-            .where(CardModel.subtype_code == None)  # noqa: E711  — exclude basicweakness / weakness
-            .where(CardModel.xp != None)  # noqa: E711  — exclude campaign reward cards (xp=NULL)
+            .where(
+                CardModel.encounter_code == None
+            )  # noqa: E711  — exclude story assets
+            .where(
+                CardModel.subtype_code == None
+            )  # noqa: E711  — exclude basicweakness / weakness
+            .where(
+                CardModel.xp != None
+            )  # noqa: E711  — exclude campaign reward cards (xp=NULL)
             .where(
                 # Exclude signature/personal cards (restrictions.investigator present)
                 # Those are mandatory deck_requirements, not selectable pool cards.
@@ -912,13 +1012,10 @@ class CardService:
         all_cards = result.mappings().all()
 
         # Also fetch trait names per card (batch)
-        trait_stmt = (
-            select(
-                card_traits_table.c.card_code,
-                TraitModel.name,
-            )
-            .join(TraitModel, TraitModel.name == card_traits_table.c.trait_name)
-        )
+        trait_stmt = select(
+            card_traits_table.c.card_code,
+            TraitModel.name,
+        ).join(TraitModel, TraitModel.name == card_traits_table.c.trait_name)
         trait_result = await self.db.execute(trait_stmt)
         card_trait_map: dict[str, set[str]] = {}
         for row in trait_result:
@@ -928,24 +1025,32 @@ class CardService:
             return card["xp"] if card["xp"] is not None else 0
 
         def matches_option(card, opt: dict) -> bool:
-            """Return True if the card satisfies this single deck_option rule."""
+            """Return True if the card satisfies this single pool rule."""
+            import re as _re
+
             xp = card_xp(card)
             level = opt.get("level", {})
             min_xp = level.get("min", 0)
             max_xp = level.get("max", 5)
 
-            # XP range check
+            # XP range check (applies to all rule types)
             if not (min_xp <= xp <= max_xp):
                 return False
+
+            # Dunwich open-level: any card at this XP range qualifies
+            if opt.get("_open_level"):
+                return True
 
             # Faction match — card qualifies if ANY of its factions is in the allowed list
             if "faction" in opt:
                 card_factions = {
-                    f for f in [
+                    f
+                    for f in [
                         card["faction_code"],
                         card.get("faction2_code"),
                         card.get("faction3_code"),
-                    ] if f
+                    ]
+                    if f
                 }
                 if not card_factions & set(opt["faction"]):
                     return False
@@ -961,21 +1066,58 @@ class CardService:
                 if card["type_code"] not in opt["type"]:
                     return False
 
-            # Uses match (via card text — crude but works for common cases)
+            # Uses match — delegates to AssetCard.has_uses, matching ArkhamDB's
+            # realText LIKE '%<uses_type>).%' logic exactly
             if "uses" in opt:
-                card_text = (card["text"] or "").lower()
-                if not any(f"uses ({u}" in card_text or f"uses\n({u}" in card_text
-                           for u in opt["uses"]):
+                from domain.card.asset_card import AssetCard
+
+                if not any(
+                    AssetCard.has_uses(card.get("real_text") or "", u)
+                    for u in opt["uses"]
+                ):
                     return False
 
-            # If no positive selector matched (only level was checked), skip
-            if not any(k in opt for k in ("faction", "trait", "type", "uses")):
+            # Tag match — card's tags field (e.g. "fa." "hh." "pa.")
+            if "tag" in opt:
+                card_tags = card.get("tags") or ""
+                if not any(tag in card_tags for tag in opt["tag"]):
+                    return False
+
+            # Text regex match — used by Carolyn Fern, Vincent Lee, etc.
+            if "text" in opt:
+                card_text = card.get("text") or ""
+                if not any(
+                    _re.search(pattern, card_text, _re.IGNORECASE)
+                    for pattern in opt["text"]
+                ):
+                    return False
+
+            # No positive selector at all — skip
+            if not any(
+                k in opt
+                for k in (
+                    "faction",
+                    "trait",
+                    "type",
+                    "uses",
+                    "tag",
+                    "text",
+                    "_open_level",
+                )
+            ):
                 return False
 
             return True
 
         def excluded(card) -> bool:
             for excl in exclusion_rules:
+                # Check level range — exclusion only applies within the specified XP range
+                level = excl.get("level", {})
+                min_lvl = level.get("min", 0)
+                max_lvl = level.get("max", 5)
+                xp = card_xp(card)
+                if not (min_lvl <= xp <= max_lvl):
+                    continue
                 if "trait" in excl:
                     card_traits_lower = card_trait_map.get(card["code"], set())
                     if any(t.lower() in card_traits_lower for t in excl["trait"]):
@@ -995,14 +1137,9 @@ class CardService:
         for card in all_cards:
             if excluded(card):
                 continue
-            if not passes_restrictions_trait(card):
-                continue
+            # if not passes_restrictions_trait(card):
+            #     continue
             for rule in inclusion_rules:
-                # Skip pure limit/error rules that have no selector
-                if "error" in rule and not any(
-                    k in rule for k in ("faction", "trait", "type", "uses")
-                ):
-                    continue
                 if matches_option(card, rule):
                     pool_codes.add(card["code"])
                     break
@@ -1014,6 +1151,8 @@ class CardService:
                 "name": c["name"],
                 "subname": c["subname"],
                 "faction_code": c["faction_code"],
+                "faction2_code": c["faction2_code"],
+                "faction3_code": c["faction3_code"],
                 "type_code": c["type_code"],
                 "xp": card_xp(c),
                 "cost": c["cost"],
@@ -1030,9 +1169,20 @@ class CardService:
         ]
         pool.sort(key=lambda c: (c["name"] or ""))
 
+        # Surface exclusion rules as human-readable restrictions
+        deck_restrictions = []
+        for excl in exclusion_rules:
+            if "trait" in excl:
+                level = excl.get("level", {})
+                entry: dict = {"traits": excl["trait"]}
+                if level:
+                    entry["level"] = level
+                deck_restrictions.append(entry)
+
         return {
             "investigator_code": investigator_code,
             "investigator_name": investigator.name,
+            "deck_restrictions": deck_restrictions,
             "total": len(pool),
             "cards": pool,
         }
@@ -1044,6 +1194,7 @@ class CardService:
         """
         from sqlalchemy import select
         from app.models.arkham_model import CardModel
+
         try:
             # Query distinct encounter codes/names directly — much faster than loading all cards
             stmt = (

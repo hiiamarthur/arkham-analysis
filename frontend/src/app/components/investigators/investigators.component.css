@@ -1352,3 +1352,26 @@
   color: #94a3b8;
   margin-left: 0.4rem;
 }
+
+.deck-restrictions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+  font-size: 0.8rem;
+}
+
+.restriction-label {
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.restriction-badge {
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+  border-radius: 4px;
+  padding: 0.15rem 0.5rem;
+  white-space: nowrap;
+}

@@ -414,6 +414,13 @@
         <h3><span [innerHTML]="getCustomIcon('trophy')"></span> Card Pool
           <span class="pool-total" *ngIf="cardPoolTotal() > 0">({{cardPoolTotal()}} cards)</span>
         </h3>
+        <div class="deck-restrictions" *ngIf="cardPoolRestrictions().length > 0">
+          <span class="restriction-label">Forbidden:</span>
+          <span class="restriction-badge" *ngFor="let r of cardPoolRestrictions()">
+            No {{r.traits.join(' / ')}}
+            <span *ngIf="r.level"> (Lvl {{r.level.min}}–{{r.level.max}})</span>
+          </span>
+        </div>
       </div>
       <div class="card-pool-filters" *ngIf="!cardPoolLoading()">
         <!-- Search -->

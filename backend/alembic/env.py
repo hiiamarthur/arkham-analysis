@@ -24,12 +24,18 @@ if config.config_file_name is not None:
 # Set target metadata
 target_metadata = BaseModel.metadata  # This line is crucial
 
+FALLBACK_URL = "postgresql://postgres:postgres@localhost:5433/arkham_analysis_db"
+
+
+def get_url() -> str:
+    """Return DB URL — prefers DATABASE_URL env var, falls back to local default."""
+    return os.environ.get("DATABASE_URL", FALLBACK_URL)
+
 
 def run_migrations_offline() -> None:
-    url = "postgresql://postgres:postgres@localhost:5433/arkham_analysis_db"
     context.configure(
-        url=url,
-        target_metadata=target_metadata,  # Add this
+        url=get_url(),
+        target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},
     )
@@ -39,13 +45,11 @@ def run_migrations_offline() -> None:
 
 
 def run_migrations_online() -> None:
-    db_url = "postgresql://postgres:postgres@localhost:5433/arkham_analysis_db"
-
-    engine = create_engine(db_url)
+    engine = create_engine(get_url())
 
     with engine.connect() as connection:
         context.configure(
-            connection=connection, target_metadata=target_metadata  # Add this
+            connection=connection, target_metadata=target_metadata
         )
 
         with context.begin_transaction():

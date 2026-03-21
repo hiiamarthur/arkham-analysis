@@ -11,18 +11,25 @@ from app.core.config import settings
 
 load_dotenv()
 
-# Get database credentials from environment
-DB_USER = settings.POSTGRES_USER
-DB_PASS = settings.POSTGRES_PASSWORD
-DB_HOST = settings.POSTGRES_HOST
-DB_PORT = settings.POSTGRES_PORT
-DB_NAME = settings.POSTGRES_DB
 DB_POOL_SIZE=settings.DB_POOL_SIZE
 DB_MAX_OVERFLOW=settings.DB_MAX_OVERFLOW
 DB_POOL_RECYCLE=settings.DB_POOL_RECYCLE
 
-# Construct database URL
-DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+# Use DATABASE_URL env var when available (Railway production), otherwise build from parts
+_raw_url = os.environ.get("DATABASE_URL") or settings.DATABASE_URL
+if _raw_url:
+    # Ensure asyncpg driver prefix
+    if _raw_url.startswith("postgres://"):
+        DATABASE_URL = _raw_url.replace("postgres://", "postgresql+asyncpg://", 1)
+    elif _raw_url.startswith("postgresql://") and "+asyncpg" not in _raw_url:
+        DATABASE_URL = _raw_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    else:
+        DATABASE_URL = _raw_url
+else:
+    DATABASE_URL = (
+        f"postgresql+asyncpg://{settings.POSTGRES_USER}:{settings.POSTGRES_PASSWORD}"
+        f"@{settings.POSTGRES_HOST}:{settings.POSTGRES_PORT}/{settings.POSTGRES_DB}"
+    )
 
 print(f"Connecting to: {DATABASE_URL}")  # Debug print
 

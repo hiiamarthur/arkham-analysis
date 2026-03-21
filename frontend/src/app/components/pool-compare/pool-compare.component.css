@@ -1237,6 +1237,16 @@
   white-space: nowrap;
 }
 
+.card-name--link {
+  cursor: pointer;
+}
+
+.card-name--link:hover {
+  color: #93c5fd;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
 .card-name {
   font-size: 0.85rem;
   color: #c8d3d5;

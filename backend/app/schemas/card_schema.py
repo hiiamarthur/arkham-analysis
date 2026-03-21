@@ -119,6 +119,7 @@ class CardSchema(BaseSchema):
 
     linked_card: CardSchema | None = None
     bonded_cards: List[BondedCardSchema] = []
+    related_card: str | None = None
 
     def apply_taboo(self, taboo_version: TabooVersion) -> "CardSchema":
         if taboo_version.cost:
@@ -252,6 +253,7 @@ class CardSchema(BaseSchema):
             enemy_fight=card_model.enemy_fight,
             enemy_horror=card_model.enemy_horror,
             linked_card=cls._get_linked_card(card_model, _processed_codes),
+            related_card=getattr(card_model, '_related_card', None),
             bonded_cards=[
                 BondedCardSchema(
                     code=bonded.bonded_card_code,

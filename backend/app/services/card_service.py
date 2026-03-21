@@ -17,6 +17,73 @@ from domain.card.deck import Deck
 from domain.card.context.card_stats import CardStats
 
 
+# Card types that are encounter/scenario cards, never player cards.
+ENCOUNTER_TYPE_CODES = {
+    "act",
+    "agenda",
+    "location",
+    "treachery",
+    "enemy",
+    "investigator",
+    "scenario",
+    "story",
+}
+
+
+def _card_code_sort_key(code: str) -> str:
+    """Pad code with leading zeros for correct numeric ordering (e.g. '01590' < '12093')."""
+    return code.zfill(10)
+
+
+def apply_player_card_policy(cards: List[CardModel]) -> List[CardModel]:
+    """
+    Centralised filter applied to every player-card query.
+
+    Rules enforced:
+      1. Exclude encounter cards — any card whose type_code is an encounter type,
+         or that belongs to an encounter set (encounter_code set).
+      2. Deduplicate reprints — keep the ORIGINAL card (oldest / smallest code, the
+         one decks actually reference) and drop its replacement printings.
+
+         ArkhamDB model: the original card carries duplicated_by=["01590","12093"],
+         meaning it has been reprinted.  The reprints themselves have no duplicated_by.
+
+         Strategy (two-pass):
+           Pass 1 — for every card with duplicated_by, collect all replacement codes
+                     into codes_to_drop.  Also record the latest replacement on the
+                     original via a transient _related_card attribute so callers can
+                     surface a "newer version available" link.
+           Pass 2 — filter out encounter cards and any code in codes_to_drop.
+    """
+    # Pass 1: collect all replacement codes; stamp originals with their latest reprint.
+    codes_to_drop: set[str] = set()
+    for card in cards:
+        if not card.duplicated_by:
+            continue
+        replacements: List[str] = card.duplicated_by
+        # All replacement printings should be hidden — the original card is kept.
+        codes_to_drop.update(replacements)
+        # Expose the latest replacement as a navigable link on the original card.
+        latest = max(replacements, key=_card_code_sort_key)
+        card._related_card = latest  # type: ignore[attr-defined]
+
+    # Pass 2: apply all rules.
+    result = []
+    for card in cards:
+        # Rule 1: drop encounter/scenario cards
+        if card.type_code in ENCOUNTER_TYPE_CODES:
+            continue
+        if card.encounter_code is not None:
+            continue
+
+        # Rule 2: drop replacement printings (originals are kept)
+        if card.code in codes_to_drop:
+            continue
+
+        result.append(card)
+    return result
+
+
 def _next_sunday_midnight_utc() -> datetime:
     """Returns the next Sunday 00:00 UTC datetime (same boundary as the cache TTL)."""
     now = datetime.utcnow()
@@ -43,7 +110,7 @@ class CardService:
         """Get comprehensive card statistics including popularity and trends"""
         # Try to get from cache first
         redis_client = await get_redis_client()
-        cache_key = f"card_stats:{card_id}"
+        cache_key = f"card_stats:v3:{card_id}"
 
         if redis_client.is_connected:
             cached_stats = await redis_client.get(cache_key)
@@ -102,18 +169,94 @@ class CardService:
                 except Exception as e:
                     pass
 
-        card_stats = CardStats(
-            cast(
-                PlayerCard,
-                adapter.schema_to_domain(schema=CardSchema.from_model(card)),
-            ),
-            converted_decks,
+        card_domain = cast(
+            PlayerCard,
+            adapter.schema_to_domain(schema=CardSchema.from_model(card)),
         )
+
+        # ── Discover the full card family ────────────────────────────────────
+        # Case A: this card IS the original → its reprints live in duplicated_by.
+        # Case B: this card IS a reprint → find the original by scanning cards
+        #         whose duplicated_by list contains this card's code.
+        from sqlalchemy import select as sa_select
+
+        if card.duplicated_by:
+            # Case A
+            all_family_codes: List[str] = [card.code] + list(card.duplicated_by)
+        else:
+            # Case B: find original among cards that have duplicated_by set
+            originals_result = await self.db.execute(
+                sa_select(CardModel).where(CardModel.duplicated_by.isnot(None))
+            )
+            originals = originals_result.scalars().all()
+            original = next(
+                (c for c in originals if card_id in (c.duplicated_by or [])),
+                None,
+            )
+            if original:
+                all_family_codes = [original.code] + list(original.duplicated_by or [])
+            else:
+                all_family_codes = [card.code]
+
+        # Codes in the family that are NOT the card being viewed
+        other_family_codes = [c for c in all_family_codes if c != card_id]
+
+        # ── Fetch all family card models (for related_cards list) ─────────────
+        family_card_models: dict[str, CardModel] = {card.code: card}
+        for fcode in other_family_codes:
+            fcard = await self.card_repo.get_first(
+                filters={"filter_by[code][equals]": fcode}
+            )
+            if fcard:
+                family_card_models[fcode] = fcard
+
+        # ── Individual stats for this card only ───────────────────────────────
+        card_stats = CardStats(card_domain, converted_decks)
+        individual_deck_stats = card_stats.get_deck_stats(trend_period=trend_period)
+
+        # ── Combined stats across the whole family ────────────────────────────
+        if other_family_codes:
+            combined_stats = CardStats(card_domain, converted_decks, extra_codes=other_family_codes)
+            combined_deck_stats = combined_stats.get_deck_stats(trend_period=trend_period)
+        else:
+            combined_deck_stats = individual_deck_stats
+
+        # ── Per-family-member independent stats ───────────────────────────────
+        related_cards: List[dict] = []
+        for fcode in other_family_codes:
+            fcard = family_card_models.get(fcode)
+            if not fcard:
+                continue
+            try:
+                fcard_domain = cast(
+                    PlayerCard,
+                    adapter.schema_to_domain(schema=CardSchema.from_model(fcard)),
+                )
+                fstats = CardStats(fcard_domain, converted_decks)
+                related_cards.append({
+                    "code": fcard.code,
+                    "name": fcard.name,
+                    "pack_name": fcard.pack_name,
+                    "pack_code": fcard.pack_code,
+                    "imagesrc": fcard.imagesrc,
+                    "deck_stats": fstats.get_deck_stats(trend_period=trend_period),
+                })
+            except Exception:
+                related_cards.append({
+                    "code": fcard.code,
+                    "name": fcard.name,
+                    "pack_name": fcard.pack_name,
+                    "pack_code": fcard.pack_code,
+                    "imagesrc": fcard.imagesrc,
+                    "deck_stats": None,
+                })
 
         # Build response with cache metadata
         result = {
             "card_info": {"code": card.code, "name": card.name, "type": card.type_name},
-            "deck_stats": card_stats.get_deck_stats(trend_period=trend_period),
+            "deck_stats": individual_deck_stats,
+            "combined_deck_stats": combined_deck_stats,
+            "related_cards": related_cards,
             "data_source": {
                 "decks_analyzed": len(decks),
                 "days_covered": days,
@@ -785,6 +928,10 @@ class CardService:
             print(f"Error fetching cards from repository: {e}")
             return 0, []
 
+        # Apply player-card policy first (encounter exclusion + duplicate removal)
+        if only_player_cards:
+            all_cards = apply_player_card_policy(all_cards)
+
         # Apply additional filters
         filtered_cards = []
         for card in all_cards:
@@ -921,17 +1068,6 @@ class CardService:
         from sqlalchemy import select
         from app.models.arkham_model import TraitModel, card_traits as card_traits_table
 
-        ENCOUNTER_TYPE_CODES = {
-            "act",
-            "agenda",
-            "location",
-            "treachery",
-            "enemy",
-            "investigator",
-            "scenario",
-            "story",
-        }
-
         investigator = await self.card_repo.get_first(
             filters={"filter_by[code][equals]": investigator_code}
         )
@@ -988,6 +1124,7 @@ class CardService:
                 CardModel.restrictions,
                 CardModel.tags,
                 CardModel.flavor,
+                CardModel.duplicated_by,
             )
             .where(CardModel.type_code.notin_(ENCOUNTER_TYPE_CODES))
             .where(CardModel.faction_code != None)  # noqa: E711
@@ -1011,6 +1148,17 @@ class CardService:
         )
         result = await self.db.execute(stmt)
         all_cards = result.mappings().all()
+
+        # Deduplicate reprints: collect replacement codes, then filter them out.
+        # Originals carry duplicated_by=[...]; replacements have no duplicated_by.
+        # We keep the original (oldest code) and drop its replacements.
+        codes_to_drop: set[str] = set()
+        for card in all_cards:
+            dup = card.get("duplicated_by")
+            if dup:
+                codes_to_drop.update(dup)
+        if codes_to_drop:
+            all_cards = [c for c in all_cards if c["code"] not in codes_to_drop]
 
         # Also fetch trait names per card (batch)
         trait_stmt = select(

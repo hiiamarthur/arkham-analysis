@@ -14,7 +14,9 @@ class Environment(str, Enum):
 
 
 class Settings(BaseSettings):
-    model_config: SettingsConfigDict = SettingsConfigDict(env_file=".env", case_sensitive=True, extra="ignore")
+    model_config: SettingsConfigDict = SettingsConfigDict(
+        env_file=".env", case_sensitive=True, extra="ignore"
+    )
 
     # Environment settings
     environment: Environment = Environment.DEVELOPMENT
@@ -28,7 +30,7 @@ class Settings(BaseSettings):
     POSTGRES_USER: str = ""
     POSTGRES_PASSWORD: str = ""
     POSTGRES_HOST: str = ""
-    POSTGRES_PORT: int = 5432
+    POSTGRES_PORT: int = 5433
     POSTGRES_DB: str = ""
 
     # JWT
@@ -37,10 +39,18 @@ class Settings(BaseSettings):
     JWT_EXPIRE_DAYS: int = 30
 
     # Database Pool Settings
-    DB_POOL_SIZE: int = Field(default=20, validation_alias=AliasChoices('DB_POOL_SIZE', 'POSTGRES_POOL_SIZE'))
-    DB_MAX_OVERFLOW: int = Field(default=30, validation_alias=AliasChoices('DB_MAX_OVERFLOW', 'POSTGRES_MAX_OVERFLOW'))
+    DB_POOL_SIZE: int = Field(
+        default=20, validation_alias=AliasChoices("DB_POOL_SIZE", "POSTGRES_POOL_SIZE")
+    )
+    DB_MAX_OVERFLOW: int = Field(
+        default=30,
+        validation_alias=AliasChoices("DB_MAX_OVERFLOW", "POSTGRES_MAX_OVERFLOW"),
+    )
     DB_POOL_TIMEOUT: int = 60
-    DB_POOL_RECYCLE: int = Field(default=3600, validation_alias=AliasChoices('DB_POOL_RECYCLE', 'POSTGRES_POOL_RECYCLE'))
+    DB_POOL_RECYCLE: int = Field(
+        default=3600,
+        validation_alias=AliasChoices("DB_POOL_RECYCLE", "POSTGRES_POOL_RECYCLE"),
+    )
     DB_ECHO_LOG: bool = False
 
     # Migration Settings
@@ -72,7 +82,11 @@ class Settings(BaseSettings):
     def get_allowed_origins(self) -> list[str]:
         base = [o.strip() for o in self.ALLOWED_ORIGINS.split(",") if o.strip()]
         # Always include local dev origins
-        dev = ["http://localhost:4200", "http://localhost:3000", "http://localhost:8080"]
+        dev = [
+            "http://localhost:4200",
+            "http://localhost:3000",
+            "http://localhost:8080",
+        ]
         return list(dict.fromkeys(base + dev))  # deduplicate, preserve order
 
     # Database URL

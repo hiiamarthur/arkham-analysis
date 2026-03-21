@@ -47,6 +47,7 @@ export interface CardResponse {
   total_decks?: number;  // Total decks for this investigator
   total_decks_analyzed?: number;  // Total decks in meta
   bonded_cards?: Array<{ code: string; name: string; count: number }>;
+  related_card?: string;
 }
 
 export interface CardSearchParams {
@@ -133,31 +134,47 @@ export interface InvestigatorUsageData {
   total_decks: number;
 }
 
+export interface CardDeckStats {
+  popularity: {
+    overall_usage_rate: number;
+    investigator_usage_rate: { [key: string]: number | InvestigatorUsageData };
+    investigator_spread: number;
+  };
+  trend: {
+    trend_data: {
+      [key: string]: {
+        usage_rate: number;
+        total_decks: number;
+        decks_with_card: number;
+      };
+    };
+    trend_direction: string;
+    change_rate: number;
+    periods_analyzed: number;
+  };
+}
+
+export interface RelatedCardStats {
+  code: string;
+  name: string;
+  pack_name: string;
+  pack_code: string;
+  imagesrc?: string;
+  deck_stats: CardDeckStats | null;
+}
+
 export interface CardStatsResponse {
   card_info: {
     code: string;
     name: string;
     type: string;
   };
-  deck_stats: {
-    popularity: {
-      overall_usage_rate: number;
-      investigator_usage_rate: { [key: string]: number | InvestigatorUsageData };
-      investigator_spread: number;
-    };
-    trend: {
-      trend_data: {
-        [key: string]: {
-          usage_rate: number;
-          total_decks: number;
-          decks_with_card: number;
-        };
-      };
-      trend_direction: string;
-      change_rate: number;
-      periods_analyzed: number;
-    };
-  };
+  /** Stats for this specific card code only */
+  deck_stats: CardDeckStats;
+  /** Stats combining this card + all reprints (use this as the headline) */
+  combined_deck_stats?: CardDeckStats;
+  /** Each reprint's independent stats */
+  related_cards?: RelatedCardStats[];
   data_source: {
     decks_analyzed: number;
     days_covered: number;

@@ -1,6 +1,7 @@
 import { Component, signal, computed, inject, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { Router } from '@angular/router';
 import { SafeHtml, DomSanitizer } from '@angular/platform-browser';
 import { InvestigatorService, CardPoolEntry, InvestigatorMetadata } from '../../services/investigator.service';
 import { ArkhamSvgIconsService } from '../../shared/services/arkham-svg-icons.service';
@@ -31,6 +32,7 @@ interface CardGroup {
   selector: 'app-pool-compare',
   standalone: true,
   imports: [CommonModule, FormsModule],
+  // RouterModule not needed — we use Router.navigate directly
   templateUrl: './pool-compare.component.html',
   styleUrl: './pool-compare.component.css',
 })
@@ -38,6 +40,11 @@ export class PoolCompareComponent implements OnInit {
   private investigatorService = inject(InvestigatorService);
   private arkhamIconsService = inject(ArkhamSvgIconsService);
   private sanitizer = inject(DomSanitizer);
+  private router = inject(Router);
+
+  goToCard(code: string): void {
+    this.router.navigate(['/analysis', code]);
+  }
 
   allInvestigators = signal<InvestigatorMetadata[]>([]);
   slots = signal<(PoolSlot | null)[]>([null, null, null, null]);

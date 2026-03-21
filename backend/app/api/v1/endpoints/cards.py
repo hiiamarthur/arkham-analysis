@@ -26,7 +26,7 @@ from . import (
 )
 
 INV_STATS_CACHE_KEY = "investigator:stats:v4"
-CARD_STATS_CACHE_KEY = "card:stats:v1"
+CARD_STATS_CACHE_KEY = "card:stats:v3"
 
 router = APIRouter()
 
@@ -496,8 +496,12 @@ async def get_investigator_card_pool(
 async def get_investigator_top_cards(
     card_code: str = Depends(get_investigator_code_param),
     card_service: CardService = Depends(get_card_service),
-    min_xp: Optional[int] = Query(None, ge=0, le=5, description="Minimum XP (1 = upgraded only)"),
-    max_xp: Optional[int] = Query(None, ge=0, le=5, description="Maximum XP (0 = level 0 only)"),
+    min_xp: Optional[int] = Query(
+        None, ge=0, le=5, description="Minimum XP (1 = upgraded only)"
+    ),
+    max_xp: Optional[int] = Query(
+        None, ge=0, le=5, description="Maximum XP (0 = level 0 only)"
+    ),
     q: Optional[str] = Query(None, description="Search card name"),
     limit: int = Query(20, ge=1, le=100, description="Number of cards to return"),
 ):

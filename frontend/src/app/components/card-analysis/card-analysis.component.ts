@@ -90,6 +90,9 @@ export class CardAnalysisComponent implements OnInit {
   selectedCardDetails = signal<CardResponse | null>(null);
   statsLoading = signal(false);
 
+  // Navigation history — stores {code, name} of previously viewed cards so Back can return to them
+  cardNavStack = signal<Array<{ code: string; name: string }>>([]);
+
   // Expandable sections
   topInvestigatorsExpanded = signal(true);
   usageTrendExpanded = signal(true);
@@ -213,24 +216,27 @@ export class CardAnalysisComponent implements OnInit {
     this.statsLoading.set(true);
     this.showStatsModal.set(true);
 
-    // Fetch card details and stats in parallel
-    const cardDetails$ = this.cardService.getCard(cardCode);
-    const cardStats$ = this.cardService.getCardStats(cardCode);
+    import('rxjs').then(({ forkJoin, of }) => {
+      import('rxjs/operators').then(({ catchError }) => {
+        // Each stream falls back to null on error so one failure doesn't block the other
+        const details$ = this.cardService.getCard(cardCode).pipe(
+          catchError(err => { console.error('Error fetching card details:', err); return of(null); })
+        );
+        const stats$ = this.cardService.getCardStats(cardCode).pipe(
+          catchError(err => { console.error('Error fetching card stats:', err); return of(null); })
+        );
 
-    import('rxjs').then(({ forkJoin }) => {
-      forkJoin({
-        details: cardDetails$,
-        stats: cardStats$
-      }).subscribe({
-        next: (result) => {
-          this.selectedCardDetails.set(result.details);
-          this.selectedCardStats.set(result.stats);
-          this.statsLoading.set(false);
-        },
-        error: (err) => {
-          console.error('Error fetching card data:', err);
-          this.statsLoading.set(false);
-        }
+        forkJoin({ details: details$, stats: stats$ }).subscribe({
+          next: (result) => {
+            this.selectedCardDetails.set(result.details as any);
+            this.selectedCardStats.set(result.stats as any);
+            this.statsLoading.set(false);
+          },
+          error: (err) => {
+            console.error('Error fetching card data:', err);
+            this.statsLoading.set(false);
+          }
+        });
       });
     });
   }
@@ -625,7 +631,17 @@ export class CardAnalysisComponent implements OnInit {
     this.showStatsModal.set(false);
     this.selectedCardStats.set(null);
     this.selectedCardDetails.set(null);
+    this.cardNavStack.set([]);
     this.location.back();
+  }
+
+  goBackInCardStack(): void {
+    const stack = this.cardNavStack();
+    if (stack.length === 0) return;
+    const prev = stack[stack.length - 1];
+    this.cardNavStack.set(stack.slice(0, -1));
+    this.loadCardDetails(prev.code);
+    this.router.navigate(['/analysis', prev.code], { replaceUrl: true });
   }
 
   toggleTopInvestigators(): void {
@@ -1167,9 +1183,14 @@ export class CardAnalysisComponent implements OnInit {
     return this.sanitizer.bypassSecurityTrustHtml(svg);
   }
 
-  // Calculate decks with card from usage rate and total decks
+  // Returns combined_deck_stats when available, falls back to deck_stats for old cached responses.
+  getCombinedStats(stats: CardStatsResponse) {
+    return stats.combined_deck_stats ?? stats.deck_stats;
+  }
+
+  // Calculate decks with card — uses combined stats (all reprints) as the headline number
   getDecksWithCard(stats: CardStatsResponse): number {
-    return Math.round(stats.deck_stats.popularity.overall_usage_rate * stats.data_source.decks_analyzed);
+    return Math.round(this.getCombinedStats(stats).popularity.overall_usage_rate * stats.data_source.decks_analyzed);
   }
 
   // Helper to check if data is InvestigatorUsageData
@@ -1183,9 +1204,8 @@ export class CardAnalysisComponent implements OnInit {
 
   // Get investigators using this card (count > 0)
   getInvestigatorsUsingCard(stats: CardStatsResponse): number {
-    return Object.values(stats.deck_stats.popularity.investigator_usage_rate)
+    return Object.values(this.getCombinedStats(stats).popularity.investigator_usage_rate)
       .filter(data => {
-        // Handle both old format (number) and new format (object)
         const rate = this.isInvestigatorUsageData(data) ? data.rate : data;
         return rate > 0;
       }).length;
@@ -1193,12 +1213,25 @@ export class CardAnalysisComponent implements OnInit {
 
   // Get total number of investigators
   getTotalInvestigators(stats: CardStatsResponse): number {
-    return Object.keys(stats.deck_stats.popularity.investigator_usage_rate).length;
+    return Object.keys(this.getCombinedStats(stats).popularity.investigator_usage_rate).length;
+  }
+
+  // Navigate to a related card's analysis page, pushing current card onto the back-stack
+  navigateToRelatedCard(code: string): void {
+    const current = this.selectedCardDetails();
+    if (current) {
+      this.cardNavStack.update(stack => [
+        ...stack,
+        { code: current.code, name: current.name ?? current.code }
+      ]);
+    }
+    this.loadCardDetails(code);
+    this.router.navigate(['/analysis', code], { replaceUrl: true });
   }
 
   // Get trend date range
   getTrendDateRange(stats: CardStatsResponse): string {
-    const periods = Object.keys(stats.deck_stats.trend.trend_data).sort();
+    const periods = Object.keys(this.getCombinedStats(stats).trend.trend_data).sort();
     if (periods.length === 0) return 'No data';
 
     const firstPeriod = this.formatPeriod(periods[0]);

@@ -4,6 +4,19 @@ All notable changes to Arkham Analysis are documented here.
 
 ---
 
+## [2.0.1] - 2026-03-21
+
+### Bug Fixes
+- Dashboard investigator names now resolve correctly for parallel/reprint investigator codes — parallel decks were previously showing raw codes instead of names
+- Investigator-by-faction meta share now correctly normalises parallel investigator codes to their canonical faction before counting
+- Meta share window changed from 90 days to 365 days for a more representative picture
+- Most versatile cards expanded to show top 10 (was 6)
+- XP distribution percentages now calculated against decks with XP data only, so buckets correctly sum to 100%
+- Investigator count in dashboard header now reflects deduplicated pool (99 unique investigators)
+- Faction colours applied as left-border accents on investigator rank and trending rows
+
+---
+
 ## [2.0.0] - 2026-03-21
 
 ### Overview
@@ -76,5 +89,6 @@ Initial public release of Arkham Analysis — an open analytics platform for Ark
 
 ---
 
+[2.0.1]: https://github.com/arthurlau/arkham-analysis/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/arthurlau/arkham-analysis/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/arthurlau/arkham-analysis/releases/tag/v1.0.0

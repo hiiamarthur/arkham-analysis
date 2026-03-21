@@ -38,7 +38,7 @@ export interface AppMetadata {
 })
 export class AppStateService {
   private readonly STORAGE_KEY = 'arkham_app_state';
-  private readonly CACHE_VERSION = 2; // Increment this to invalidate old cache
+  private readonly CACHE_VERSION = 3; // Increment this to invalidate old cache
   private readonly CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
   private platformId = inject(PLATFORM_ID);
 

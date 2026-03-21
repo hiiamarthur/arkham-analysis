@@ -15,20 +15,20 @@ from . import ARKHAM_HEADERS, seconds_until_next_sunday_midnight
 
 router = APIRouter()
 
-CACHE_KEY = "dashboard:stats:v5"
+CACHE_KEY = "dashboard:stats:v7"
 
 
 @router.get("")
 async def get_dashboard_stats(
     response: Response,
-    days: int = 90,
+    days: int = 365,
     card_service: CardService = Depends(get_card_service),
     deck_service: DeckService = Depends(get_deck_service),
 ) -> Dict[str, Any]:
     """
     Aggregated dashboard stats from ArkhamDB deck data.
-    Default window is 90 days for snappy response times.
-    Cached for 2 hours.
+    Default window is 365 days.
+    Cached until next Sunday midnight.
     """
     redis_client = await get_redis_client()
     cache_key = f"{CACHE_KEY}:{days}"
@@ -75,7 +75,8 @@ async def get_dashboard_stats(
         xp_spent_values: List[int] = []
 
         for deck in decks:
-            inv_code = deck.investigator_code
+            # Normalise parallel/reprint investigator codes to their canonical original
+            inv_code = reprint_map.get(deck.investigator_code, deck.investigator_code)
             all_inv_counter[inv_code] += 1
             faction = inv_lookup.get(inv_code, {}).get("faction_code", "neutral")
             faction_counter[faction] += 1
@@ -116,8 +117,8 @@ async def get_dashboard_stats(
     total_decks = len(decks)
     now = datetime.utcnow()
 
-    # Single bulk DB query for top-40 card metadata (replaces 40 individual queries)
-    top_card_codes = [c for c, _ in card_counter.most_common(40)]
+    # Single bulk DB query for top-60 card metadata (provides enough candidates for all buckets)
+    top_card_codes = [c for c, _ in card_counter.most_common(60)]
     card_meta = await _bulk_card_metadata(top_card_codes, card_service)
 
     # Bucket cards by type
@@ -165,7 +166,7 @@ async def get_dashboard_stats(
                 "inclusion_rate": round(card_counter[code] / total_decks, 3),
             })
     versatile_cards.sort(key=lambda x: x["faction_count"], reverse=True)
-    versatile_cards = versatile_cards[:6]
+    versatile_cards = versatile_cards[:10]
 
     def _card_list(counter: Counter, limit: int) -> List[Dict]:
         result = []

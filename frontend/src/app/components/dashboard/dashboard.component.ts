@@ -117,7 +117,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   private async loadDashboardStats(): Promise<void> {
     this.statsLoading.set(true);
     try {
-      const stats = await this.scenarioService.getDashboardStats(90).toPromise();
+      const stats = await this.scenarioService.getDashboardStats(365).toPromise();
       if (stats) {
         this.dashboardStats.set(stats);
         if (isPlatformBrowser(this.platformId)) setTimeout(() => this.buildMetaCharts(), 100);
@@ -251,11 +251,12 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   private buildXpChart(): void {
     const ctx = this.xpChartRef?.nativeElement?.getContext('2d');
     const dist = this.dashboardStats()?.card_stats?.xp_distribution;
-    const total = this.dashboardStats()?.meta?.decks_analyzed ?? 1;
     if (!ctx || !dist) return;
 
     const labels = Object.keys(dist);
-    const pcts   = labels.map(k => Math.round(dist[k] / total * 100));
+    const counts = labels.map(k => dist[k]);
+    const xpTotal = counts.reduce((a, b) => a + b, 0) || 1;
+    const pcts = counts.map(v => Math.round(v / xpTotal * 100));
 
     this.charts.push(new Chart(ctx, {
       type: 'bar',

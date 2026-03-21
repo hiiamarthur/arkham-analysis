@@ -15,7 +15,7 @@ from . import ARKHAM_HEADERS, seconds_until_next_sunday_midnight
 
 router = APIRouter()
 
-CACHE_KEY = "dashboard:stats:v5"
+CACHE_KEY = "dashboard:stats:v6"
 
 
 @router.get("")
@@ -75,7 +75,8 @@ async def get_dashboard_stats(
         xp_spent_values: List[int] = []
 
         for deck in decks:
-            inv_code = deck.investigator_code
+            # Normalise parallel/reprint investigator codes to their canonical original
+            inv_code = reprint_map.get(deck.investigator_code, deck.investigator_code)
             all_inv_counter[inv_code] += 1
             faction = inv_lookup.get(inv_code, {}).get("faction_code", "neutral")
             faction_counter[faction] += 1

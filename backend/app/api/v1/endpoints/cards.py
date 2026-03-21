@@ -25,7 +25,7 @@ from . import (
     seconds_until_next_sunday_midnight,
 )
 
-INV_STATS_CACHE_KEY = "investigator:stats:v3"
+INV_STATS_CACHE_KEY = "investigator:stats:v4"
 CARD_STATS_CACHE_KEY = "card:stats:v1"
 
 router = APIRouter()
@@ -449,7 +449,7 @@ async def get_investigator_stats(
 
     try:
         result = await asyncio.wait_for(
-            card_service.get_investigator_stats(card_code, days=90),
+            card_service.get_investigator_stats(card_code, days=365),
             timeout=30.0,
         )
     except asyncio.TimeoutError:
@@ -506,7 +506,7 @@ async def get_investigator_top_cards(
         result = await asyncio.wait_for(
             card_service.get_investigator_card_rankings(
                 investigator_code=card_code,
-                days=90,
+                days=365,
                 min_xp=min_xp,
                 max_xp=max_xp,
                 query=q,

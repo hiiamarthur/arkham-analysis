@@ -132,7 +132,7 @@ class CardService:
 
         return result
 
-    async def get_investigator_stats(self, investigator_code: str, days: int = 90):
+    async def get_investigator_stats(self, investigator_code: str, days: int = 365):
         """Get stats for an investigator"""
         investigator = await self.card_repo.get_first(
             filters={"filter_by[code][equals]": investigator_code}
@@ -223,7 +223,7 @@ class CardService:
     async def get_investigator_card_rankings(
         self,
         investigator_code: str,
-        days: int = 90,
+        days: int = 365,
         min_xp: Optional[int] = None,
         max_xp: Optional[int] = None,
         query: Optional[str] = None,
@@ -987,6 +987,7 @@ class CardService:
                 CardModel.permanent,
                 CardModel.restrictions,
                 CardModel.tags,
+                CardModel.flavor,
             )
             .where(CardModel.type_code.notin_(ENCOUNTER_TYPE_CODES))
             .where(CardModel.faction_code != None)  # noqa: E711
@@ -1055,10 +1056,10 @@ class CardService:
                 if not card_factions & set(opt["faction"]):
                     return False
 
-            # Trait match (card must have ALL specified traits)
+            # Trait match (card must have ANY of the specified traits)
             if "trait" in opt:
                 card_traits_lower = card_trait_map.get(card["code"], set())
-                if not all(t.lower() in card_traits_lower for t in opt["trait"]):
+                if not any(t.lower() in card_traits_lower for t in opt["trait"]):
                     return False
 
             # Type match
@@ -1163,6 +1164,8 @@ class CardService:
                 "is_unique": c["is_unique"],
                 "permanent": c["permanent"],
                 "traits": sorted(card_trait_map.get(c["code"], set())),
+                "text": c["real_text"] or c["text"],
+                "flavor": c.get("flavor"),
             }
             for c in all_cards
             if c["code"] in pool_codes

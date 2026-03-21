@@ -47,6 +47,14 @@ export const routes: Routes = [
     }
   },
   {
+    path: 'pool-compare',
+    loadComponent: () => import('./components/pool-compare/pool-compare.component').then(m => m.PoolCompareComponent),
+    data: {
+      title: 'Pool Playground',
+      description: 'Compare card pools between Arkham Horror LCG investigators — find shared cards, intersections, and exclusive picks to plan multi-investigator parties.'
+    }
+  },
+  {
     path: 'about',
     loadComponent: () => import('./components/about/about.component').then(m => m.AboutComponent),
     data: {

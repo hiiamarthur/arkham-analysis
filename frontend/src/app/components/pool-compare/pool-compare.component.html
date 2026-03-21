@@ -1,0 +1,535 @@
+<div class="compare-page">
+
+  <!-- Header -->
+  <div class="page-header">
+    <h1>Pool Playground</h1>
+    <p class="page-subtitle">Select 2–4 investigators and explore which cards they share or don't</p>
+  </div>
+
+  <!-- Investigator Slots -->
+  <div class="slots-row">
+    <div class="slot-wrapper" *ngFor="let slot of slots(); let i = index">
+
+      <!-- Empty slot -->
+      <div class="slot slot--empty" *ngIf="!slot" (click)="openSearch(i, $event)">
+        <span class="slot-plus">＋</span>
+        <span class="slot-hint">Add Investigator</span>
+      </div>
+
+      <!-- Filled slot -->
+      <div class="slot slot--filled" *ngIf="slot" [style.border-color]="slotColor(i)">
+        <div class="slot-body">
+          <div class="slot-avatar" [style.background-image]="'url(' + invImageUrl(slot.code) + ')'">
+            <span class="slot-num" [style.background]="slotColor(i)">{{ i + 1 }}</span>
+          </div>
+          <div class="slot-text">
+            <div class="slot-name">{{ slot.name }}</div>
+            <div class="slot-sub" [style.color]="slotColor(i)">
+              {{ FACTION_LABELS[slot.faction_code] || slot.faction_code }}
+              <span class="slot-count" *ngIf="!slot.loading">· {{ slot.pool.length }} cards</span>
+              <span class="slot-count" *ngIf="slot.loading">· loading…</span>
+            </div>
+          </div>
+          <button class="slot-remove" (click)="removeSlot(i)" title="Remove">×</button>
+        </div>
+      </div>
+
+      <!-- Search dropdown -->
+      <div class="search-dropdown" *ngIf="slotOpen[i]" (click)="$event.stopPropagation()">
+        <input
+          class="search-input"
+          type="text"
+          placeholder="Search investigator…"
+          [(ngModel)]="slotSearch[i]"
+          (blur)="closeSearch(i)"
+          autofocus>
+        <div class="search-results">
+          <div class="search-item"
+            *ngFor="let inv of searchResults(i)"
+            (mousedown)="selectInvestigator(i, inv)">
+            <div class="result-avatar" [style.background-image]="'url(' + invImageUrl(inv.code) + ')'"></div>
+            <span class="result-name">{{ inv.name }}</span>
+            <span class="result-faction">{{ FACTION_LABELS[inv.faction_code ?? 'neutral'] }}</span>
+          </div>
+          <div class="search-empty" *ngIf="searchResults(i).length === 0">No investigators found</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Prompt when < 2 selected -->
+  <div class="prompt-state" *ngIf="activeSlots().length < 2">
+    <p>Select at least 2 investigators above to compare their card pools.</p>
+  </div>
+
+  <!-- Comparison area -->
+  <div class="comparison-area" *ngIf="activeSlots().length >= 2">
+
+    <!-- Loading -->
+    <div class="loading-bar" *ngIf="isLoading()">
+      <div class="loading-pulse"></div>
+      <span>Loading card pools…</span>
+    </div>
+
+    <!-- Preload investigator images once; all later <img> uses serve from cache -->
+    <div class="img-preload" aria-hidden="true">
+      <img *ngFor="let inv of activeSlots()" [src]="invImageUrl(inv.code)" [alt]="">
+    </div>
+
+    <ng-container *ngIf="!isLoading()">
+
+      <!-- Stats row -->
+      <div class="stats-row">
+        <div class="stat-card stat-card--union">
+          <div class="stat-num">{{ unionSize() }}</div>
+          <div class="stat-label">Union</div>
+        </div>
+        <div class="stat-card stat-card--intersect">
+          <div class="stat-num">{{ intersectionSize() }}</div>
+          <div class="stat-label">All share</div>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-card stat-card--inv" *ngFor="let inv of activeSlots()">
+          <div class="stat-num" [style.color]="FACTION_COLORS[inv.faction_code]">{{ inv.pool.length }}</div>
+          <div class="stat-label">{{ inv.name }}</div>
+        </div>
+      </div>
+
+      <!-- ── Mode panel ──────────────────────────────────────────────────── -->
+      <div class="mode-panel">
+
+        <!-- Preset pills -->
+        <div class="mode-presets">
+          <span class="mode-presets-label">Presets</span>
+          <button class="preset-pill preset-pill--union"
+                  [class.preset-pill--active]="!hasActiveInvFilter()"
+                  (click)="applyPreset('union')">
+            Union
+          </button>
+          <button class="preset-pill preset-pill--intersect"
+                  [class.preset-pill--active]="isIntersectPreset()"
+                  (click)="applyPreset('intersect')">
+            All share
+          </button>
+          <button class="preset-pill"
+                  *ngFor="let inv of activeSlots(); let k = index"
+                  [class.preset-pill--active]="isOnlyPreset(k)"
+                  [style.--accent]="FACTION_COLORS[inv.faction_code]"
+                  (click)="applyPreset('only', k)">
+            Only {{ inv.name }}
+          </button>
+        </div>
+
+        <!-- Per-investigator mode cards -->
+        <div class="mode-cards">
+          <div class="mode-card" *ngFor="let inv of activeSlots(); let k = index"
+               [class.mode-card--in]="getInvMode(k) === 'in'"
+               [class.mode-card--out]="getInvMode(k) === 'out'">
+
+            <div class="mode-card-portrait">
+              <img class="mode-card-img" [src]="invImageUrl(inv.code)" [alt]="inv.name">
+              <div class="mode-card-portrait-overlay" [style.--faction-color]="FACTION_COLORS[inv.faction_code]"></div>
+              <div class="mode-card-name">{{ inv.name }}</div>
+            </div>
+
+            <div class="mode-card-body">
+              <div class="mode-btns">
+                <button class="mode-btn mode-btn--any"
+                        [class.active]="getInvMode(k) === 'any'"
+                        (click)="setInvMode(k, 'any')"
+                        title="Include any cards from this investigator's pool">
+                  Any
+                </button>
+                <button class="mode-btn mode-btn--in"
+                        [class.active]="getInvMode(k) === 'in'"
+                        (click)="setInvMode(k, 'in')"
+                        title="Card must be in this investigator's pool">
+                  ✓ Must
+                </button>
+                <button class="mode-btn mode-btn--out"
+                        [class.active]="getInvMode(k) === 'out'"
+                        (click)="setInvMode(k, 'out')"
+                        title="Card must NOT be in this investigator's pool">
+                  ✗ Not
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Active filter description -->
+        <div class="mode-description" *ngIf="hasActiveInvFilter()">
+          Showing cards
+          <ng-container *ngFor="let inv of activeSlots(); let k = index">
+            <span *ngIf="getInvMode(k) === 'in'" class="mode-desc-chip mode-desc-chip--in"
+                  [style.background]="FACTION_COLORS[inv.faction_code] + '22'"
+                  [style.border-color]="FACTION_COLORS[inv.faction_code] + '66'"
+                  [style.color]="FACTION_COLORS[inv.faction_code]">
+              ✓ {{ inv.name }}
+            </span>
+            <span *ngIf="getInvMode(k) === 'out'" class="mode-desc-chip mode-desc-chip--out">
+              ✗ {{ inv.name }}
+            </span>
+          </ng-container>
+        </div>
+
+      </div>
+
+      <!-- ── Filter bar ──────────────────────────────────────────────────── -->
+      <div class="filter-bar">
+
+        <!-- Row 1: XP + Name + Text + Clear -->
+        <div class="filter-row">
+
+          <div class="filter-group">
+            <label class="filter-label">XP</label>
+            <div class="btn-group">
+              <button class="btn-toggle" [class.active]="xpFilter()==='all'" (click)="xpFilter.set('all')">All</button>
+              <button class="btn-toggle" [class.active]="xpFilter()==='0'"   (click)="xpFilter.set('0')">0</button>
+              <button class="btn-toggle" [class.active]="xpFilter()==='1+'"  (click)="xpFilter.set('1+')">1+</button>
+            </div>
+          </div>
+
+          <div class="filter-group filter-group--grow">
+            <label class="filter-label">Name</label>
+            <input class="filter-input" type="text" placeholder="Card name…"
+              [value]="nameSearch()" (input)="nameSearch.set($any($event.target).value)">
+          </div>
+
+          <div class="filter-group filter-group--grow">
+            <label class="filter-label">Text / Flavor</label>
+            <input class="filter-input" type="text" placeholder="Search card text…"
+              [value]="textSearch()" (input)="textSearch.set($any($event.target).value)">
+          </div>
+
+          <div class="filter-group" *ngIf="hasActiveFilters()">
+            <label class="filter-label">&nbsp;</label>
+            <button class="btn-clear" (click)="clearFilters()">Clear all</button>
+          </div>
+
+        </div>
+
+        <!-- Row 2: Multi-selects -->
+        <div class="filter-row filter-row--chips">
+
+          <!-- Type -->
+          <div class="filter-group filter-group--multi">
+            <label class="filter-label">Type</label>
+            <div class="multi-select" (click)="toggleDropdown('type', $event)">
+              <span class="multi-placeholder" *ngIf="!typeFilter().size">All types</span>
+              <span class="chip" *ngFor="let t of typeFilter()" (click)="toggleFilter(typeFilter, t); $event.stopPropagation()">
+                {{ TYPE_LABELS[t] || t }} ×
+              </span>
+              <span class="multi-caret">▾</span>
+            </div>
+            <div class="multi-dropdown" *ngIf="typeOpen" (click)="stopProp($event)">
+              <label class="multi-option" *ngFor="let t of availableTypes()">
+                <input type="checkbox" [checked]="typeFilter().has(t)" (change)="toggleFilter(typeFilter, t)">
+                {{ TYPE_LABELS[t] || t }}
+              </label>
+            </div>
+          </div>
+
+          <!-- Faction -->
+          <div class="filter-group filter-group--multi">
+            <label class="filter-label">Faction</label>
+            <div class="multi-select" (click)="toggleDropdown('faction', $event)">
+              <span class="multi-placeholder" *ngIf="!factionFilter().size">All factions</span>
+              <span class="chip chip--faction" *ngFor="let f of factionFilter()" (click)="toggleFilter(factionFilter, f); $event.stopPropagation()">
+                <span class="chip-icon" [innerHTML]="getArkhamIcon(f)"></span>{{ FACTION_LABELS[f] || f }} ×
+              </span>
+              <span class="multi-caret">▾</span>
+            </div>
+            <div class="multi-dropdown" *ngIf="factionOpen" (click)="stopProp($event)">
+              <label class="multi-option" *ngFor="let f of availableFactions()">
+                <input type="checkbox" [checked]="factionFilter().has(f)" (change)="toggleFilter(factionFilter, f)">
+                <span class="faction-icon" [innerHTML]="getArkhamIcon(f)"></span>
+                {{ FACTION_LABELS[f] || f }}
+              </label>
+            </div>
+          </div>
+
+          <!-- Slot -->
+          <div class="filter-group filter-group--multi">
+            <label class="filter-label">Slot</label>
+            <div class="multi-select" (click)="toggleDropdown('slot', $event)">
+              <span class="multi-placeholder" *ngIf="!slotFilter().size">All slots</span>
+              <span class="chip" *ngFor="let s of slotFilter()" (click)="toggleFilter(slotFilter, s); $event.stopPropagation()">
+                {{ s }} ×
+              </span>
+              <span class="multi-caret">▾</span>
+            </div>
+            <div class="multi-dropdown" *ngIf="slotOpen2" (click)="stopProp($event)">
+              <label class="multi-option" *ngFor="let s of availableSlots()">
+                <input type="checkbox" [checked]="slotFilter().has(s)" (change)="toggleFilter(slotFilter, s)">
+                {{ s }}
+              </label>
+            </div>
+          </div>
+
+          <!-- Cost -->
+          <div class="filter-group filter-group--multi">
+            <label class="filter-label">Cost</label>
+            <div class="multi-select" (click)="toggleDropdown('cost', $event)">
+              <span class="multi-placeholder" *ngIf="!costFilter().size">All costs</span>
+              <span class="chip" *ngFor="let c of costFilter()" (click)="toggleFilter(costFilter, c); $event.stopPropagation()">
+                {{ c }}{{ c !== 'X' ? 'r' : '' }} ×
+              </span>
+              <span class="multi-caret">▾</span>
+            </div>
+            <div class="multi-dropdown multi-dropdown--cost" *ngIf="costOpen" (click)="stopProp($event)">
+              <label class="multi-option" *ngFor="let c of availableCosts()">
+                <input type="checkbox" [checked]="costFilter().has(c)" (change)="toggleFilter(costFilter, c)">
+                {{ c }}{{ c !== 'X' ? 'r' : '' }}
+              </label>
+            </div>
+          </div>
+
+          <!-- Trait -->
+          <div class="filter-group filter-group--multi filter-group--wide">
+            <label class="filter-label">Trait</label>
+            <div class="multi-select" (click)="toggleDropdown('trait', $event)">
+              <span class="multi-placeholder" *ngIf="!traitFilter().size">All traits</span>
+              <span class="chip" *ngFor="let t of traitFilter()" (click)="toggleFilter(traitFilter, t); $event.stopPropagation()">
+                {{ t }} ×
+              </span>
+              <span class="multi-caret">▾</span>
+            </div>
+            <div class="multi-dropdown multi-dropdown--tall" *ngIf="traitOpen" (click)="stopProp($event)">
+              <input class="dropdown-search" type="text" placeholder="Search traits…"
+                [(ngModel)]="traitSearchTerm" (input)="$event.stopPropagation()">
+              <label class="multi-option" *ngFor="let t of filteredTraits()">
+                <input type="checkbox" [checked]="traitFilter().has(t)" (change)="toggleFilter(traitFilter, t)">
+                {{ t }}
+              </label>
+            </div>
+          </div>
+
+          <!-- Pack / Set -->
+          <div class="filter-group filter-group--multi filter-group--wide">
+            <label class="filter-label">Set</label>
+            <div class="multi-select" (click)="toggleDropdown('pack', $event)">
+              <span class="multi-placeholder" *ngIf="!packFilter().size">All sets</span>
+              <span class="chip" *ngFor="let p of packFilter()" (click)="toggleFilter(packFilter, p); $event.stopPropagation()">
+                {{ p }} ×
+              </span>
+              <span class="multi-caret">▾</span>
+            </div>
+            <div class="multi-dropdown multi-dropdown--tall" *ngIf="packOpen" (click)="stopProp($event)">
+              <label class="multi-option" *ngFor="let p of availablePacks()">
+                <input type="checkbox" [checked]="packFilter().has(p)" (change)="toggleFilter(packFilter, p)">
+                {{ p }}
+              </label>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+      <!-- Results summary -->
+      <div class="results-summary">
+        <span class="results-count">{{ filteredCards().length }}</span> cards
+      </div>
+
+      <!-- Card groups -->
+      <div class="card-groups">
+
+        <div class="card-group" *ngFor="let group of groupedCards()">
+
+          <div class="group-header group-header--clickable" (click)="toggleGroup(group.label)"
+               [style.border-left-color]="group.color">
+            <span class="group-label">{{ group.label }}</span>
+            <span class="group-count">{{ group.cards.length }}</span>
+            <span class="group-chevron" [class.group-chevron--collapsed]="isGroupCollapsed(group.label)">▾</span>
+          </div>
+
+          <div [hidden]="isGroupCollapsed(group.label)">
+
+            <table class="card-table">
+              <thead>
+                <tr>
+                  <th class="th-presence"></th>
+                  <th class="th-name">Card</th>
+                  <th class="th-traits hide-mobile">Traits</th>
+                  <th class="th-faction">Faction</th>
+                  <th class="th-type">Type</th>
+                  <th class="th-slot hide-mobile">Slot</th>
+                  <th class="th-xp">XP</th>
+                  <th class="th-cost">Cost</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let card of getPagedCards(group)">
+
+                  <td class="td-presence">
+                    <div class="presence">
+                      <div class="presence-avatar"
+                        *ngFor="let inv of activeSlots(); let di = index"
+                        [style.background-image]="'url(' + invImageUrl(inv.code) + ')'"
+                        [class.presence-avatar--absent]="!card.presentIn[di]"
+                        [class.presence-avatar--out]="getInvMode(di) === 'out'"
+                        [style.border-color]="card.presentIn[di] ? FACTION_COLORS[inv.faction_code] : 'transparent'"
+                        [title]="(card.presentIn[di] ? '✓ ' : '✗ ') + inv.name">
+                      </div>
+                    </div>
+                  </td>
+
+                  <td class="td-name">
+                    <span class="card-name">{{ card.name }}</span>
+                    <span class="card-subname" *ngIf="card.subname"> · {{ card.subname }}</span>
+                  </td>
+
+                  <td class="td-traits hide-mobile">
+                    <span class="trait-inline" *ngFor="let t of card.traits; let last = last">{{ t }}<span *ngIf="!last"> · </span></span>
+                  </td>
+
+                  <td class="td-faction">
+                    <span class="faction-icon" [innerHTML]="getArkhamIcon(card.faction_code)" [title]="FACTION_LABELS[card.faction_code] || card.faction_code"></span>
+                    <span *ngIf="card.faction2_code" class="faction-icon" [innerHTML]="getArkhamIcon(card.faction2_code)" [title]="FACTION_LABELS[card.faction2_code] || card.faction2_code"></span>
+                  </td>
+
+                  <td class="td-type">{{ TYPE_LABELS[card.type_code] || card.type_code }}</td>
+
+                  <td class="td-slot hide-mobile">{{ card.real_slot || '—' }}</td>
+
+                  <td class="td-xp">
+                    <span *ngIf="card.xp > 0" class="meta-xp">{{ xpDots(card.xp) }}</span>
+                    <span *ngIf="card.xp === 0" class="meta-xp meta-xp--zero">0</span>
+                  </td>
+
+                  <td class="td-cost">
+                    <span *ngIf="card.cost != null">{{ card.cost }}<span class="cost-r">r</span></span>
+                    <span *ngIf="card.cost == null" class="cost-na">—</span>
+                  </td>
+
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- Pagination -->
+            <div class="pagination" *ngIf="getPageCount(group) > 1">
+              <button class="page-btn" (click)="prevPage(group.label)" [disabled]="getGroupPage(group.label) <= 1">‹</button>
+
+              <ng-container *ngFor="let p of [].constructor(getPageCount(group)); let pi = index">
+                <button class="page-btn page-btn--num"
+                        *ngIf="pi + 1 === 1 || pi + 1 === getPageCount(group) || (pi + 1 >= getGroupPage(group.label) - 1 && pi + 1 <= getGroupPage(group.label) + 1)"
+                        [class.active]="pi + 1 === getGroupPage(group.label)"
+                        (click)="goToPage(group.label, pi + 1, getPageCount(group))">
+                  {{ pi + 1 }}
+                </button>
+                <span class="page-ellipsis"
+                      *ngIf="(pi + 1 === 2 && getGroupPage(group.label) - 1 > 2) || (pi + 1 === getPageCount(group) - 1 && getGroupPage(group.label) + 1 < getPageCount(group) - 1)">
+                  …
+                </span>
+              </ng-container>
+
+              <button class="page-btn" (click)="nextPage(group)" [disabled]="getGroupPage(group.label) >= getPageCount(group)">›</button>
+              <span class="page-info">{{ getPageStart(group) }}–{{ getPageEnd(group) }} of {{ group.cards.length }}</span>
+            </div>
+
+          </div>
+
+        </div>
+
+        <div class="empty-state" *ngIf="groupedCards().length === 0 && filteredCards().length === 0">
+          No cards match the current filters.
+        </div>
+
+      </div>
+
+    </ng-container>
+  </div>
+
+</div>
+
+<!-- Floating Help Button -->
+<button
+  class="help-fab"
+  type="button"
+  (click)="toggleHelp()"
+  [class.active]="showHelp()"
+  [attr.aria-label]="showHelp() ? 'Close help panel' : 'Open help panel'"
+  title="How to use Pool Playground">
+  {{ showHelp() ? '✕' : '?' }}
+</button>
+
+<!-- Help Panel -->
+<div class="help-panel" [class.open]="showHelp()">
+  <div class="help-panel-header">
+    <h3>Pool Playground</h3>
+    <p class="help-subtitle">Compare card pools across up to 4 investigators</p>
+  </div>
+  <div class="help-panel-body">
+
+    <div class="help-section">
+      <h4>Adding Investigators</h4>
+      <dl>
+        <dt>Empty slot</dt>
+        <dd>Click ＋ and type a name to search. The full legal card pool loads automatically once selected.</dd>
+        <dt>Removing</dt>
+        <dd>Click the × on a filled slot. Supports 2–4 investigators simultaneously.</dd>
+      </dl>
+    </div>
+
+    <div class="help-section">
+      <h4>Set Algebra Modes</h4>
+      <dl>
+        <dt>Any</dt>
+        <dd>Default. This investigator's pool contributes freely — cards appear regardless of what others can or cannot take.</dd>
+        <dt>Must <span style="color:#4ade80">●</span></dt>
+        <dd>Restricts results to cards available to <em>every</em> Must investigator. Use to find the true intersection of pools.</dd>
+        <dt>Not <span style="color:#ef4444">●</span></dt>
+        <dd>Subtracts this investigator's pool from results. Use to isolate cards the others can take that this one cannot.</dd>
+        <dt>Presets</dt>
+        <dd>
+          <strong>Union</strong> — everyone on Any, all cards shown.<br>
+          <strong>All share</strong> — everyone on Must, intersection only.<br>
+          <strong>Only [Name]</strong> — one Must, all others Not — exclusive cards for that investigator.
+        </dd>
+      </dl>
+    </div>
+
+    <div class="help-section">
+      <h4>Reading Results</h4>
+      <dl>
+        <dt>Groups</dt>
+        <dd>Cards are bucketed by how many active investigators share access — from "Shared by all" down to individual exclusives. Click any group header to collapse it.</dd>
+        <dt>Presence avatars</dt>
+        <dd>Each row shows a portrait per investigator. Bright = can take this card. Faded = cannot.</dd>
+      </dl>
+    </div>
+
+    <div class="help-section">
+      <h4>Filters</h4>
+      <dl>
+        <dt>XP</dt>
+        <dd>All / Level 0 / XP 1+. Applies globally across all groups.</dd>
+        <dt>Name &amp; Text</dt>
+        <dd>Name searches the card title. Text searches inside card body and flavor text — useful for keyword hunting.</dd>
+        <dt>Type, Faction, Slot, Cost, Trait, Set</dt>
+        <dd>Multi-select dropdowns. Select multiple values to broaden within that filter. Active values appear as chips — click any chip to remove it.</dd>
+        <dt>Clear all</dt>
+        <dd>Resets every filter and mode back to Union defaults.</dd>
+      </dl>
+    </div>
+
+    <div class="help-section">
+      <h4>Examples</h4>
+      <dl>
+        <dt>Cards Roland and Wendy both can run at Level 0</dt>
+        <dd>Add both → All share preset → Level 0 filter.</dd>
+        <dt>Assets only Skids has access to, that Finn cannot run</dt>
+        <dd>Skids → Must · Finn → Not · Type = Asset.</dd>
+        <dt>Seeker events shared by exactly 3 of 4 investigators</dt>
+        <dd>Add all four → Faction = Seeker, Type = Event → read the "Shared by 3" group.</dd>
+      </dl>
+    </div>
+
+  </div>
+</div>
+
+<!-- Help backdrop -->
+<div class="help-backdrop" *ngIf="showHelp()" (click)="toggleHelp()"></div>

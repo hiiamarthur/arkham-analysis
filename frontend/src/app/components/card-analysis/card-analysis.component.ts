@@ -170,13 +170,17 @@ export class CardAnalysisComponent implements OnInit {
     this.analysisForm = this.createForm();
   }
 
-  // Get Arkham game icon
+  // Get Arkham game icon with normalized viewBox + scale/translation applied
   getArkhamIcon(iconName: string): SafeHtml {
-    // For neutral faction, use 'neutral' without -color suffix
-    // For all other factions and icons, use colored version
-    const iconKey = iconName.toLowerCase() === 'neutral' ? 'neutral' : `${iconName}-color`;
-    const svg = this.arkhamIconsService.getIcon(iconKey);
-    return this.sanitizer.bypassSecurityTrustHtml(svg);
+    return this.sanitizer.bypassSecurityTrustHtml(
+      this.arkhamIconsService.getNormalizedIcon(iconName.toLowerCase())
+    );
+  }
+
+  // Get faction icon as PNG image variant (-color) — for stat-pills where image quality is preferred
+  getArkhamIconImage(factionCode: string): SafeHtml {
+    const key = factionCode.toLowerCase() === 'neutral' ? 'neutral' : `${factionCode.toLowerCase()}-color`;
+    return this.sanitizer.bypassSecurityTrustHtml(this.arkhamIconsService.getIcon(key));
   }
 
   // Get custom icon

@@ -668,7 +668,7 @@
               <!-- Card Stats Ribbon -->
               <div class="game-stats-ribbon" [style.--faction-color]="getFactionColor(details.faction_name || 'Neutral')">
                 <div class="stat-pill" *ngIf="details.faction_code">
-                  <span class="value" [innerHTML]="getArkhamIcon(details.faction_code)"></span>
+                  <span class="value" [innerHTML]="getArkhamIconImage(details.faction_code)"></span>
                   <span class="label">{{details.faction_name || details.faction_code}}</span>
                 </div>
                 <div class="stat-pill" *ngIf="details.cost !== undefined && details.cost !== null">

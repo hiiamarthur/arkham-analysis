@@ -75,6 +75,8 @@ export interface CardPoolEntry {
   is_unique?: boolean | null;
   permanent?: boolean | null;
   traits: string[];
+  text?: string | null;
+  flavor?: string | null;
 }
 
 export interface UnderusedGem {

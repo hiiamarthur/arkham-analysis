@@ -118,7 +118,7 @@ export class ArkhamIconsPipe implements PipeTransform {
           // Check if icon exists in available icons list
           const availableIcons = this.svgIconsService.getAvailableIcons();
           if (availableIcons.includes(lowerToken)) {
-            return this.svgIconsService.getIcon(lowerToken);
+            return this.svgIconsService.getNormalizedIcon(lowerToken);
           }
           // If no icon exists, make the keyword bold without brackets
           return `<strong>${token}</strong>`;

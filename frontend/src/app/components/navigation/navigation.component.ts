@@ -21,7 +21,7 @@ export class NavigationComponent {
     { path: '/analysis', label: 'Card', icon: 'level_2_bullet_point' },
     { path: '/investigators', label: 'Investigators', icon: 'investigator' },
     { path: '/threat-assessment', label: 'Threat', icon: 'threat' },
-    { path: '/pool-compare', label: 'Pool', icon: 'synergy' },
+    { path: '/pool-playground', label: 'Pool', icon: 'synergy' },
     { path: '/about', label: 'About', icon: 'info' }
   ];
 

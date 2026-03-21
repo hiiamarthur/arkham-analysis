@@ -15,7 +15,7 @@ from . import ARKHAM_HEADERS, seconds_until_next_sunday_midnight
 
 router = APIRouter()
 
-CACHE_KEY = "dashboard:stats:v4"
+CACHE_KEY = "dashboard:stats:v5"
 
 
 @router.get("")
@@ -41,10 +41,11 @@ async def get_dashboard_stats(
             return cached
 
     try:
-        decks, investigators = await asyncio.wait_for(
+        decks, investigators, reprint_map = await asyncio.wait_for(
             asyncio.gather(
                 deck_service.get_decks_last_n_days(days),
                 card_service.get_all_investigators(),
+                _build_reprint_map(card_service),
             ),
             timeout=30.0,
         )
@@ -56,7 +57,7 @@ async def get_dashboard_stats(
     if not decks:
         return _empty_response(days)
 
-    def _crunch(decks, investigators):
+    def _crunch(decks, investigators, reprint_map):
         inv_lookup: Dict[str, Dict] = {
             i["code"]: {"name": i["name"], "faction_code": i.get("faction_code", "neutral")}
             for i in investigators
@@ -93,10 +94,12 @@ async def get_dashboard_stats(
             for card_code in deck.slots:
                 if card_code == inv_code:
                     continue
-                card_counter[card_code] += 1
-                if card_code not in card_faction_spread:
-                    card_faction_spread[card_code] = set()
-                card_faction_spread[card_code].add(faction)
+                # Normalize reprints to their original code so counts are merged
+                canonical = reprint_map.get(card_code, card_code)
+                card_counter[canonical] += 1
+                if canonical not in card_faction_spread:
+                    card_faction_spread[canonical] = set()
+                card_faction_spread[canonical].add(faction)
 
         return (
             recent_inv_counter, prior_inv_counter, all_inv_counter,
@@ -108,7 +111,7 @@ async def get_dashboard_stats(
         recent_inv_counter, prior_inv_counter, all_inv_counter,
         card_counter, faction_counter, card_faction_spread, xp_spent_values,
         inv_lookup,
-    ) = await asyncio.to_thread(_crunch, decks, investigators)
+    ) = await asyncio.to_thread(_crunch, decks, investigators, reprint_map)
 
     total_decks = len(decks)
     now = datetime.utcnow()
@@ -236,6 +239,26 @@ async def get_dashboard_stats(
     response.headers.update(ARKHAM_HEADERS)
     response.headers["X-Cache"] = "MISS"
     return result
+
+
+async def _build_reprint_map(card_service: CardService) -> Dict[str, str]:
+    """
+    Returns {reprint_code: original_code} for every card that is a reprint.
+    Originals carry duplicated_by=[...]; reprints have no duplicated_by.
+    """
+    try:
+        stmt = select(CardModel.code, CardModel.duplicated_by).where(
+            CardModel.duplicated_by.isnot(None)
+        )
+        result = await card_service.db.execute(stmt)
+        mapping: Dict[str, str] = {}
+        for original_code, duped_by in result:
+            for reprint_code in (duped_by or []):
+                mapping[reprint_code] = original_code
+        return mapping
+    except Exception as e:
+        print(f"Reprint map build failed: {e}")
+        return {}
 
 
 async def _bulk_card_metadata(codes: List[str], card_service: CardService) -> Dict[str, Dict]:

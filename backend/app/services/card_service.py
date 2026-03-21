@@ -361,6 +361,9 @@ class CardService:
         # Enrich stats with card names
         await self._enrich_stats_with_card_names(stats)
 
+        # Dedup reprint codes across all card lists
+        await self._dedup_stats_card_codes(stats)
+
         return stats
 
     async def get_investigator_card_rankings(
@@ -373,7 +376,7 @@ class CardService:
         limit: int = 20,
     ) -> dict:
         """Compute only card rankings for an investigator with server-side filtering."""
-        RANKINGS_CACHE_KEY = f"investigator:card_rankings:v1:{investigator_code}"
+        RANKINGS_CACHE_KEY = f"investigator:card_rankings:v2:{investigator_code}"
         redis_client = await get_redis_client()
 
         # Try raw rankings cache first (unfiltered, unenriched)
@@ -487,6 +490,78 @@ class CardService:
                         card["card_subname"] = subname_map.get(code)
                 except Exception as e:
                     print(f"Warning: Could not enrich card rankings: {e}")
+
+            # Dedup reprints: merge ranking entries for reprint codes into their original.
+            # Decks on ArkhamDB may reference either the original code (01020 Machete) or
+            # a reprint code (01520), so both can appear as separate ranking rows.
+            try:
+                from sqlalchemy import select as sa_select
+
+                orig_rows = await self.db.execute(
+                    sa_select(CardModel.code, CardModel.duplicated_by).where(
+                        CardModel.duplicated_by.isnot(None)
+                    )
+                )
+                reprint_to_original: dict[str, str] = {}
+                for row in orig_rows:
+                    for rcode in row.duplicated_by or []:
+                        reprint_to_original[rcode] = row.code
+
+                if reprint_to_original:
+                    ranking_map: dict[str, dict] = {}
+                    order: list[str] = []
+                    for entry in raw_rankings:
+                        code = entry["card_code"]
+                        canonical = reprint_to_original.get(code, code)
+                        if canonical not in ranking_map:
+                            merged_entry = dict(entry)
+                            if canonical != code:
+                                # Reprint appearing before its original — use canonical code,
+                                # strip name/xp (will be fetched below if needed)
+                                merged_entry["card_code"] = canonical
+                                merged_entry.pop("card_name", None)
+                                merged_entry.pop("card_xp", None)
+                                merged_entry.pop("card_subname", None)
+                            ranking_map[canonical] = merged_entry
+                            order.append(canonical)
+                        else:
+                            existing = ranking_map[canonical]
+                            existing["usage_count"] = (
+                                existing.get("usage_count", 0)
+                                + entry.get("usage_count", 0)
+                            )
+                            # usage_rate shares the same denominator so rates are additive
+                            existing["usage_rate"] = (
+                                existing.get("usage_rate", 0)
+                                + entry.get("usage_rate", 0)
+                            )
+                            # If this entry IS the original, overwrite metadata
+                            if canonical == code:
+                                existing["card_name"] = entry.get("card_name")
+                                existing["card_xp"] = entry.get("card_xp")
+                                existing["card_subname"] = entry.get("card_subname")
+
+                    # Fetch names for canonical codes that only appeared as reprints
+                    needs_name = [
+                        c for c in order if not ranking_map[c].get("card_name")
+                    ]
+                    if needs_name:
+                        try:
+                            orig_cards = await self.card_repo.get_all(
+                                filter_by={"filter_by[code][in]": needs_name},
+                                items_per_page=len(needs_name) + 10,
+                            )
+                            for c in orig_cards:
+                                if c.code in ranking_map:
+                                    ranking_map[c.code]["card_name"] = c.name or c.code
+                                    ranking_map[c.code]["card_xp"] = c.xp
+                                    ranking_map[c.code]["card_subname"] = c.subname
+                        except Exception:
+                            pass
+
+                    raw_rankings = [ranking_map[c] for c in order]
+            except Exception as e:
+                print(f"Warning: Could not dedup card rankings: {e}")
 
             if redis_client.is_connected:
                 from app.api.v1.endpoints import seconds_until_next_sunday_midnight
@@ -707,6 +782,83 @@ class CardService:
                 slot_code: [card_subname_map.get(c) for c in alt_codes]
                 for slot_code, alt_codes in replacements.items()
             }
+
+    async def _dedup_stats_card_codes(self, stats: dict) -> None:
+        """Normalize reprint codes across all card lists in an investigator stats response.
+
+        For ranked lists (card_rankings, staple_cards) reprint entries are merged into
+        their originals by summing usage_count and usage_rate (both share the same
+        total-decks denominator, so rates are additive).  For trend/gem lists, reprint
+        entries are simply dropped and the canonical code is used instead.
+        """
+        from sqlalchemy import select as sa_select
+
+        try:
+            orig_rows = await self.db.execute(
+                sa_select(CardModel.code, CardModel.duplicated_by).where(
+                    CardModel.duplicated_by.isnot(None)
+                )
+            )
+            reprint_to_original: dict[str, str] = {}
+            for row in orig_rows:
+                for rcode in row.duplicated_by or []:
+                    reprint_to_original[rcode] = row.code
+
+            if not reprint_to_original:
+                return
+
+            def dedup_ranked(
+                items: list,
+                count_key: str = "usage_count",
+                rate_key: str = "usage_rate",
+            ) -> list:
+                merged: dict[str, dict] = {}
+                order: list[str] = []
+                for item in items:
+                    code = item.get("card_code", "")
+                    canonical = reprint_to_original.get(code, code)
+                    if canonical not in merged:
+                        entry = dict(item)
+                        entry["card_code"] = canonical
+                        merged[canonical] = entry
+                        order.append(canonical)
+                    else:
+                        merged[canonical][count_key] = (
+                            merged[canonical].get(count_key, 0)
+                            + item.get(count_key, 0)
+                        )
+                        merged[canonical][rate_key] = (
+                            merged[canonical].get(rate_key, 0)
+                            + item.get(rate_key, 0)
+                        )
+                        if canonical == code:
+                            merged[canonical]["card_name"] = item.get("card_name")
+                            merged[canonical]["card_xp"] = item.get("card_xp")
+                            merged[canonical]["card_subname"] = item.get("card_subname")
+                return [merged[c] for c in order]
+
+            def dedup_simple(items: list) -> list:
+                seen: set[str] = set()
+                result = []
+                for item in items:
+                    code = item.get("card_code", "")
+                    canonical = reprint_to_original.get(code, code)
+                    if canonical not in seen:
+                        entry = dict(item)
+                        entry["card_code"] = canonical
+                        seen.add(canonical)
+                        result.append(entry)
+                return result
+
+            if "card_rankings" in stats:
+                stats["card_rankings"] = dedup_ranked(stats["card_rankings"])
+            if "staple_cards" in stats:
+                stats["staple_cards"] = dedup_ranked(stats["staple_cards"])
+            for key in ["rising_cards", "falling_cards", "underused_gems", "overused_cards"]:
+                if key in stats:
+                    stats[key] = dedup_simple(stats[key])
+        except Exception as e:
+            print(f"Warning: Could not dedup stats card codes: {e}")
 
     async def search_all_cards(
         self,
@@ -1020,32 +1172,38 @@ class CardService:
     async def get_all_investigators(self) -> List[Dict[str, str]]:
         """
         Get all investigators with their codes and names.
-        Returns a list of dictionaries with code and name.
+        Reprints (parallel investigators listed in another card's duplicated_by) are
+        filtered out so each investigator appears only once as their canonical version.
         """
         try:
-            # Get all investigator cards
-            cards = await self.card_repo.get_all(
-                filter_by={"filter_by[type_code][equals]": "investigator"},
-                items_per_page=1000,
-            )
+            from sqlalchemy import select as sa_select
 
-            # Extract code and name
-            investigators = []
-            for card in cards:
-                if card.code and card.name:
-                    investigators.append(
-                        {
-                            "code": card.code,
-                            "name": card.name,
-                            "faction_code": (
-                                card.faction_code
-                                if hasattr(card, "faction_code")
-                                else None
-                            ),
-                        }
-                    )
+            # Fetch all investigator cards with duplicated_by in one query
+            stmt = sa_select(
+                CardModel.code,
+                CardModel.name,
+                CardModel.faction_code,
+                CardModel.duplicated_by,
+            ).where(CardModel.type_code == "investigator")
+            result = await self.db.execute(stmt)
+            rows = result.mappings().all()
 
-            # Sort by name
+            # Collect reprint codes to drop (codes listed in any investigator's duplicated_by)
+            reprint_codes: set[str] = set()
+            for row in rows:
+                for rcode in row["duplicated_by"] or []:
+                    reprint_codes.add(rcode)
+
+            investigators = [
+                {
+                    "code": row["code"],
+                    "name": row["name"],
+                    "faction_code": row["faction_code"],
+                }
+                for row in rows
+                if row["code"] and row["name"] and row["code"] not in reprint_codes
+            ]
+
             investigators.sort(key=lambda x: x["name"])
             return investigators
         except Exception as e:
@@ -1157,6 +1315,12 @@ class CardService:
             dup = card.get("duplicated_by")
             if dup:
                 codes_to_drop.update(dup)
+        # Build a quick lookup for reprint metadata (name, pack_name) before filtering
+        reprint_info: dict[str, dict] = {
+            c["code"]: {"name": c["name"], "pack_name": c["pack_name"]}
+            for c in all_cards
+            if c["code"] in codes_to_drop
+        }
         if codes_to_drop:
             all_cards = [c for c in all_cards if c["code"] not in codes_to_drop]
 
@@ -1314,6 +1478,14 @@ class CardService:
                 "traits": sorted(card_trait_map.get(c["code"], set())),
                 "text": c["real_text"] or c["text"],
                 "flavor": c.get("flavor"),
+                "related_cards": [
+                    {
+                        "code": rc,
+                        "name": reprint_info.get(rc, {}).get("name", rc),
+                        "pack_name": reprint_info.get(rc, {}).get("pack_name", ""),
+                    }
+                    for rc in (c.get("duplicated_by") or [])
+                ] or None,
             }
             for c in all_cards
             if c["code"] in pool_codes

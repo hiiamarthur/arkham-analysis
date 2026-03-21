@@ -25,7 +25,7 @@ from . import (
     seconds_until_next_sunday_midnight,
 )
 
-INV_STATS_CACHE_KEY = "investigator:stats:v4"
+INV_STATS_CACHE_KEY = "investigator:stats:v5"
 CARD_STATS_CACHE_KEY = "card:stats:v3"
 
 router = APIRouter()
@@ -64,15 +64,12 @@ async def get_all_investigators(
 ):
     """
     Get a list of all investigators with their codes and names.
-    Results are cached for performance.
     """
     try:
         investigators = await card_service.get_all_investigators()
 
         response.headers.update(ARKHAM_HEADERS)
-        response.headers["Cache-Control"] = (
-            "public, max-age=86400"  # Cache for 24 hours
-        )
+        response.headers["Cache-Control"] = "no-cache"
 
         return investigators
     except Exception as e:

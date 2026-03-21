@@ -77,6 +77,7 @@ export interface CardPoolEntry {
   traits: string[];
   text?: string | null;
   flavor?: string | null;
+  related_cards?: Array<{ code: string; name: string; pack_name: string }> | null;
 }
 
 export interface UnderusedGem {

@@ -1,7 +1,7 @@
 import { Component, signal, computed, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { DataTableComponent, TableColumn, TableConfig } from '../../shared/components/data-table.component';
 import { InvestigatorService, InvestigatorStatsResponse, CardRanking, StapleCard, TrendingCard, CardSynergy, DeckArchetype, UnderusedGem, CardPoolEntry } from '../../services/investigator.service';
 import { CardService, CardResponse } from '../../services/card.service';
@@ -45,6 +45,7 @@ export class InvestigatorsComponent implements OnInit {
   private iconService = inject(IconService);
   private sanitizer = inject(DomSanitizer);
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
 
   // Expose Math to template
   Math = Math;
@@ -128,7 +129,8 @@ export class InvestigatorsComponent implements OnInit {
   ngOnInit() {
     const params = this.route.snapshot.queryParamMap;
     const factionParam = params.get('faction');
-    const investigatorParam = params.get('investigator');
+    // Support both /investigators/:code (path param) and ?investigator=code (legacy query param)
+    const investigatorParam = this.route.snapshot.paramMap.get('code') ?? params.get('investigator');
 
     if (factionParam) {
       this.selectedFaction.set(this.normalizeFactionName(factionParam));
@@ -137,7 +139,7 @@ export class InvestigatorsComponent implements OnInit {
     this.loadInvestigators().then(() => {
       if (investigatorParam) {
         const match = this.investigators().find(inv => inv.code === investigatorParam);
-        if (match) this.onInvestigatorClick(match);
+        if (match) this.onInvestigatorClick(match, /* updateUrl */ false);
       }
     });
   }
@@ -287,7 +289,10 @@ export class InvestigatorsComponent implements OnInit {
   }
 
   // Event handlers
-  async onInvestigatorClick(investigator: Investigator) {
+  async onInvestigatorClick(investigator: Investigator, updateUrl = true) {
+    if (updateUrl) {
+      this.router.navigate(['/investigators', investigator.code], { replaceUrl: false });
+    }
     this.selectedInvestigator.set(investigator);
     this.selectedInvestigatorCode.set(investigator.code);
     this.statsNoData.set(false);
@@ -380,6 +385,7 @@ export class InvestigatorsComponent implements OnInit {
           card_name: c.name,
           card_subname: c.subname,
           card_xp: c.xp,
+          related_cards: c.related_cards,
         }));
         this.cardPool.set(mapped as any);
         this.cardPoolTotal.set(res.total);

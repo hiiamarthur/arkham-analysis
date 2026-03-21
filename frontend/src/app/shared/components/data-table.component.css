@@ -433,3 +433,30 @@
   line-height: 1;
 }
 
+.related-cards-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 4px;
+}
+
+.related-card-chip {
+  display: inline-block;
+  padding: 1px 7px;
+  background: rgba(147, 197, 253, 0.08);
+  border: 1px solid rgba(147, 197, 253, 0.25);
+  border-radius: 10px;
+  font-size: 0.68em;
+  color: #93c5fd;
+  text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.related-card-chip:hover {
+  background: rgba(147, 197, 253, 0.18);
+  border-color: rgba(147, 197, 253, 0.5);
+  text-decoration: underline;
+}
+

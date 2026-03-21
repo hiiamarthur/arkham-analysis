@@ -159,7 +159,8 @@
         <ol class="inv-rank-list" *ngIf="dashboardStats()">
           <li *ngFor="let inv of dashboardStats()!.top_investigators; let i = index"
               class="inv-rank-item"
-              [style.animation-delay]="(i * 50) + 'ms'">
+              [style.animation-delay]="(i * 50) + 'ms'"
+              [style.border-left-color]="getFactionColor(inv.faction)">
             <span class="rank-num">{{ i + 1 }}</span>
             <span class="faction-dot" [style.background]="getFactionColor(inv.faction)"></span>
             <a class="inv-name inv-name--link"
@@ -323,8 +324,9 @@
           <div class="trending-group">
             <span class="trend-label trend-up">↑ Rising</span>
             <ul class="trend-list">
-              <li *ngFor="let inv of dashboardStats()!.trending.rising" class="trend-item">
-                <span class="faction-dot" [style.background]="getFactionColor(inv.faction)"></span>
+              <li *ngFor="let inv of dashboardStats()!.trending.rising" class="trend-item"
+                  [style.border-left]="'2px solid ' + getFactionColor(inv.faction)"
+                  style="padding-left: 0.4rem; border-radius: 2px;">
                 <a class="trend-name trend-name--link"
                    [routerLink]="['/investigators']"
                    [queryParams]="{ investigator: inv.code }">{{ inv.name }}</a>
@@ -336,8 +338,9 @@
           <div class="trending-group">
             <span class="trend-label trend-down">↓ Falling</span>
             <ul class="trend-list">
-              <li *ngFor="let inv of dashboardStats()!.trending.falling" class="trend-item">
-                <span class="faction-dot" [style.background]="getFactionColor(inv.faction)"></span>
+              <li *ngFor="let inv of dashboardStats()!.trending.falling" class="trend-item"
+                  [style.border-left]="'2px solid ' + getFactionColor(inv.faction)"
+                  style="padding-left: 0.4rem; border-radius: 2px;">
                 <a class="trend-name trend-name--link"
                    [routerLink]="['/investigators']"
                    [queryParams]="{ investigator: inv.code }">{{ inv.name }}</a>

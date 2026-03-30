@@ -102,6 +102,18 @@
 }
 
 @media (max-width: 480px) {
+  .section-header {
+    display: flex;
+    flex-direction: column;
+  }
+
+ 
+
+  .search-filters {
+    padding: 0.75rem;
+  }
+
+
   .filter-row {
     grid-template-columns: 1fr;
   }
@@ -213,6 +225,7 @@
 
 /* Back Button */
 .back-button {
+  width: fit-content;
   background: rgba(79, 70, 229, 0.1);
   color: #3a5a4a;
   border: 1px solid rgba(79, 70, 229, 0.3);
@@ -254,7 +267,6 @@
 }
 
 .investigator-portrait {
-  
   border-radius: 0.75rem;
   display: flex;
   align-items: center;
@@ -271,8 +283,8 @@
 
 .portrait-image {
   width: 100%;
-  height: 100%;
-  object-fit: cover;
+  height: auto;
+  display: block;
   border-radius: 0.75rem;
 }
 
@@ -973,14 +985,30 @@
     padding: 1rem;
   }
 
+  .investigator-details {
+    padding: 1.25rem;
+  }
+
+  .detail-header {
+    padding: 1.25rem;
+  }
+
+  .back-button {
+    width: 100%;
+    justify-content: center;
+  }
+
   .page-header h1 {
     font-size: 2.5rem;
   }
 
-  .investigator-card {
-    flex-direction: column;
-    text-align: center;
-    gap: 1.5rem;
+  
+
+  .investigator-portrait {
+    align-self: stretch;
+    
+    display: block;
+    flex-shrink: unset;
   }
 
   .performance-cards {
@@ -993,6 +1021,18 @@
 }
 
 @media (max-width: 768px) {
+  .investigator-details {
+    padding: 1rem;
+  }
+
+  .detail-header {
+    padding: 1rem;
+  }
+
+  .back-button {
+    margin-bottom: 1.25rem;
+  }
+
   .page-header h1 {
     font-size: 2rem;
     flex-direction: column;
@@ -1052,6 +1092,13 @@
 
   .meta-considerations {
     grid-template-columns: 1fr;
+  }
+
+  .investigator-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 1.5rem;
+    align-items: center;
   }
 }
 
@@ -1213,6 +1260,10 @@
 }
 
 @media (max-width: 480px) {
+  .investigators-list {
+    padding: 1rem;
+  }
+
   .stats-grid {
     grid-template-columns: 1fr;
   }
@@ -1222,9 +1273,15 @@
   }
 
   .investigator-portrait {
-    width: 100px;
-    height: 100px;
+    max-width: 100%;
     font-size: 3rem;
+    align-self: stretch;
+  }
+
+  
+
+  .detail-header {
+    padding: 0.75rem;
   }
 
   .investigator-info h1 {

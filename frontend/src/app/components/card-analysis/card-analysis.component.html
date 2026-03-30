@@ -283,7 +283,16 @@
             ← Previous
           </button>
 
-          <span class="page-indicator">Page {{currentPage()}}</span>
+          <div class="page-numbers">
+            <button
+              *ngFor="let page of getPageNumbers()"
+              class="pagination-button"
+              [class.active]="page === currentPage()"
+              [disabled]="page === -1"
+              (click)="page !== -1 ? goToPage(page) : null">
+              {{ page === -1 ? '...' : page }}
+            </button>
+          </div>
 
           <button
             class="pagination-button"

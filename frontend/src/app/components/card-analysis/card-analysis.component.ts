@@ -104,6 +104,7 @@ export class CardAnalysisComponent implements OnInit {
   totalResults = signal(0);
   hasNextPage = signal(false);
   hasPrevPage = signal(false);
+  totalPages = computed(() => Math.ceil(this.totalResults() / this.pageSize()) || 1);
 
   // Basic search filters
   searchQuery = signal('');
@@ -369,6 +370,20 @@ export class CardAnalysisComponent implements OnInit {
   goToPage(page: number): void {
     this.currentPage.set(page);
     this.loadCards();
+  }
+
+  getPageNumbers(): number[] {
+    const current = this.currentPage();
+    const total = this.totalPages();
+    const pages: number[] = [];
+    if (total > 0) pages.push(1);
+    const start = Math.max(2, current - 2);
+    const end = Math.min(total - 1, current + 2);
+    if (start > 2) pages.push(-1);
+    for (let i = start; i <= end; i++) pages.push(i);
+    if (end < total - 1) pages.push(-1);
+    if (total > 1) pages.push(total);
+    return pages;
   }
 
   changePageSize(size: number): void {

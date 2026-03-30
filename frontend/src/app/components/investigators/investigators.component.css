@@ -267,6 +267,7 @@
 }
 
 .investigator-portrait {
+  width: calc(8vw + 500px );
   border-radius: 0.75rem;
   display: flex;
   align-items: center;
@@ -1005,8 +1006,8 @@
   
 
   .investigator-portrait {
-    align-self: stretch;
-    
+    width: calc(40vw + 20px);
+    max-width: 400px;
     display: block;
     flex-shrink: unset;
   }
@@ -1273,9 +1274,9 @@
   }
 
   .investigator-portrait {
+    width: calc(100vw - 3rem);
     max-width: 100%;
     font-size: 3rem;
-    align-self: stretch;
   }
 
   

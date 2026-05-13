@@ -233,6 +233,22 @@ FORGOTTEN_AGE_SCENARIOS: Dict[ScenarioType, List[ScenarioRule]] = cast(
             ),
             WeaknessRule(weakness_count=1),
         ],
+        ScenarioType.TURN_BACK_TIME: [
+            PlayerCountScalingRule("starting_clues", 2, per_player=1),
+            DynamicValueRule("doom_threshold", lambda ctx: 8 + ctx["player_count"]),
+            LocationSetupRule(
+                required_locations=[
+                    "nexus_of_n_kai",
+                    "past_jungle_path",
+                    "altered_past",
+                    "echoed_ruins",
+                ],
+                optional_locations=["temporal_anomaly"],
+            ),
+            DynamicValueRule("time_travel_mechanics", lambda ctx: True),
+            DynamicValueRule("poison_mechanics", lambda ctx: True),
+            WeaknessRule(weakness_count=1),
+        ],
         ScenarioType.SHATTERED_AEONS: [
             PlayerCountScalingRule("starting_clues", 2, per_player=2),
             DynamicValueRule("doom_threshold", lambda ctx: 13 + ctx["player_count"]),

@@ -65,42 +65,94 @@ PATH_TO_CARCOSA_SCENARIOS: Dict[ScenarioType, List[ScenarioRule]] = cast(
         ScenarioType.ECHOES_OF_THE_PAST: [
             PlayerCountScalingRule("starting_clues", 2, per_player=1),
             DynamicValueRule("doom_threshold", lambda ctx: 8 + ctx["player_count"]),
-            # Memory mechanics
+            LocationSetupRule(
+                required_locations=[
+                    "historical_society_meeting_room",
+                    "historical_society_library",
+                    "historical_society_museum",
+                    "historical_society_exhibit_hall",
+                    "historical_society_archives",
+                ],
+            ),
             DynamicValueRule("memory_mechanics", lambda ctx: True),
             WeaknessRule(weakness_count=1),
         ],
         ScenarioType.THE_UNSPEAKABLE_OATH: [
             PlayerCountScalingRule("starting_clues", 3, per_player=2),
             DynamicValueRule("doom_threshold", lambda ctx: 10 + ctx["player_count"]),
-            # Asylum return
+            LocationSetupRule(
+                required_locations=[
+                    "cell_block",
+                    "day_room",
+                    "mess_hall",
+                    "garden",
+                    "office",
+                    "bathroom",
+                    "morgue",
+                ],
+            ),
             DynamicValueRule("asylum_return", lambda ctx: True),
             WeaknessRule(weakness_count=1),
         ],
         ScenarioType.A_PHANTOM_OF_TRUTH: [
             PlayerCountScalingRule("starting_clues", 2, per_player=1),
             DynamicValueRule("doom_threshold", lambda ctx: 8 + ctx["player_count"]),
-            # Theater return
+            LocationSetupRule(
+                required_locations=[
+                    "montmartre",
+                    "pigalle",
+                    "le_marais",
+                    "montparnasse",
+                    "opera_house",
+                ],
+                optional_locations=["the_catacombs"],
+            ),
             DynamicValueRule("theater_return", lambda ctx: True),
             WeaknessRule(weakness_count=1),
         ],
         ScenarioType.THE_PALLID_MASK: [
             PlayerCountScalingRule("starting_clues", 3, per_player=2),
             DynamicValueRule("doom_threshold", lambda ctx: 10 + ctx["player_count"]),
-            # Masquerade mechanics
+            LocationSetupRule(
+                required_locations=["tomb_of_shadows", "charnel_pit", "ossuary"],
+                optional_locations=[
+                    "vault_of_the_ancients",
+                    "bone_filled_caverns",
+                    "underground_river",
+                ],
+            ),
             DynamicValueRule("masquerade_mechanics", lambda ctx: True),
             WeaknessRule(weakness_count=1),
         ],
         ScenarioType.BLACK_STARS_RISE: [
             PlayerCountScalingRule("starting_clues", 2, per_player=2),
             DynamicValueRule("doom_threshold", lambda ctx: 9 + ctx["player_count"]),
-            # Cosmic horror
+            LocationSetupRule(
+                required_locations=[
+                    "abbey_tower",
+                    "abbey_church",
+                    "abbots_dwelling",
+                    "inner_sanctum",
+                    "village_commons",
+                    "the_river",
+                ],
+            ),
             DynamicValueRule("cosmic_horror", lambda ctx: True),
             WeaknessRule(weakness_count=1),
         ],
         ScenarioType.DIM_CARCOSA: [
             PlayerCountScalingRule("starting_clues", 3, per_player=2),
             DynamicValueRule("doom_threshold", lambda ctx: 11 + ctx["player_count"]),
-            # Final scenario
+            LocationSetupRule(
+                required_locations=[
+                    "palace_of_the_king",
+                    "the_lake_of_hali",
+                    "bleak_plains",
+                    "ruins_of_carcosa",
+                    "depths_of_demhe",
+                    "shores_of_hali",
+                ],
+            ),
             DynamicValueRule("campaign_finale", lambda ctx: True),
             DynamicValueRule("carcosa_mechanics", lambda ctx: True),
             WeaknessRule(weakness_count=1),

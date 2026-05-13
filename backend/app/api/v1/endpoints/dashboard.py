@@ -40,6 +40,7 @@ async def get_dashboard_stats(
             response.headers["X-Cache"] = "HIT"
             return cached
 
+    fetch_timeout = min(300.0, max(60.0, days * 0.35))
     try:
         decks, investigators, reprint_map = await asyncio.wait_for(
             asyncio.gather(
@@ -47,7 +48,7 @@ async def get_dashboard_stats(
                 card_service.get_all_investigators(),
                 _build_reprint_map(card_service),
             ),
-            timeout=30.0,
+            timeout=fetch_timeout,
         )
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Deck data fetch timed out. Try again — results will be cached.")

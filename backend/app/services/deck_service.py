@@ -19,7 +19,7 @@ class DeckService:
         self,
         days: int,
         batch_size: int = 30,
-        max_concurrent: int = 10,
+        max_concurrent: int = 20,
         use_cache: bool = True,
     ) -> List[DeckListSchema]:
         """
@@ -58,12 +58,6 @@ class DeckService:
                     print("Cache MISS")
             except Exception as e:
                 print(f"Cache error (continuing without cache): {e}")
-                return []
-                # Clear potentially corrupted cache
-                try:
-                    await self.cache_service.delete_with_key("bulk_decks", cache_key)
-                except:
-                    pass
 
         # Fetch deck data if not cached
         if raw_decks is None:

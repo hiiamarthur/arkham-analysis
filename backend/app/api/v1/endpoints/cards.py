@@ -411,7 +411,7 @@ async def get_card_stats(
     try:
         result = await asyncio.wait_for(
             card_service.get_card_stats(card_code),
-            timeout=60.0,
+            timeout=300.0,
         )
     except asyncio.TimeoutError:
         raise HTTPException(
@@ -447,7 +447,7 @@ async def get_investigator_stats(
     try:
         result = await asyncio.wait_for(
             card_service.get_investigator_stats(card_code, days=365),
-            timeout=30.0,
+            timeout=300.0,
         )
     except asyncio.TimeoutError:
         raise HTTPException(
@@ -478,7 +478,7 @@ async def get_investigator_card_pool(
     try:
         result = await asyncio.wait_for(
             card_service.get_investigator_card_pool(card_code),
-            timeout=30.0,
+            timeout=300.0,
         )
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Request timed out.")
@@ -513,7 +513,7 @@ async def get_investigator_top_cards(
                 query=q,
                 limit=limit,
             ),
-            timeout=30.0,
+            timeout=300.0,
         )
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Request timed out — try again.")

@@ -103,6 +103,15 @@ NIGHT_OF_THE_ZEALOT_SCENARIOS: Dict[ScenarioType, List[ScenarioRule]] = cast(
             WeaknessRule(weakness_count=1),
         ],
         ScenarioType.THE_DEVOURER_BELOW: [
+            # Location setup — woods outside Arkham plus ritual site
+            LocationSetupRule(
+                required_locations=["woods", "ritual_site"],
+                optional_locations=[
+                    "your_house", "rivertown", "easttown", "northside",
+                    "southside", "downtown", "uptown", "miskatonic_university",
+                    "st_marys_hospital",
+                ],
+            ),
             # Random encounter set selection (key mechanic)
             RandomEncounterSetRule(
                 [

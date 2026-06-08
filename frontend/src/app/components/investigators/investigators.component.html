@@ -20,13 +20,12 @@
       <div class="filter-row">
         <div class="filter-group">
           <label>Search</label>
-          <input
-            type="text"
+          <app-autocomplete-input
+            [suggestions]="investigatorNameSuggestions()"
             [ngModel]="nameSearch()"
             (ngModelChange)="nameSearch.set($event)"
             placeholder="Search investigators..."
-            class="filter-input"
-          />
+          ></app-autocomplete-input>
         </div>
         <div class="filter-group">
           <label>Class</label>

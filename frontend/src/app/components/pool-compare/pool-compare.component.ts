@@ -1,6 +1,7 @@
 import { Component, signal, computed, inject, OnInit, HostListener } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { AutocompleteInputComponent } from '../../shared/components/autocomplete-input.component';
 import { Router } from '@angular/router';
 import { SafeHtml, DomSanitizer } from '@angular/platform-browser';
 import { InvestigatorService, CardPoolEntry, InvestigatorMetadata } from '../../services/investigator.service';
@@ -31,7 +32,7 @@ interface CardGroup {
 @Component({
   selector: 'app-pool-compare',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AutocompleteInputComponent],
   // RouterModule not needed — we use Router.navigate directly
   templateUrl: './pool-compare.component.html',
   styleUrl: './pool-compare.component.css',
@@ -99,6 +100,13 @@ export class PoolCompareComponent implements OnInit {
   // ── Derived state ──────────────────────────────────────────────────────────
 
   activeSlots = computed(() => this.slots().filter((s): s is PoolSlot => s !== null));
+
+  // Card name suggestions from the union of all loaded pools
+  cardNameSuggestions = computed(() => {
+    const names = new Set<string>();
+    this.activeSlots().forEach(slot => slot.pool.forEach(card => names.add(card.name)));
+    return Array.from(names).sort();
+  });
 
   /** Slot-array indices (0-3) for each active investigator, in order */
   activeSlotIndices = computed(() =>

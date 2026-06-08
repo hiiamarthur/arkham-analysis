@@ -194,8 +194,12 @@
 
           <div class="filter-group filter-group--grow">
             <label class="filter-label">Name</label>
-            <input class="filter-input" type="text" placeholder="Card name…"
-              [value]="nameSearch()" (input)="nameSearch.set($any($event.target).value)">
+            <app-autocomplete-input
+              [suggestions]="cardNameSuggestions()"
+              [ngModel]="nameSearch()"
+              (ngModelChange)="nameSearch.set($event)"
+              placeholder="Card name…"
+            ></app-autocomplete-input>
           </div>
 
           <div class="filter-group filter-group--grow">

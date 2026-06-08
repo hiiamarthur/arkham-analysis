@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DataTableComponent, TableColumn, TableConfig } from '../../shared/components/data-table.component';
+import { AutocompleteInputComponent } from '../../shared/components/autocomplete-input.component';
 import { InvestigatorService, InvestigatorStatsResponse, CardRanking, StapleCard, TrendingCard, CardSynergy, DeckArchetype, UnderusedGem, CardPoolEntry } from '../../services/investigator.service';
 import { CardService, CardResponse } from '../../services/card.service';
 import { CardCodeLinkComponent } from '../../shared/components/card-code-link.component';
@@ -34,7 +35,7 @@ interface Investigator {
 @Component({
   selector: 'app-investigators',
   standalone: true,
-  imports: [CommonModule, FormsModule, DataTableComponent, CardCodeLinkComponent, CardModalComponent],
+  imports: [CommonModule, FormsModule, DataTableComponent, CardCodeLinkComponent, CardModalComponent, AutocompleteInputComponent],
   templateUrl: './investigators.component.html',
   styleUrl: './investigators.component.css'
 })
@@ -66,6 +67,9 @@ export class InvestigatorsComponent implements OnInit {
 
   // All investigators data
   investigators = signal<Investigator[]>([]);
+
+  // Investigator name suggestions for autocomplete
+  investigatorNameSuggestions = computed(() => this.investigators().map(inv => inv.name));
 
   // Filtered investigators
   filteredInvestigators = computed(() => {

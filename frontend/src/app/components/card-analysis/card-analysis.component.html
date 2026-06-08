@@ -37,14 +37,14 @@
         <div class="filter-row">
           <div class="filter-group">
             <label for="search-query">Search</label>
-            <input
+            <app-autocomplete-input
               id="search-query"
-              type="text"
-              [(ngModel)]="searchQuery"
+              [suggestions]="cardNameSuggestions()"
+              [ngModel]="searchQuery()"
+              (ngModelChange)="searchQuery.set($event)"
               placeholder="Search card names..."
-              class="filter-input"
-              (keyup.enter)="onSearch()"
-            />
+              (suggestionSelected)="onSearch()"
+            ></app-autocomplete-input>
           </div>
 
           <div class="filter-group">
@@ -717,13 +717,14 @@
               (click)="selectTaboo(t.taboo_id)">
               <span class="taboo-pill-label">
                 <ng-container *ngIf="t.date_start; else codeLabel">
-                  {{t.date_start}}<ng-container *ngIf="t.date_end"> – {{t.date_end}}</ng-container>
+                  {{t.date_start}}
+                  <ng-container *ngIf="t.date_end"> – {{t.date_end}}</ng-container>
+                  <ng-container *ngIf="!t.date_end && t.is_current"> – present</ng-container>
                 </ng-container>
                 <ng-template #codeLabel>
                   <ng-container *ngIf="t.effective_from === t.effective_to">v{{t.effective_from}}</ng-container>
                   <ng-container *ngIf="t.effective_from !== t.effective_to">v{{t.effective_from}}–{{t.effective_to}}</ng-container>
                 </ng-template>
-                <span *ngIf="t.is_current" class="taboo-current-dot" title="Currently active">●</span>
                 <span *ngIf="t.is_strongest && !t.is_current" class="taboo-crown" title="Least restrictive version">★</span>
               </span>
               <span class="taboo-pill-meta">{{tabooRestrictionLabel(t.restriction_score, t.is_forbidden)}}</span>
@@ -738,7 +739,9 @@
                 <ng-container *ngIf="!entry.is_introduced">Changed</ng-container>
                 &nbsp;
                 <ng-container *ngIf="entry.date_start; else detailCodeLabel">
-                  {{entry.date_start}}<ng-container *ngIf="entry.date_end"> – {{entry.date_end}}</ng-container>
+                  {{entry.date_start}}
+                  <ng-container *ngIf="entry.date_end"> – {{entry.date_end}}</ng-container>
+                  <ng-container *ngIf="!entry.date_end && entry.is_current"> – present</ng-container>
                 </ng-container>
                 <ng-template #detailCodeLabel>
                   v{{entry.effective_from}}<ng-container *ngIf="entry.effective_from !== entry.effective_to">–{{entry.effective_to}}</ng-container>

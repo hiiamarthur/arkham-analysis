@@ -18,6 +18,11 @@ export interface Investigator {
   faction_code?: string;
 }
 
+export interface CardName {
+  code: string;
+  name: string;
+}
+
 /**
  * Application metadata cached globally
  */
@@ -26,6 +31,7 @@ export interface AppMetadata {
   traits: string[];
   encounterSets: EncounterSet[];
   investigators: Investigator[];
+  cardNames: CardName[];
   lastUpdated: number;  // timestamp
 }
 
@@ -38,7 +44,7 @@ export interface AppMetadata {
 })
 export class AppStateService {
   private readonly STORAGE_KEY = 'arkham_app_state';
-  private readonly CACHE_VERSION = 3; // Increment this to invalidate old cache
+  private readonly CACHE_VERSION = 4; // Increment this to invalidate old cache
   private readonly CACHE_DURATION = 24 * 60 * 60 * 1000; // 24 hours in milliseconds
   private platformId = inject(PLATFORM_ID);
 
@@ -46,6 +52,7 @@ export class AppStateService {
   private _traits = signal<string[]>([]);
   private _encounterSets = signal<EncounterSet[]>([]);
   private _investigators = signal<Investigator[]>([]);
+  private _cardNames = signal<CardName[]>([]);
   private _lastUpdated = signal<number>(0);
   private _isLoading = signal<boolean>(false);
 
@@ -53,6 +60,8 @@ export class AppStateService {
   readonly traits = computed(() => this._traits());
   readonly encounterSets = computed(() => this._encounterSets());
   readonly investigators = computed(() => this._investigators());
+  readonly cardNames = computed(() => this._cardNames());
+  readonly cardNameSuggestions = computed(() => this._cardNames().map(c => c.name));
   readonly lastUpdated = computed(() => this._lastUpdated());
   readonly isLoading = computed(() => this._isLoading());
   readonly isCacheValid = computed(() => {
@@ -79,6 +88,7 @@ export class AppStateService {
         traits: this._traits(),
         encounterSets: this._encounterSets(),
         investigators: this._investigators(),
+        cardNames: this._cardNames(),
         lastUpdated: this._lastUpdated()
       });
     });
@@ -106,6 +116,7 @@ export class AppStateService {
         this._traits.set(metadata.traits || []);
         this._encounterSets.set(metadata.encounterSets || []);
         this._investigators.set(metadata.investigators || []);
+        this._cardNames.set(metadata.cardNames || []);
         this._lastUpdated.set(metadata.lastUpdated || 0);
       }
     } catch (error) {
@@ -153,6 +164,14 @@ export class AppStateService {
   }
 
   /**
+   * Update card names for autocomplete
+   */
+  setCardNames(cardNames: CardName[]): void {
+    this._cardNames.set(cardNames);
+    this._lastUpdated.set(Date.now());
+  }
+
+  /**
    * Update all metadata at once
    */
   setMetadata(metadata: Partial<AppMetadata>): void {
@@ -164,6 +183,9 @@ export class AppStateService {
     }
     if (metadata.investigators) {
       this._investigators.set(metadata.investigators);
+    }
+    if (metadata.cardNames) {
+      this._cardNames.set(metadata.cardNames);
     }
     this._lastUpdated.set(Date.now());
   }
@@ -182,6 +204,7 @@ export class AppStateService {
     this._traits.set([]);
     this._encounterSets.set([]);
     this._investigators.set([]);
+    this._cardNames.set([]);
     this._lastUpdated.set(0);
 
     if (isPlatformBrowser(this.platformId)) {

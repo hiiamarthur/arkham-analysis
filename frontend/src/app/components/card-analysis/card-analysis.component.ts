@@ -5,6 +5,7 @@ import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { Location } from '@angular/common';
 import { AnalysisService, CardAnalysisRequest, AnalysisResponse } from '../../services/analysis.service';
 import { DataTableComponent, TableColumn, TableConfig } from '../../shared/components/data-table.component';
+import { AutocompleteInputComponent } from '../../shared/components/autocomplete-input.component';
 import { CardService, CardResponse, CardStatsResponse, CardTaboosResponse } from '../../services/card.service';
 import { AppStateService } from '../../services/app-state.service';
 import { ArkhamIconsPipe } from '../../shared/pipes/arkham-icons.pipe';
@@ -60,7 +61,7 @@ interface Card {
 @Component({
   selector: 'app-card-analysis',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, DataTableComponent, ArkhamIconsPipe, BaseChartDirective],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, DataTableComponent, ArkhamIconsPipe, BaseChartDirective, AutocompleteInputComponent],
   templateUrl: './card-analysis.component.html',
   styleUrl: './card-analysis.component.css'
 })
@@ -199,6 +200,9 @@ export class CardAnalysisComponent implements OnInit {
 
   // Access cached traits for dropdown
   availableTraits = computed(() => this.appState.traits());
+
+  // Card name suggestions for autocomplete
+  cardNameSuggestions = computed(() => this.appState.cardNameSuggestions());
 
   ngOnInit(): void {
     // Subscribe to route parameter changes

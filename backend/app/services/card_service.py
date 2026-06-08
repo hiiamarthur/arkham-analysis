@@ -1511,6 +1511,34 @@ class CardService:
             "cards": pool,
         }
 
+    async def get_all_card_names(self) -> List[dict]:
+        """
+        Get all player card names and codes for autocomplete suggestions.
+        Excludes encounter cards and deduplicates reprints.
+        """
+        from sqlalchemy import select
+
+        try:
+            stmt = (
+                select(CardModel.code, CardModel.name)
+                .where(
+                    CardModel.type_code.notin_(ENCOUNTER_TYPE_CODES),
+                    CardModel.encounter_code.is_(None),
+                )
+                .order_by(CardModel.name)
+            )
+            result = await self.db.execute(stmt)
+            seen: set[str] = set()
+            names = []
+            for code, name in result.all():
+                if name and name not in seen:
+                    seen.add(name)
+                    names.append({"code": code, "name": name})
+            return names
+        except Exception as e:
+            print(f"Error getting card names: {e}")
+            return []
+
     async def get_all_encounter_sets(self) -> List[dict]:
         """
         Get all unique encounter sets.
@@ -1627,7 +1655,7 @@ class CardService:
                     effective_from=eff_from,
                     effective_to=eff_to,
                     date_start=_fmt_date(eff_from),
-                    date_end=_fmt_date(eff_to) if eff_from != eff_to else None,
+                    date_end=_fmt_date(eff_to) if (eff_from != eff_to and idx < len(groups) - 1) else None,
                     cost_delta=row.cost,
                     xp_delta=row.level,
                     text=row.text,

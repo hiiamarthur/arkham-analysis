@@ -111,6 +111,30 @@ async def get_all_encounter_sets(
         )
 
 
+@router.get("/metadata/names", response_model=List[dict])
+async def get_all_card_names(
+    response: Response,
+    card_service: CardService = Depends(get_card_service),
+):
+    """
+    Get all player card names and codes for client-side autocomplete.
+    Returns list of {code, name} objects, deduplicated by name.
+    """
+    try:
+        names = await card_service.get_all_card_names()
+
+        response.headers.update(ARKHAM_HEADERS)
+        response.headers["Cache-Control"] = "public, max-age=86400"
+
+        return names
+    except Exception as e:
+        import logging
+
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error getting card names: {e}")
+        raise HTTPException(status_code=500, detail=f"Error getting card names: {str(e)}")
+
+
 @router.post("/fetch_cards", response_model=List[CardSchema])
 async def fetch_cards(
     encounter: int,

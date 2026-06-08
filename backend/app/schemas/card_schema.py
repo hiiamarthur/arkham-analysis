@@ -331,6 +331,36 @@ class ScenarioContext(BaseSchema):
     model_config = {"arbitrary_types_allowed": True}
 
 
+class TabooEntrySchema(BaseSchema):
+    taboo_id: int
+    taboo_code: str
+    effective_from: str
+    effective_to: str
+    date_start: Optional[str] = None
+    date_end: Optional[str] = None
+    cost_delta: Optional[int] = None
+    xp_delta: Optional[int] = None
+    text: Optional[str] = None
+    is_forbidden: bool
+    restriction_score: int
+    is_strongest: bool
+    is_current: bool
+    is_introduced: bool
+
+
+class CardTaboosResponse(BaseSchema):
+    card_code: str
+    card_name: Optional[str] = None
+    base_cost: Optional[int] = None
+    base_xp: Optional[int] = None
+    taboo_versions: List[TabooEntrySchema]
+    has_taboos: bool
+    introduced_version: Optional[str] = None
+    introduced_date: Optional[str] = None
+    versions_active: int = 0
+    restriction_trend: str = "none"
+
+
 class CardGPTResponse(BaseSchema):
     name: str
     best_case_quantities: EffectQuantities

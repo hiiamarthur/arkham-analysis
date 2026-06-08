@@ -1,8 +1,9 @@
 from typing import Any, Dict, Optional, List, Tuple, cast
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from datetime import datetime, timedelta
 
-from app.models.arkham_model import CardModel
+from app.models.arkham_model import CardModel, TabooModel
 from app.repositories.base_repositories import BaseRepository
 from app.services.deck_service import DeckService
 from app.adapters.card_adapters import UnifiedCardAdapter
@@ -1536,3 +1537,124 @@ class CardService:
         except Exception as e:
             print(f"Error getting encounter sets: {e}")
             return []
+
+    async def get_card_taboos(self, card_code: str) -> Optional[dict]:
+        """Return deduplicated taboo history for a card — one entry per actual change."""
+        from app.schemas.card_schema import CardTaboosResponse, TabooEntrySchema
+
+        card_stmt = select(CardModel).where(CardModel.code == card_code)
+        card_result = await self.db.execute(card_stmt)
+        card = card_result.scalar_one_or_none()
+        if card is None:
+            return None
+
+        taboo_stmt = select(TabooModel).where(TabooModel.code == card_code)
+        taboo_result = await self.db.execute(taboo_stmt)
+        taboo_rows = taboo_result.scalars().all()
+
+        # Load taboo list dates (code → date_start)
+        from app.models.arkham_model import TabooListModel
+        tl_result = await self.db.execute(select(TabooListModel))
+        taboo_list_map = {tl.code: tl for tl in tl_result.scalars().all()}
+
+        if not taboo_rows:
+            return CardTaboosResponse(
+                card_code=card.code,
+                card_name=card.name,
+                base_cost=card.cost,
+                base_xp=card.xp,
+                taboo_versions=[],
+                has_taboos=False,
+            ).model_dump()
+
+        def _restriction_score(cost, level, text: str) -> int:
+            t = (text or "").strip()
+            if t.startswith("Forbidden.") or t == "Forbidden":
+                return 9999
+            score = 0
+            if cost and cost > 0:
+                score += cost * 2
+            if level and level > 0:
+                score += level * 3
+            if t:
+                score += 2
+            return score
+
+        sorted_rows = sorted(taboo_rows, key=lambda t: t.taboo_code or "")
+        versions_active = len(sorted_rows)
+
+        # Group consecutive entries with identical (cost, level, text) — carry-forwards
+        groups: List[tuple] = []  # (taboo_row, effective_from, effective_to)
+        i = 0
+        while i < len(sorted_rows):
+            row = sorted_rows[i]
+            key = (row.cost, row.level, (row.text or "").strip())
+            j = i + 1
+            while j < len(sorted_rows):
+                nk = (sorted_rows[j].cost, sorted_rows[j].level, (sorted_rows[j].text or "").strip())
+                if nk != key:
+                    break
+                j += 1
+            groups.append((row, row.taboo_code or "", sorted_rows[j - 1].taboo_code or ""))
+            i = j
+
+        # Compute restriction trend across change points
+        scores = [_restriction_score(r.cost, r.level, r.text or "") for r, _, _ in groups]
+        if len(scores) <= 1:
+            trend = "stable"
+        elif scores[-1] > scores[0]:
+            trend = "escalating"
+        elif scores[-1] < scores[0]:
+            trend = "easing"
+        else:
+            trend = "stable"
+
+        def _fmt_date(code: str) -> Optional[str]:
+            tl = taboo_list_map.get(code)
+            if tl and tl.date_start:
+                return tl.date_start.strftime("%b %Y")
+            return None
+
+        entries: List[TabooEntrySchema] = []
+        for idx, (row, eff_from, eff_to) in enumerate(groups):
+            text = (row.text or "").strip()
+            is_forbidden = text.startswith("Forbidden.") or text == "Forbidden"
+            score = _restriction_score(row.cost, row.level, text)
+            entries.append(
+                TabooEntrySchema(
+                    taboo_id=row.id,
+                    taboo_code=eff_from,
+                    effective_from=eff_from,
+                    effective_to=eff_to,
+                    date_start=_fmt_date(eff_from),
+                    date_end=_fmt_date(eff_to) if eff_from != eff_to else None,
+                    cost_delta=row.cost,
+                    xp_delta=row.level,
+                    text=row.text,
+                    is_forbidden=is_forbidden,
+                    restriction_score=score,
+                    is_strongest=False,
+                    is_current=(idx == len(groups) - 1),
+                    is_introduced=(idx == 0),
+                )
+            )
+
+        # Mark the least-restrictive non-forbidden change point
+        non_forbidden = [e for e in entries if not e.is_forbidden]
+        if non_forbidden:
+            min(non_forbidden, key=lambda e: e.restriction_score).is_strongest = True
+
+        intro_date = _fmt_date(groups[0][1])
+
+        return CardTaboosResponse(
+            card_code=card.code,
+            card_name=card.name,
+            base_cost=card.cost,
+            base_xp=card.xp,
+            taboo_versions=entries,
+            has_taboos=True,
+            introduced_version=groups[0][1],
+            introduced_date=intro_date,
+            versions_active=versions_active,
+            restriction_trend=trend,
+        ).model_dump()

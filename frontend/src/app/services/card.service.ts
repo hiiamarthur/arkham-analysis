@@ -182,6 +182,36 @@ export interface CardStatsResponse {
   };
 }
 
+export interface TabooEntry {
+  taboo_id: number;
+  taboo_code: string;
+  effective_from: string;
+  effective_to: string;
+  date_start: string | null;
+  date_end: string | null;
+  cost_delta: number | null;
+  xp_delta: number | null;
+  text: string | null;
+  is_forbidden: boolean;
+  restriction_score: number;
+  is_strongest: boolean;
+  is_current: boolean;
+  is_introduced: boolean;
+}
+
+export interface CardTaboosResponse {
+  card_code: string;
+  card_name: string | null;
+  base_cost: number | null;
+  base_xp: number | null;
+  taboo_versions: TabooEntry[];
+  has_taboos: boolean;
+  introduced_version: string | null;
+  introduced_date: string | null;
+  versions_active: number;
+  restriction_trend: 'escalating' | 'easing' | 'stable' | 'none';
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -264,5 +294,9 @@ export class CardService {
    */
   getCardStats(cardCode: string): Observable<CardStatsResponse> {
     return this.http.get<CardStatsResponse>(`${this.apiUrl}/${cardCode}/stats`);
+  }
+
+  getCardTaboos(cardCode: string): Observable<CardTaboosResponse> {
+    return this.http.get<CardTaboosResponse>(`${this.apiUrl}/${cardCode}/taboos`);
   }
 }

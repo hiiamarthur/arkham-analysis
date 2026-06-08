@@ -5,7 +5,7 @@ import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { Location } from '@angular/common';
 import { AnalysisService, CardAnalysisRequest, AnalysisResponse } from '../../services/analysis.service';
 import { DataTableComponent, TableColumn, TableConfig } from '../../shared/components/data-table.component';
-import { CardService, CardResponse, CardStatsResponse } from '../../services/card.service';
+import { CardService, CardResponse, CardStatsResponse, CardTaboosResponse } from '../../services/card.service';
 import { AppStateService } from '../../services/app-state.service';
 import { ArkhamIconsPipe } from '../../shared/pipes/arkham-icons.pipe';
 import { ArkhamSvgIconsService } from '../../shared/services/arkham-svg-icons.service';
@@ -92,6 +92,11 @@ export class CardAnalysisComponent implements OnInit {
 
   // Navigation history — stores {code, name} of previously viewed cards so Back can return to them
   cardNavStack = signal<Array<{ code: string; name: string }>>([]);
+
+  // Taboo comparison
+  cardTaboos = signal<CardTaboosResponse | null>(null);
+  tabooLoading = signal(false);
+  selectedTabooId = signal<number | null>(null);
 
   // Expandable sections
   topInvestigatorsExpanded = signal(true);
@@ -216,6 +221,8 @@ export class CardAnalysisComponent implements OnInit {
   private loadCardDetails(cardCode: string): void {
     this.statsLoading.set(true);
     this.showStatsModal.set(true);
+    this.cardTaboos.set(null);
+    this.selectedTabooId.set(null);
 
     import('rxjs').then(({ forkJoin, of }) => {
       import('rxjs/operators').then(({ catchError }) => {
@@ -226,11 +233,15 @@ export class CardAnalysisComponent implements OnInit {
         const stats$ = this.cardService.getCardStats(cardCode).pipe(
           catchError(err => { console.error('Error fetching card stats:', err); return of(null); })
         );
+        const taboos$ = this.cardService.getCardTaboos(cardCode).pipe(
+          catchError(err => { console.error('Error fetching taboos:', err); return of(null); })
+        );
 
-        forkJoin({ details: details$, stats: stats$ }).subscribe({
+        forkJoin({ details: details$, stats: stats$, taboos: taboos$ }).subscribe({
           next: (result) => {
             this.selectedCardDetails.set(result.details as any);
             this.selectedCardStats.set(result.stats as any);
+            this.cardTaboos.set(result.taboos as any);
             this.statsLoading.set(false);
           },
           error: (err) => {
@@ -802,6 +813,32 @@ export class CardAnalysisComponent implements OnInit {
   getCardImageUrl(imagesrc: string | undefined): string {
     if (!imagesrc) return '';
     return `https://arkhamdb.com${imagesrc}`;
+  }
+
+  selectTaboo(id: number | null): void {
+    this.selectedTabooId.set(id);
+  }
+
+  selectedTabooEntry() {
+    const id = this.selectedTabooId();
+    if (id === null) return null;
+    return this.cardTaboos()?.taboo_versions.find(t => t.taboo_id === id) ?? null;
+  }
+
+  tabooRestrictionLabel(score: number, isForbidden: boolean): string {
+    if (isForbidden) return 'Forbidden';
+    if (score === 0) return 'No restriction';
+    if (score <= 2) return 'Minor';
+    if (score <= 5) return 'Moderate';
+    return 'Heavy';
+  }
+
+  tabooRestrictionClass(score: number, isForbidden: boolean): string {
+    if (isForbidden) return 'taboo-forbidden';
+    if (score === 0) return 'taboo-none';
+    if (score <= 2) return 'taboo-minor';
+    if (score <= 5) return 'taboo-moderate';
+    return 'taboo-heavy';
   }
 
   get includeCampaignContext(): boolean {

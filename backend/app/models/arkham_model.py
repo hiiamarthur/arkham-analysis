@@ -6,13 +6,14 @@ from sqlalchemy import (
     String,
     Text,
     Boolean,
+    Date,
     Table,
     ForeignKey,
     text,
 )
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from typing import List, Optional, Dict, Any
-from datetime import datetime
+from datetime import datetime, date
 
 
 # Define the association table first
@@ -79,6 +80,17 @@ class BondedCardModel(BaseModel):
     bonded_card: Mapped["CardModel"] = relationship(
         "CardModel", foreign_keys=[bonded_card_code]
     )
+
+
+class TabooListModel(BaseModel):
+    __tablename__ = "taboo_lists"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    code: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    date_start: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    date_update: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    active: Mapped[bool] = mapped_column(Boolean, default=True)
 
 
 class TabooModel(BaseModel):

@@ -370,6 +370,31 @@ async def get_cards_by_encounter(
     )
 
 
+@router.get("/{card_code}/taboos")
+async def get_card_taboos(
+    response: Response,
+    card_code: str = Depends(get_card_code_param),
+    card_service: CardService = Depends(get_card_service),
+):
+    """Get all taboo versions for a card with restriction scores and strength ranking."""
+    import logging
+
+    logger = logging.getLogger(__name__)
+    try:
+        data = await card_service.get_card_taboos(card_code)
+        if data is None:
+            raise CARD_NOT_FOUND
+
+        response.headers.update(ARKHAM_HEADERS)
+        response.headers["Cache-Control"] = f"public, max-age={CACHE_TTL_MEDIUM}"
+        return data
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error getting taboos for {card_code}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @router.get("/{card_code}/score", response_model=ScoringResult)
 async def get_card_score(
     response: Response,

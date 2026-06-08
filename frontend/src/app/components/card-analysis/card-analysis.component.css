@@ -2147,3 +2147,210 @@
     margin-bottom: 0.6rem;
   }
 }
+
+/* ── Taboo Section ─────────────────────────────────────────────── */
+
+.taboo-section {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+
+.taboo-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.taboo-section-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+}
+
+.taboo-clean-badge {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border-radius: 4px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.taboo-versions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.taboo-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.05);
+  transition: all 0.15s ease;
+  font-family: inherit;
+  text-align: center;
+  min-width: 80px;
+}
+
+.taboo-pill:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.taboo-pill--active {
+  box-shadow: 0 0 0 2px currentColor;
+}
+
+.taboo-pill-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.taboo-pill-meta {
+  font-size: 0.7rem;
+  margin-top: 0.1rem;
+}
+
+.taboo-crown {
+  color: #fbbf24;
+  font-size: 0.75rem;
+}
+
+.taboo-current-dot {
+  color: #10b981;
+  font-size: 0.6rem;
+  vertical-align: middle;
+}
+
+.taboo-current-label {
+  display: inline-block;
+  margin-left: 0.4rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.taboo-meta-badge {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.taboo-trend-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+}
+
+.taboo-trend--escalating {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.taboo-trend--easing {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.taboo-trend--stable {
+  color: #94a3b8;
+  background: rgba(148, 163, 184, 0.1);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+/* Severity colour tokens */
+.taboo-none   { color: #10b981; border-color: rgba(16,185,129,0.4);  background: rgba(16,185,129,0.08);  }
+.taboo-minor  { color: #fbbf24; border-color: rgba(251,191,36,0.4);  background: rgba(251,191,36,0.08);  }
+.taboo-moderate { color: #f97316; border-color: rgba(249,115,22,0.4); background: rgba(249,115,22,0.08); }
+.taboo-heavy  { color: #ef4444; border-color: rgba(239,68,68,0.4);   background: rgba(239,68,68,0.08);   }
+.taboo-forbidden { color: #7c3aed; border-color: rgba(124,58,237,0.5); background: rgba(124,58,237,0.1); }
+
+/* Detail panel */
+.taboo-detail-panel {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.taboo-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.taboo-version-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.taboo-restriction-badge {
+  font-size: 0.7rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.taboo-deltas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.taboo-delta {
+  font-size: 0.8125rem;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.taboo-delta--cost {
+  background: rgba(251, 191, 36, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.taboo-delta--xp {
+  background: rgba(99, 102, 241, 0.12);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.taboo-text {
+  font-size: 0.8125rem;
+  color: #94a3b8;
+  line-height: 1.6;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 0.5rem;
+  margin-top: 0.25rem;
+}

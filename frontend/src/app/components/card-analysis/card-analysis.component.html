@@ -677,6 +677,96 @@
           {{getLastUpdatedText(stats)}}
         </div>
 
+        <!-- Taboo Versions -->
+        <div *ngIf="cardTaboos() as taboos" class="taboo-section">
+          <div class="taboo-section-header">
+            <span class="taboo-section-title">Taboo History</span>
+            <ng-container *ngIf="taboos.has_taboos">
+              <span class="taboo-meta-badge">
+                Since {{taboos.introduced_date || ('v' + taboos.introduced_version)}} &nbsp;·&nbsp; {{taboos.versions_active}} lists
+              </span>
+              <span class="taboo-trend-badge taboo-trend--{{taboos.restriction_trend}}">
+                {{ taboos.restriction_trend === 'escalating' ? '↑ Escalating' :
+                   taboos.restriction_trend === 'easing'     ? '↓ Easing' : '→ Stable' }}
+              </span>
+            </ng-container>
+            <span *ngIf="!taboos.has_taboos" class="taboo-clean-badge">Not Tabooed</span>
+          </div>
+
+          <div *ngIf="taboos.has_taboos" class="taboo-versions-row">
+            <!-- Original baseline pill -->
+            <button
+              class="taboo-pill taboo-none"
+              [class.taboo-pill--active]="selectedTabooId() === null"
+              (click)="selectTaboo(null)">
+              <span class="taboo-pill-label">Original</span>
+              <span class="taboo-pill-meta">
+                Base&nbsp;
+                <span *ngIf="taboos.base_cost !== null && taboos.base_cost !== undefined">{{taboos.base_cost}} res</span>
+                <span *ngIf="taboos.base_xp !== null && taboos.base_xp !== undefined">&nbsp;·&nbsp;{{taboos.base_xp}} XP</span>
+              </span>
+            </button>
+
+            <!-- One pill per change point (deduplicated) -->
+            <button
+              *ngFor="let t of taboos.taboo_versions"
+              class="taboo-pill"
+              [class]="'taboo-pill ' + tabooRestrictionClass(t.restriction_score, t.is_forbidden)"
+              [class.taboo-pill--active]="selectedTabooId() === t.taboo_id"
+              [title]="t.text || ''"
+              (click)="selectTaboo(t.taboo_id)">
+              <span class="taboo-pill-label">
+                <ng-container *ngIf="t.date_start; else codeLabel">
+                  {{t.date_start}}<ng-container *ngIf="t.date_end"> – {{t.date_end}}</ng-container>
+                </ng-container>
+                <ng-template #codeLabel>
+                  <ng-container *ngIf="t.effective_from === t.effective_to">v{{t.effective_from}}</ng-container>
+                  <ng-container *ngIf="t.effective_from !== t.effective_to">v{{t.effective_from}}–{{t.effective_to}}</ng-container>
+                </ng-template>
+                <span *ngIf="t.is_current" class="taboo-current-dot" title="Currently active">●</span>
+                <span *ngIf="t.is_strongest && !t.is_current" class="taboo-crown" title="Least restrictive version">★</span>
+              </span>
+              <span class="taboo-pill-meta">{{tabooRestrictionLabel(t.restriction_score, t.is_forbidden)}}</span>
+            </button>
+          </div>
+
+          <!-- Selected taboo detail panel -->
+          <div *ngIf="selectedTabooEntry() as entry" class="taboo-detail-panel">
+            <div class="taboo-detail-header">
+              <span class="taboo-version-label">
+                <ng-container *ngIf="entry.is_introduced">Introduced</ng-container>
+                <ng-container *ngIf="!entry.is_introduced">Changed</ng-container>
+                &nbsp;
+                <ng-container *ngIf="entry.date_start; else detailCodeLabel">
+                  {{entry.date_start}}<ng-container *ngIf="entry.date_end"> – {{entry.date_end}}</ng-container>
+                </ng-container>
+                <ng-template #detailCodeLabel>
+                  v{{entry.effective_from}}<ng-container *ngIf="entry.effective_from !== entry.effective_to">–{{entry.effective_to}}</ng-container>
+                </ng-template>
+                <span *ngIf="entry.is_current" class="taboo-current-label">Current</span>
+              </span>
+              <span class="taboo-restriction-badge" [class]="tabooRestrictionClass(entry.restriction_score, entry.is_forbidden)">
+                {{tabooRestrictionLabel(entry.restriction_score, entry.is_forbidden)}}
+              </span>
+            </div>
+            <div class="taboo-deltas">
+              <span *ngIf="entry.cost_delta && entry.cost_delta > 0" class="taboo-delta taboo-delta--cost">
+                Cost +{{entry.cost_delta}}
+                <span *ngIf="taboos.base_cost !== null && taboos.base_cost !== undefined">
+                  ({{taboos.base_cost}} → {{taboos.base_cost + entry.cost_delta}})
+                </span>
+              </span>
+              <span *ngIf="entry.xp_delta && entry.xp_delta > 0" class="taboo-delta taboo-delta--xp">
+                XP +{{entry.xp_delta}}
+                <span *ngIf="taboos.base_xp !== null && taboos.base_xp !== undefined">
+                  ({{taboos.base_xp}} → {{taboos.base_xp + entry.xp_delta}})
+                </span>
+              </span>
+            </div>
+            <div *ngIf="entry.text" class="taboo-text" [innerHTML]="entry.text | arkhamIcons"></div>
+          </div>
+        </div>
+
         <!-- Card Details Section - Full Width Below Overview -->
         <div *ngIf="selectedCardDetails() as details" class="card-details-section-top">
           <div class="card-details-layout-horizontal">

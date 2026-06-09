@@ -9,11 +9,12 @@ import { ReplacePipe } from '../../pipes/replace.pipe';
 import { IconService } from '../../shared/services/icon.service';
 import { SafeHtml } from '@angular/platform-browser';
 import { SearchableSelectComponent, SelectOption } from '../../shared/components/searchable-select.component';
+import { CardTooltipDirective } from '../../shared/directives/card-tooltip.directive';
 
 @Component({
   selector: 'app-threat-assessment',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, ReplacePipe, SearchableSelectComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, ReplacePipe, SearchableSelectComponent, CardTooltipDirective],
   templateUrl: './threat-assessment.component.html',
   styleUrl: './threat-assessment.component.css'
 })

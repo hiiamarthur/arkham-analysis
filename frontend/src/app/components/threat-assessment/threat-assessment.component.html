@@ -424,7 +424,7 @@
                         <div class="card-content">
                           <div class="card-header">
                             <div class="card-title-section">
-                              <span class="card-name">{{card.name}}</span>
+                              <span class="card-name" [cardTooltip]="card.code">{{card.name}}</span>
                               <span class="card-code">{{card.code}}</span>
                               <span class="card-quantity" [class.quantity-multiple]="card.quantity > 1">
                                 ×{{card.quantity}}

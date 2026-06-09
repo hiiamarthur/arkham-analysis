@@ -14,6 +14,7 @@ import { IconService } from '../../shared/services/icon.service';
 import { SafeHtml, DomSanitizer } from '@angular/platform-browser';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartData, ChartOptions } from 'chart.js';
+import { CardTooltipDirective } from '../../shared/directives/card-tooltip.directive';
 
 interface Card {
   code: string;
@@ -61,7 +62,7 @@ interface Card {
 @Component({
   selector: 'app-card-analysis',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, DataTableComponent, ArkhamIconsPipe, BaseChartDirective, AutocompleteInputComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, DataTableComponent, ArkhamIconsPipe, BaseChartDirective, AutocompleteInputComponent, CardTooltipDirective],
   templateUrl: './card-analysis.component.html',
   styleUrl: './card-analysis.component.css'
 })

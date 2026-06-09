@@ -3,9 +3,10 @@ import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { Chart, registerables } from 'chart.js';
 import { AppStateService } from '../../services/app-state.service';
-import { ScenarioService, Scenario, Campaign, DashboardStats, DashboardCard } from '../../services/scenario.service';
+import { ScenarioService, Scenario, Campaign, DashboardStats, DashboardCard, MetaTrends } from '../../services/scenario.service';
 import { IconService } from '../../shared/services/icon.service';
 import { SafeHtml } from '@angular/platform-browser';
+import { CardTooltipDirective } from '../../shared/directives/card-tooltip.directive';
 
 const FACTION_COLORS: Record<string, string> = {
   guardian: '#2b80c5',
@@ -24,7 +25,7 @@ const CHART_BORDER = '#0a080f';
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterModule],
+  imports: [CommonModule, RouterModule, CardTooltipDirective],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css'
 })
@@ -33,6 +34,8 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   @ViewChild('campaignChart',    { static: false }) campaignChartRef!:    ElementRef<HTMLCanvasElement>;
   @ViewChild('metaFactionChart', { static: false }) metaFactionChartRef!: ElementRef<HTMLCanvasElement>;
   @ViewChild('xpChart',          { static: false }) xpChartRef!:          ElementRef<HTMLCanvasElement>;
+  @ViewChild('factionTrendChart',     { static: false }) factionTrendChartRef!:     ElementRef<HTMLCanvasElement>;
+  @ViewChild('invTrendChart',         { static: false }) invTrendChartRef!:         ElementRef<HTMLCanvasElement>;
 
   private charts: Chart[] = [];
   private iconService = inject(IconService);
@@ -43,6 +46,8 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   loading      = signal(true);
   dashboardStats  = signal<DashboardStats | null>(null);
   statsLoading    = signal(true);
+  metaTrends      = signal<MetaTrends | null>(null);
+  trendsLoading   = signal(false);
 
   traits        = computed(() => this.appState.traits());
   encounterSets = computed(() => this.appState.encounterSets());
@@ -84,6 +89,7 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
   ngOnInit(): void {
     this.loadData();
     this.loadDashboardStats();
+    this.loadMetaTrends();
   }
 
   ngAfterViewInit(): void {
@@ -114,6 +120,21 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     }
   }
 
+  private async loadMetaTrends(): Promise<void> {
+    this.trendsLoading.set(true);
+    try {
+      const trends = await this.scenarioService.getMetaTrends(12).toPromise();
+      if (trends) {
+        this.metaTrends.set(trends);
+        if (isPlatformBrowser(this.platformId)) setTimeout(() => this.buildTrendCharts(), 100);
+      }
+    } catch (e) {
+      console.error('Meta trends load failed:', e);
+    } finally {
+      this.trendsLoading.set(false);
+    }
+  }
+
   private async loadDashboardStats(): Promise<void> {
     this.statsLoading.set(true);
     try {
@@ -140,6 +161,85 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     this.destroyCharts(['metaFactionChart', 'xpChart']);
     this.buildMetaFactionChart();
     this.buildXpChart();
+  }
+
+  private buildTrendCharts(): void {
+    this.destroyCharts(['factionTrendChart', 'invTrendChart']);
+    this.buildFactionTrendChart();
+    this.buildInvTrendChart();
+  }
+
+  private buildFactionTrendChart(): void {
+    const ctx = this.factionTrendChartRef?.nativeElement?.getContext('2d');
+    const trends = this.metaTrends();
+    if (!ctx || !trends) return;
+
+    const datasets = Object.entries(trends.factions).map(([faction, values]) => ({
+      label: faction.charAt(0).toUpperCase() + faction.slice(1),
+      data: values,
+      borderColor: FACTION_COLORS[faction] ?? '#4a5568',
+      backgroundColor: (FACTION_COLORS[faction] ?? '#4a5568') + '22',
+      borderWidth: 2,
+      pointRadius: 3,
+      pointHoverRadius: 5,
+      tension: 0.3,
+      fill: false,
+    }));
+
+    this.charts.push(new Chart(ctx, {
+      type: 'line',
+      data: { labels: trends.months, datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        animation: { duration: 900 },
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { position: 'bottom', labels: { color: CHART_TEXT, font: { size: 10 }, padding: 8, usePointStyle: true, boxWidth: 8 } },
+          tooltip: { callbacks: { label: (c) => ` ${c.dataset.label}: ${c.parsed.y}%` } },
+        },
+        scales: {
+          x: { ticks: { color: CHART_TEXT, font: { size: 10 }, maxRotation: 45 }, grid: { color: CHART_GRID } },
+          y: { beginAtZero: true, ticks: { color: CHART_TEXT, font: { size: 10 }, callback: (v: any) => `${v}%` }, grid: { color: CHART_GRID } },
+        },
+      },
+    }));
+  }
+
+  private buildInvTrendChart(): void {
+    const ctx = this.invTrendChartRef?.nativeElement?.getContext('2d');
+    const trends = this.metaTrends();
+    if (!ctx || !trends || !trends.investigators.length) return;
+
+    const palette = ['#c9a84c', '#8b1c1c', '#2b80c5', '#107116', '#6c3483', '#cc3038'];
+    const datasets = trends.investigators.map((inv, i) => ({
+      label: inv.name,
+      data: inv.monthly_share,
+      borderColor: palette[i % palette.length],
+      backgroundColor: palette[i % palette.length] + '22',
+      borderWidth: 2,
+      pointRadius: 3,
+      pointHoverRadius: 5,
+      tension: 0.3,
+      fill: false,
+    }));
+
+    this.charts.push(new Chart(ctx, {
+      type: 'line',
+      data: { labels: trends.months, datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        animation: { duration: 900 },
+        interaction: { mode: 'index', intersect: false },
+        plugins: {
+          legend: { position: 'bottom', labels: { color: CHART_TEXT, font: { size: 10 }, padding: 8, usePointStyle: true, boxWidth: 8 } },
+          tooltip: { callbacks: { label: (c) => ` ${c.dataset.label}: ${c.parsed.y}%` } },
+        },
+        scales: {
+          x: { ticks: { color: CHART_TEXT, font: { size: 10 }, maxRotation: 45 }, grid: { color: CHART_GRID } },
+          y: { beginAtZero: true, ticks: { color: CHART_TEXT, font: { size: 10 }, callback: (v: any) => `${v}%` }, grid: { color: CHART_GRID } },
+        },
+      },
+    }));
   }
 
   private destroyCharts(tags: string[]): void {

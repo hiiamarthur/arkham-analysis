@@ -2,6 +2,7 @@ import { Component, signal, computed, inject, OnInit, HostListener } from '@angu
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AutocompleteInputComponent } from '../../shared/components/autocomplete-input.component';
+import { CardTooltipDirective } from '../../shared/directives/card-tooltip.directive';
 import { Router } from '@angular/router';
 import { SafeHtml, DomSanitizer } from '@angular/platform-browser';
 import { InvestigatorService, CardPoolEntry, InvestigatorMetadata } from '../../services/investigator.service';
@@ -32,7 +33,7 @@ interface CardGroup {
 @Component({
   selector: 'app-pool-compare',
   standalone: true,
-  imports: [CommonModule, FormsModule, AutocompleteInputComponent],
+  imports: [CommonModule, FormsModule, AutocompleteInputComponent, CardTooltipDirective],
   // RouterModule not needed — we use Router.navigate directly
   templateUrl: './pool-compare.component.html',
   styleUrl: './pool-compare.component.css',

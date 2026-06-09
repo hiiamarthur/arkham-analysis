@@ -897,17 +897,30 @@
               </div>
 
               <!-- Bonded Cards -->
-              <div *ngIf="details.bonded_cards && details.bonded_cards.length > 0" style="margin-top: 0.5rem;">
-                <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">Bonded</div>
-                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+              <div *ngIf="details.bonded_cards && details.bonded_cards.length > 0" style="margin-top: 0.75rem;">
+                <div style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #64748b; margin-bottom: 0.4rem;">Bonded Cards</div>
+                <div style="display: flex; flex-direction: column; gap: 0.35rem;">
                   <a *ngFor="let bonded of details.bonded_cards"
                      [routerLink]="['/analysis', bonded.code]"
-                     style="font-size: 0.875rem; color: #d6ad60; text-decoration: none; display: flex; align-items: center; gap: 0.35rem;">
-                    <span style="font-size: 0.7em; opacity: 0.7;">⬡</span>
-                    {{bonded.name}}
-                    <span *ngIf="bonded.count > 1" style="font-size: 0.75em; color: #64748b;">×{{bonded.count}}</span>
+                     [cardTooltip]="bonded.code"
+                     style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; border-left: 2px solid #d6ad60; background: rgba(214,173,96,0.07); border-radius: 0 4px 4px 0;">
+                    <span style="font-size: 0.75rem; color: #d6ad60; opacity: 0.8;">⬡</span>
+                    <span style="font-size: 0.875rem; color: #d6ad60;">{{bonded.name}}</span>
+                    <span *ngIf="bonded.count > 1" style="font-size: 0.75rem; color: #64748b; margin-left: auto;">×{{bonded.count}}</span>
                   </a>
                 </div>
+              </div>
+
+              <!-- Linked Card (double-sided front/back pairs) -->
+              <div *ngIf="details.linked_card" style="margin-top: 0.75rem;">
+                <div style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #64748b; margin-bottom: 0.4rem;">Linked Card</div>
+                <a [routerLink]="['/analysis', details.linked_card.code]"
+                   [cardTooltip]="details.linked_card.code"
+                   style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; border-left: 2px solid #94a3b8; background: rgba(148,163,184,0.07); border-radius: 0 4px 4px 0;">
+                  <span style="font-size: 0.75rem; color: #94a3b8; opacity: 0.8;">⇌</span>
+                  <span style="font-size: 0.875rem; color: #cbd5e1;">{{details.linked_card.name}}</span>
+                  <span *ngIf="details.linked_card.type_name" style="font-size: 0.75rem; color: #64748b; margin-left: auto;">{{details.linked_card.type_name}}</span>
+                </a>
               </div>
 
               <!-- ArkhamDB Link -->
@@ -930,7 +943,7 @@
               <div *ngFor="let inv of getTopInvestigators(getCombinedStats(stats).popularity.investigator_usage_rate); let i = index"
                    class="investigator-item-compact">
                 <span class="inv-rank">{{i + 1}}</span>
-                <span class="inv-name">{{getInvestigatorName(inv.code)}}</span>
+                <span class="inv-name" [cardTooltip]="inv.code">{{getInvestigatorName(inv.code)}}</span>
                 <div class="inv-bar-mini">
                   <div class="inv-bar-fill" [style.width.%]="getBarPercent(inv.rate)"></div>
                 </div>
@@ -961,7 +974,7 @@
               <span class="stat-label-compact">this card also appears in other sets</span>
             </div>
             <div class="related-cards-list">
-              <div *ngFor="let related of stats.related_cards" class="related-card-chip" (click)="navigateToRelatedCard(related.code)">
+              <div *ngFor="let related of stats.related_cards" class="related-card-chip" [cardTooltip]="related.code" (click)="navigateToRelatedCard(related.code)">
                 <span class="related-card-name">{{related.name}}</span>
                 <span class="related-card-pack">{{related.pack_name}}</span>
                 <span class="related-card-decks" *ngIf="related.deck_stats">

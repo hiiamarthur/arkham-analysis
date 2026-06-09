@@ -2,11 +2,12 @@ import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs/operators';
 import { NavigationComponent } from './components/navigation/navigation.component';
+import { CardTooltipOverlayComponent } from './shared/components/card-tooltip-overlay.component';
 import { SeoService } from './services/seo.service';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, NavigationComponent],
+  imports: [RouterOutlet, NavigationComponent, CardTooltipOverlayComponent],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

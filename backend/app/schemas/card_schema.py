@@ -121,6 +121,8 @@ class CardSchema(BaseSchema):
     bonded_cards: List[BondedCardSchema] = []
     related_card: str | None = None
     alternated_by: List[str] | None = None
+    customization_text: str | None = None
+    customization_options: List[Any] | None = None
 
     def apply_taboo(self, taboo_version: TabooVersion) -> "CardSchema":
         if taboo_version.cost:
@@ -267,6 +269,8 @@ class CardSchema(BaseSchema):
                 code for code in (card_model.alternated_by or [])
                 if code not in set(card_model.duplicated_by or [])
             ] or None,
+            customization_text=card_model.customization_text,
+            customization_options=card_model.customization_options,
         )
 
 

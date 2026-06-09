@@ -1331,6 +1331,21 @@ export class CardAnalysisComponent implements OnInit {
     return Object.keys(this.getCombinedStats(stats).popularity.investigator_usage_rate).length;
   }
 
+  parseCustomizationOptions(text: string): Array<{ xp: number; pips: number[]; name: string; description: string; isPreamble: boolean }> {
+    return text.split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .map(line => {
+        const isPreamble = !line.startsWith('□');
+        const xp = isPreamble ? 0 : (line.match(/^□+/) || [''])[0].length;
+        const rest = isPreamble ? line : line.replace(/^□+\s*/, '');
+        const nameMatch = !isPreamble && rest.match(/^<b>(.+?)<\/b>\s*(.*)/s);
+        const name = nameMatch ? nameMatch[1].replace(/\.$/, '') : rest;
+        const description = nameMatch ? nameMatch[2].trim() : '';
+        return { xp, pips: Array.from({ length: xp }, (_, i) => i), name, description, isPreamble };
+      });
+  }
+
   // Navigate to a related card's analysis page, pushing current card onto the back-stack
   navigateToRelatedCard(code: string): void {
     const current = this.selectedCardDetails();

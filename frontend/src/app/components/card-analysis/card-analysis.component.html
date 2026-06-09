@@ -735,6 +735,27 @@
             </div>
           </div>
         </div>
+
+        <!-- Customization Options (no-stats block) -->
+        <div *ngIf="details.customization_text" class="customization-section" style="margin-top: 1rem;">
+          <div class="customization-header">
+            <span class="customization-label">Customizable</span>
+          </div>
+          <div class="customization-list">
+            <ng-container *ngFor="let opt of parseCustomizationOptions(details.customization_text)">
+              <div *ngIf="opt.isPreamble" class="customization-preamble" [innerHTML]="opt.name | arkhamIcons"></div>
+              <div *ngIf="!opt.isPreamble" class="customization-row">
+                <div class="customization-xp">
+                  <span *ngFor="let pip of opt.pips" class="xp-pip"></span>
+                </div>
+                <div class="customization-content">
+                  <span class="customization-name" [innerHTML]="opt.name | arkhamIcons"></span>
+                  <span *ngIf="opt.description" class="customization-desc" [innerHTML]="opt.description | arkhamIcons"></span>
+                </div>
+              </div>
+            </ng-container>
+          </div>
+        </div>
       </div>
 
       <div *ngIf="!statsLoading() && selectedCardStats() as stats" class="stats-content">
@@ -973,6 +994,27 @@
             <div *ngIf="details.flavor" style="margin-top: 0.5rem; padding: 0 0.25rem;">
               <div style="color: #94a3b8; font-style: italic; font-size: 0.875rem; line-height: 1.5;">
                 {{details.flavor}}
+              </div>
+            </div>
+
+            <!-- Customization Options -->
+            <div *ngIf="details.customization_text" class="customization-section">
+              <div class="customization-header">
+                <span class="customization-label">Customizable</span>
+              </div>
+              <div class="customization-list">
+                <ng-container *ngFor="let opt of parseCustomizationOptions(details.customization_text)">
+                  <div *ngIf="opt.isPreamble" class="customization-preamble" [innerHTML]="opt.name | arkhamIcons"></div>
+                  <div *ngIf="!opt.isPreamble" class="customization-row">
+                    <div class="customization-xp">
+                      <span *ngFor="let pip of opt.pips" class="xp-pip"></span>
+                    </div>
+                    <div class="customization-content">
+                      <span class="customization-name" [innerHTML]="opt.name | arkhamIcons"></span>
+                      <span *ngIf="opt.description" class="customization-desc" [innerHTML]="opt.description | arkhamIcons"></span>
+                    </div>
+                  </div>
+                </ng-container>
               </div>
             </div>
 

@@ -52,6 +52,8 @@ export interface CardResponse {
   alternate_of_code?: string;
   alternate_of_name?: string;
   alternated_by?: string[];
+  customization_text?: string;
+  customization_options?: any[];
 }
 
 export interface CardSearchParams {

@@ -705,6 +705,33 @@
                   <span *ngIf="details.linked_card.type_name" style="font-size: 0.75rem; color: #64748b; margin-left: auto;">{{details.linked_card.type_name}}</span>
                 </div>
               </div>
+
+              <!-- Alternate of (this card is a parallel/alternate version) -->
+              <div *ngIf="details.alternate_of_code" style="margin-top: 0.75rem;">
+                <div style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #64748b; margin-bottom: 0.4rem;">Alternate Of</div>
+                <div [cardTooltip]="details.alternate_of_code"
+                     (click)="navigateToRelatedCard(details.alternate_of_code)"
+                     style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; border-left: 2px solid #818cf8; background: rgba(129,140,248,0.07); border-radius: 0 4px 4px 0;">
+                  <span style="font-size: 0.75rem; color: #818cf8; opacity: 0.8;">◈</span>
+                  <span style="font-size: 0.875rem; color: #c7d2fe;">{{details.alternate_of_name || details.alternate_of_code}}</span>
+                  <span style="font-size: 0.7rem; color: #64748b; margin-left: auto;">Original</span>
+                </div>
+              </div>
+
+              <!-- Alternated by (this card has parallel/alternate versions) -->
+              <div *ngIf="details.alternated_by && details.alternated_by.length > 0" style="margin-top: 0.75rem;">
+                <div style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #64748b; margin-bottom: 0.4rem;">Alternate Versions</div>
+                <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                  <div *ngFor="let altCode of details.alternated_by"
+                       [cardTooltip]="altCode"
+                       (click)="navigateToRelatedCard(altCode)"
+                       style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; border-left: 2px solid #818cf8; background: rgba(129,140,248,0.07); border-radius: 0 4px 4px 0;">
+                    <span style="font-size: 0.75rem; color: #818cf8; opacity: 0.8;">◈</span>
+                    <span style="font-size: 0.875rem; color: #c7d2fe;">{{altCode}}</span>
+                    <span style="font-size: 0.7rem; color: #64748b; margin-left: auto;">Parallel</span>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -1000,6 +1027,33 @@
                   <span style="font-size: 0.75rem; color: #94a3b8; opacity: 0.8;">⇌</span>
                   <span style="font-size: 0.875rem; color: #cbd5e1;">{{details.linked_card.name}}</span>
                   <span *ngIf="details.linked_card.type_name" style="font-size: 0.75rem; color: #64748b; margin-left: auto;">{{details.linked_card.type_name}}</span>
+                </div>
+              </div>
+
+              <!-- Alternate of (this card is a parallel/alternate version) -->
+              <div *ngIf="details.alternate_of_code" style="margin-top: 0.75rem;">
+                <div style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #64748b; margin-bottom: 0.4rem;">Alternate Of</div>
+                <div [cardTooltip]="details.alternate_of_code"
+                     (click)="navigateToRelatedCard(details.alternate_of_code)"
+                     style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; border-left: 2px solid #818cf8; background: rgba(129,140,248,0.07); border-radius: 0 4px 4px 0;">
+                  <span style="font-size: 0.75rem; color: #818cf8; opacity: 0.8;">◈</span>
+                  <span style="font-size: 0.875rem; color: #c7d2fe;">{{details.alternate_of_name || details.alternate_of_code}}</span>
+                  <span style="font-size: 0.7rem; color: #64748b; margin-left: auto;">Original</span>
+                </div>
+              </div>
+
+              <!-- Alternated by (this card has parallel/alternate versions) -->
+              <div *ngIf="details.alternated_by && details.alternated_by.length > 0" style="margin-top: 0.75rem;">
+                <div style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #64748b; margin-bottom: 0.4rem;">Alternate Versions</div>
+                <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                  <div *ngFor="let altCode of details.alternated_by"
+                       [cardTooltip]="altCode"
+                       (click)="navigateToRelatedCard(altCode)"
+                       style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; border-left: 2px solid #818cf8; background: rgba(129,140,248,0.07); border-radius: 0 4px 4px 0;">
+                    <span style="font-size: 0.75rem; color: #818cf8; opacity: 0.8;">◈</span>
+                    <span style="font-size: 0.875rem; color: #c7d2fe;">{{altCode}}</span>
+                    <span style="font-size: 0.7rem; color: #64748b; margin-left: auto;">Parallel</span>
+                  </div>
                 </div>
               </div>
 

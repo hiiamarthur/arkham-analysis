@@ -147,6 +147,31 @@
       </div>
     </div>
 
+    <!-- Alternate version links -->
+    <div class="alternate-versions-bar" *ngIf="investigator.alternate_of_code || (investigator.alternated_by && investigator.alternated_by.length)">
+      <!-- This is a parallel version → link back to original -->
+      <div *ngIf="investigator.alternate_of_code" class="alt-entry alt-entry--original"
+           [cardTooltip]="investigator.alternate_of_code"
+           (click)="navigateToInvestigator(investigator.alternate_of_code!)">
+        <span class="alt-icon">◈</span>
+        <span class="alt-label">Parallel of</span>
+        <span class="alt-name">{{investigator.alternate_of_name || investigator.alternate_of_code}}</span>
+        <span class="alt-tag">Original</span>
+      </div>
+      <!-- This investigator has parallel versions → list them -->
+      <ng-container *ngIf="investigator.alternated_by && investigator.alternated_by.length">
+        <span class="alt-divider" *ngIf="investigator.alternate_of_code">·</span>
+        <span class="alt-label">Parallel versions:</span>
+        <div *ngFor="let altCode of investigator.alternated_by" class="alt-entry alt-entry--parallel"
+             [cardTooltip]="altCode"
+             (click)="navigateToInvestigator(altCode)">
+          <span class="alt-icon">◈</span>
+          <span class="alt-name">{{getInvestigatorName(altCode)}}</span>
+          <span class="alt-tag">Parallel</span>
+        </div>
+      </ng-container>
+    </div>
+
     <!-- No deck data notice (parallel / new investigators) -->
     <div class="no-stats-notice" *ngIf="!statsLoading() && statsNoData()">
       <p>No deck data found for this investigator.</p>

@@ -1433,3 +1433,69 @@
   padding: 0.15rem 0.5rem;
   white-space: nowrap;
 }
+
+/* ── Alternate versions bar ─────────────────────────────────── */
+.alternate-versions-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin: 1rem 0;
+  padding: 0.75rem 1rem;
+  background: linear-gradient(135deg, rgba(129, 140, 248, 0.12), rgba(167, 139, 250, 0.08));
+  border: 1px solid rgba(129, 140, 248, 0.4);
+  border-left: 3px solid #818cf8;
+  border-radius: 10px;
+  box-shadow: 0 0 12px rgba(129, 140, 248, 0.1);
+}
+
+.alt-label {
+  font-size: 0.72rem;
+  color: #a5b4fc;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.alt-divider {
+  color: #475569;
+}
+
+.alt-entry {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0.75rem;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: background 0.15s, box-shadow 0.15s, transform 0.1s;
+  border: 1px solid rgba(129, 140, 248, 0.45);
+  background: rgba(129, 140, 248, 0.12);
+}
+
+.alt-entry:hover {
+  background: rgba(129, 140, 248, 0.28);
+  box-shadow: 0 0 10px rgba(129, 140, 248, 0.3);
+  transform: translateY(-1px);
+}
+
+.alt-icon {
+  font-size: 0.75rem;
+  color: #a78bfa;
+}
+
+.alt-name {
+  font-size: 0.82rem;
+  color: #e0e7ff;
+  font-weight: 600;
+}
+
+.alt-tag {
+  font-size: 0.65rem;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 0.05rem 0.35rem;
+  margin-left: 0.2rem;
+}

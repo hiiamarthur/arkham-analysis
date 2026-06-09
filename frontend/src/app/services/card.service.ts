@@ -49,6 +49,9 @@ export interface CardResponse {
   bonded_cards?: Array<{ code: string; name: string; count: number }>;
   linked_card?: { code: string; name: string; type_name?: string; imagesrc?: string };
   related_card?: string;
+  alternate_of_code?: string;
+  alternate_of_name?: string;
+  alternated_by?: string[];
 }
 
 export interface CardSearchParams {

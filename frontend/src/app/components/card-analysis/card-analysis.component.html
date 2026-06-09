@@ -47,7 +47,8 @@
             ></app-autocomplete-input>
           </div>
 
-          <div class="filter-group">
+          <!-- Faction filter: only relevant for player cards -->
+          <div class="filter-group" *ngIf="filterPlayerOnly()">
             <label for="search-faction">Faction</label>
             <select id="search-faction" [(ngModel)]="searchFaction" class="filter-select">
               <option value="">All Factions</option>
@@ -64,12 +65,25 @@
             <label for="search-type">Type</label>
             <select id="search-type" [(ngModel)]="searchType" class="filter-select">
               <option value="">All Types</option>
-              <option value="asset">Asset</option>
-              <option value="event">Event</option>
-              <option value="skill">Skill</option>
-              <option value="investigator">Investigator</option>
-              <option value="treachery">Treachery</option>
-              <option value="enemy">Enemy</option>
+              <ng-container *ngIf="filterPlayerOnly()">
+                <!-- treachery/enemy are ENCOUNTER_TYPE_CODES on backend — excluded in player-only mode -->
+                <option value="asset">Asset</option>
+                <option value="event">Event</option>
+                <option value="skill">Skill</option>
+              </ng-container>
+              <ng-container *ngIf="!filterPlayerOnly()">
+                <option disabled style="color: #64748b; font-size: 0.7rem;">─── Player ───</option>
+                <option value="asset">Asset</option>
+                <option value="event">Event</option>
+                <option value="skill">Skill</option>
+                <option disabled style="color: #64748b; font-size: 0.7rem;">─── Encounter ───</option>
+                <option value="treachery">Treachery</option>
+                <option value="enemy">Enemy</option>
+                <option value="location">Location</option>
+                <option value="act">Act</option>
+                <option value="agenda">Agenda</option>
+                <option value="story">Story</option>
+              </ng-container>
             </select>
           </div>
 
@@ -118,6 +132,20 @@
           <button class="search-button advanced" (click)="toggleAdvancedFilters()">
             {{ showAdvancedFilters() ? '▼ Hide Advanced' : '▶ Show Advanced' }}
           </button>
+
+          <!-- Encounter filter controls -->
+          <div class="encounter-filter-controls">
+            <label class="toggle-switch-label" title="When off, encounter cards (enemies, treacheries, locations…) are included in results">
+              <span class="toggle-switch-text">Player cards only</span>
+              <div class="toggle-switch" [class.active]="filterPlayerOnly()" (click)="onTogglePlayerOnly()">
+                <div class="toggle-knob"></div>
+              </div>
+            </label>
+            <label *ngIf="!filterPlayerOnly()" class="spoiler-checkbox-label" title="Blur encounter card details to avoid spoilers">
+              <input type="checkbox" [checked]="hideEncounterSpoilers()" (change)="hideEncounterSpoilers.set(!hideEncounterSpoilers())">
+              <span>Hide encounter spoilers</span>
+            </label>
+          </div>
         </div>
 
         <!-- Advanced Filters Section -->
@@ -372,8 +400,14 @@
             </div>
           </div>
 
+          <!-- Encounter spoiler notice -->
+          <div *ngIf="hideEncounterSpoilers() && isEncounterCard(card.type)" class="encounter-spoiler-banner">
+            <span style="opacity: 0.7;">🔒</span> Encounter card — details hidden to avoid spoilers
+            <button (click)="hideEncounterSpoilers.set(false)" style="margin-left: auto; background: none; border: 1px solid rgba(148,163,184,0.4); color: #94a3b8; font-size: 0.75rem; padding: 0.2rem 0.5rem; border-radius: 4px; cursor: pointer;">Reveal</button>
+          </div>
+
           <!-- Two Column Layout -->
-          <div class="modal-two-column">
+          <div class="modal-two-column" [class.encounter-spoiler-blur]="hideEncounterSpoilers() && isEncounterCard(card.type)">
             <!-- Left Column: Card Info -->
             <div class="left-column">
               <!-- Traits as Tags -->
@@ -625,8 +659,54 @@
           <h2>{{details.name}}</h2>
           <span class="card-type-badge">{{details.type_name}}</span>
         </div>
-        <div class="stats-footer-compact" style="text-align:left; padding: 1rem;">
-          No statistics available for this card yet.
+
+        <!-- Card Details Section (image + bonded/linked) — shown even without deck stats -->
+        <div class="card-details-section-top">
+          <div class="card-details-layout-horizontal">
+            <div class="card-image-container">
+              <img *ngIf="details.imagesrc"
+                   [src]="getCardImageUrl(details.imagesrc)"
+                   [alt]="details.name"
+                   class="card-image"
+                   (error)="$any($event.target).src=''; $any($event.target).style.display='none'">
+              <div *ngIf="!details.imagesrc" class="no-image-placeholder">
+                <span class="no-image-icon" [innerHTML]="getIcon('card')"></span>
+                <p>No image available</p>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem; padding-top: 0.25rem;">
+              <div class="stats-footer-compact" style="text-align:left; padding: 0;">
+                No statistics available for this card yet.
+              </div>
+
+              <!-- Bonded Cards -->
+              <div *ngIf="details.bonded_cards && details.bonded_cards.length > 0" style="margin-top: 0.75rem;">
+                <div style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #64748b; margin-bottom: 0.4rem;">Bonded Cards</div>
+                <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                  <div *ngFor="let bonded of details.bonded_cards"
+                       [cardTooltip]="bonded.code"
+                       (click)="navigateToRelatedCard(bonded.code)"
+                       style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; border-left: 2px solid #d6ad60; background: rgba(214,173,96,0.07); border-radius: 0 4px 4px 0;">
+                    <span style="font-size: 0.75rem; color: #d6ad60; opacity: 0.8;">⬡</span>
+                    <span style="font-size: 0.875rem; color: #d6ad60;">{{bonded.name}}</span>
+                    <span *ngIf="bonded.count > 1" style="font-size: 0.75rem; color: #64748b; margin-left: auto;">×{{bonded.count}}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Linked Card -->
+              <div *ngIf="details.linked_card" style="margin-top: 0.75rem;">
+                <div style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #64748b; margin-bottom: 0.4rem;">Linked Card</div>
+                <div [cardTooltip]="details.linked_card.code"
+                     (click)="navigateToRelatedCard(details.linked_card.code)"
+                     style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; border-left: 2px solid #94a3b8; background: rgba(148,163,184,0.07); border-radius: 0 4px 4px 0;">
+                  <span style="font-size: 0.75rem; color: #94a3b8; opacity: 0.8;">⇌</span>
+                  <span style="font-size: 0.875rem; color: #cbd5e1;">{{details.linked_card.name}}</span>
+                  <span *ngIf="details.linked_card.type_name" style="font-size: 0.75rem; color: #64748b; margin-left: auto;">{{details.linked_card.type_name}}</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -900,27 +980,27 @@
               <div *ngIf="details.bonded_cards && details.bonded_cards.length > 0" style="margin-top: 0.75rem;">
                 <div style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #64748b; margin-bottom: 0.4rem;">Bonded Cards</div>
                 <div style="display: flex; flex-direction: column; gap: 0.35rem;">
-                  <a *ngFor="let bonded of details.bonded_cards"
-                     [routerLink]="['/analysis', bonded.code]"
+                  <div *ngFor="let bonded of details.bonded_cards"
                      [cardTooltip]="bonded.code"
-                     style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; border-left: 2px solid #d6ad60; background: rgba(214,173,96,0.07); border-radius: 0 4px 4px 0;">
+                     (click)="navigateToRelatedCard(bonded.code)"
+                     style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; border-left: 2px solid #d6ad60; background: rgba(214,173,96,0.07); border-radius: 0 4px 4px 0;">
                     <span style="font-size: 0.75rem; color: #d6ad60; opacity: 0.8;">⬡</span>
                     <span style="font-size: 0.875rem; color: #d6ad60;">{{bonded.name}}</span>
                     <span *ngIf="bonded.count > 1" style="font-size: 0.75rem; color: #64748b; margin-left: auto;">×{{bonded.count}}</span>
-                  </a>
+                  </div>
                 </div>
               </div>
 
               <!-- Linked Card (double-sided front/back pairs) -->
               <div *ngIf="details.linked_card" style="margin-top: 0.75rem;">
                 <div style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #64748b; margin-bottom: 0.4rem;">Linked Card</div>
-                <a [routerLink]="['/analysis', details.linked_card.code]"
-                   [cardTooltip]="details.linked_card.code"
-                   style="text-decoration: none; display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; border-left: 2px solid #94a3b8; background: rgba(148,163,184,0.07); border-radius: 0 4px 4px 0;">
+                <div [cardTooltip]="details.linked_card.code"
+                     (click)="navigateToRelatedCard(details.linked_card.code)"
+                     style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; border-left: 2px solid #94a3b8; background: rgba(148,163,184,0.07); border-radius: 0 4px 4px 0;">
                   <span style="font-size: 0.75rem; color: #94a3b8; opacity: 0.8;">⇌</span>
                   <span style="font-size: 0.875rem; color: #cbd5e1;">{{details.linked_card.name}}</span>
                   <span *ngIf="details.linked_card.type_name" style="font-size: 0.75rem; color: #64748b; margin-left: auto;">{{details.linked_card.type_name}}</span>
-                </a>
+                </div>
               </div>
 
               <!-- ArkhamDB Link -->

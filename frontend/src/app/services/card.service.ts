@@ -89,6 +89,9 @@ export interface CardSearchParams {
   min_sanity?: number;
   max_sanity?: number;
 
+  // Encounter filter
+  only_player_cards?: boolean;
+
   // Pagination
   page?: number;
   limit?: number;
@@ -269,6 +272,9 @@ export class CardService {
     if (params.min_sanity !== undefined) httpParams = httpParams.set('min_sanity', params.min_sanity.toString());
     if (params.max_sanity !== undefined) httpParams = httpParams.set('max_sanity', params.max_sanity.toString());
 
+    // Encounter filter
+    if (params.only_player_cards !== undefined) httpParams = httpParams.set('only_player_cards', params.only_player_cards.toString());
+
     // Pagination parameters
     if (params.page !== undefined) httpParams = httpParams.set('page', params.page.toString());
     if (params.limit !== undefined) httpParams = httpParams.set('limit', params.limit.toString());
@@ -299,5 +305,10 @@ export class CardService {
 
   getCardTaboos(cardCode: string): Observable<CardTaboosResponse> {
     return this.http.get<CardTaboosResponse>(`${this.apiUrl}/${cardCode}/taboos`);
+  }
+
+  getAllCardNames(includeEncounter = false): Observable<Array<{ code: string; name: string }>> {
+    const params = includeEncounter ? '?include_encounter=true' : '';
+    return this.http.get<Array<{ code: string; name: string }>>(`${this.apiUrl}/metadata/names${params}`);
   }
 }

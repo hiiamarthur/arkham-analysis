@@ -5,6 +5,7 @@ import {
   EventEmitter,
   signal,
   computed,
+  input,
   forwardRef,
   HostListener,
   ElementRef,
@@ -31,7 +32,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
         <input
           class="ac-input"
           type="text"
-          [placeholder]="placeholder"
+          [placeholder]="placeholder()"
           [value]="currentValue()"
           (input)="onInput($event)"
           (keydown)="onKeydown($event)"
@@ -166,9 +167,9 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   `],
 })
 export class AutocompleteInputComponent implements ControlValueAccessor {
-  @Input() suggestions: string[] = [];
-  @Input() placeholder: string = '';
-  @Input() maxSuggestions: number = 8;
+  suggestions = input<string[]>([]);
+  placeholder = input<string>('');
+  maxSuggestions = input<number>(8);
   @Output() suggestionSelected = new EventEmitter<string>();
 
   private el = inject(ElementRef);
@@ -181,9 +182,9 @@ export class AutocompleteInputComponent implements ControlValueAccessor {
   visibleSuggestions = computed(() => {
     const term = this.currentValue().toLowerCase().trim();
     if (!term) return [];
-    return this.suggestions
+    return this.suggestions()
       .filter(s => s.toLowerCase().includes(term))
-      .slice(0, this.maxSuggestions);
+      .slice(0, this.maxSuggestions());
   });
 
   showDropdown = computed(() => this.isFocused() && this.visibleSuggestions().length > 0);

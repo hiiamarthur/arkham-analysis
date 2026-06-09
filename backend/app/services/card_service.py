@@ -1511,22 +1511,22 @@ class CardService:
             "cards": pool,
         }
 
-    async def get_all_card_names(self) -> List[dict]:
+    async def get_all_card_names(self, include_encounter: bool = False) -> List[dict]:
         """
-        Get all player card names and codes for autocomplete suggestions.
-        Excludes encounter cards and deduplicates reprints.
+        Get card names and codes for autocomplete suggestions.
+        By default excludes encounter cards and deduplicates reprints.
+        Pass include_encounter=True to also include encounter cards.
         """
         from sqlalchemy import select
 
         try:
-            stmt = (
-                select(CardModel.code, CardModel.name)
-                .where(
+            stmt = select(CardModel.code, CardModel.name)
+            if not include_encounter:
+                stmt = stmt.where(
                     CardModel.type_code.notin_(ENCOUNTER_TYPE_CODES),
                     CardModel.encounter_code.is_(None),
                 )
-                .order_by(CardModel.name)
-            )
+            stmt = stmt.order_by(CardModel.name)
             result = await self.db.execute(stmt)
             seen: set[str] = set()
             names = []

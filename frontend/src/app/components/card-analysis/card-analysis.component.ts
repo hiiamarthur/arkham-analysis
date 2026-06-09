@@ -121,6 +121,10 @@ export class CardAnalysisComponent implements OnInit {
   searchMinCost = signal<number | undefined>(undefined);
   searchMaxCost = signal<number | undefined>(undefined);
 
+  // Encounter filters
+  filterPlayerOnly = signal(true);
+  hideEncounterSpoilers = signal(false);
+
   // Advanced filters (collapsible)
   showAdvancedFilters = signal(false);
   searchText = signal('');
@@ -181,6 +185,12 @@ export class CardAnalysisComponent implements OnInit {
     this.analysisForm = this.createForm();
   }
 
+  private readonly ENCOUNTER_TYPE_CODES = new Set(['treachery', 'enemy', 'location', 'act', 'agenda', 'scenario', 'story', 'key']);
+
+  isEncounterCard(typeCode: string): boolean {
+    return this.ENCOUNTER_TYPE_CODES.has(typeCode?.toLowerCase());
+  }
+
   // Get Arkham game icon with normalized viewBox + scale/translation applied
   getArkhamIcon(iconName: string): SafeHtml {
     return this.sanitizer.bypassSecurityTrustHtml(
@@ -202,10 +212,25 @@ export class CardAnalysisComponent implements OnInit {
   // Access cached traits for dropdown
   availableTraits = computed(() => this.appState.traits());
 
-  // Card name suggestions for autocomplete
-  cardNameSuggestions = computed(() => this.appState.cardNameSuggestions());
+  // All card names including encounter — loaded once on first encounter-mode activation
+  private allCardNames = signal<string[]>([]);
+  private allCardNamesLoaded = false;
+
+  // Suggestions switch: player-only uses the cached player list; encounter mode uses the full list
+  cardNameSuggestions = computed(() =>
+    this.filterPlayerOnly() ? this.appState.cardNameSuggestions() : this.allCardNames()
+  );
 
   ngOnInit(): void {
+    // Pre-fetch all card names (including encounter) in the background so they're ready
+    // when the user turns off player-only mode — avoids an empty dropdown on first toggle
+    this.cardService.getAllCardNames(true).subscribe({
+      next: (names) => {
+        this.allCardNames.set(names.map(n => n.name));
+        this.allCardNamesLoaded = true;
+      },
+    });
+
     // Subscribe to route parameter changes
     this.route.paramMap.subscribe(paramMap => {
       const cardCode = paramMap.get('code');
@@ -264,7 +289,8 @@ export class CardAnalysisComponent implements OnInit {
     // Build search params from current filter values
     const params: any = {
       page: this.currentPage(),
-      limit: this.pageSize()
+      limit: this.pageSize(),
+      only_player_cards: this.filterPlayerOnly(),
     };
 
     // Basic filters
@@ -338,6 +364,10 @@ export class CardAnalysisComponent implements OnInit {
 
   // Clear all search filters
   clearSearch(): void {
+    // Encounter filters
+    this.filterPlayerOnly.set(true);
+    this.hideEncounterSpoilers.set(false);
+
     // Basic filters
     this.searchQuery.set('');
     this.searchFaction.set('');
@@ -361,6 +391,34 @@ export class CardAnalysisComponent implements OnInit {
 
     this.currentPage.set(1);
     this.loadCards();
+  }
+
+  // Toggle player-only mode — clears filters that are incompatible with the new mode
+  onTogglePlayerOnly(): void {
+    const turningOn = !this.filterPlayerOnly();
+    this.filterPlayerOnly.set(turningOn);
+
+    if (turningOn) {
+      // Encounter types are excluded in player-only mode — clear if selected
+      if (this.isEncounterCard(this.searchType())) {
+        this.searchType.set('');
+      }
+    } else {
+      // Switching to encounter mode — clear faction (not meaningful for encounter cards)
+      this.searchFaction.set('');
+      this.hideEncounterSpoilers.set(false);
+
+      // Lazy-load full name list (player + encounter) for autocomplete suggestions
+      if (!this.allCardNamesLoaded) {
+        this.allCardNamesLoaded = true;
+        this.cardService.getAllCardNames(true).subscribe({
+          next: (names) => this.allCardNames.set(names.map(n => n.name)),
+          error: () => { this.allCardNamesLoaded = false; },
+        });
+      }
+    }
+
+    this.onSearch();
   }
 
   // Toggle advanced filters visibility

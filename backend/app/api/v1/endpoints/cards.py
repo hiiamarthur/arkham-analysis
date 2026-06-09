@@ -114,14 +114,16 @@ async def get_all_encounter_sets(
 @router.get("/metadata/names", response_model=List[dict])
 async def get_all_card_names(
     response: Response,
+    include_encounter: bool = False,
     card_service: CardService = Depends(get_card_service),
 ):
     """
-    Get all player card names and codes for client-side autocomplete.
+    Get card names and codes for client-side autocomplete.
+    include_encounter=true adds encounter cards (enemies, locations, treacheries…).
     Returns list of {code, name} objects, deduplicated by name.
     """
     try:
-        names = await card_service.get_all_card_names()
+        names = await card_service.get_all_card_names(include_encounter=include_encounter)
 
         response.headers.update(ARKHAM_HEADERS)
         response.headers["Cache-Control"] = "public, max-age=86400"
@@ -205,6 +207,7 @@ async def search_cards(
     max_health: Optional[int] = None,
     min_sanity: Optional[int] = None,
     max_sanity: Optional[int] = None,
+    only_player_cards: bool = True,
     pagination=Depends(get_pagination_params),
     card_service: CardService = Depends(get_card_service),
 ):
@@ -271,6 +274,7 @@ async def search_cards(
             max_sanity=max_sanity,
             page=pagination["page"],
             limit=pagination["limit"],
+            only_player_cards=only_player_cards,
         )
 
         # Convert to summary format for better performance

@@ -210,18 +210,20 @@ export class DashboardComponent implements OnInit, OnDestroy, AfterViewInit {
     const trends = this.metaTrends();
     if (!ctx || !trends || !trends.investigators.length) return;
 
-    const palette = ['#c9a84c', '#8b1c1c', '#2b80c5', '#107116', '#6c3483', '#cc3038'];
-    const datasets = trends.investigators.map((inv, i) => ({
-      label: inv.name,
-      data: inv.monthly_share,
-      borderColor: palette[i % palette.length],
-      backgroundColor: palette[i % palette.length] + '22',
-      borderWidth: 2,
-      pointRadius: 3,
-      pointHoverRadius: 5,
-      tension: 0.3,
-      fill: false,
-    }));
+    const datasets = trends.investigators.map((inv) => {
+      const color = FACTION_COLORS[inv.faction?.toLowerCase()] ?? '#4a5568';
+      return {
+        label: inv.name,
+        data: inv.monthly_share,
+        borderColor: color,
+        backgroundColor: color + '22',
+        borderWidth: 2,
+        pointRadius: 3,
+        pointHoverRadius: 5,
+        tension: 0.3,
+        fill: false,
+      };
+    });
 
     this.charts.push(new Chart(ctx, {
       type: 'line',

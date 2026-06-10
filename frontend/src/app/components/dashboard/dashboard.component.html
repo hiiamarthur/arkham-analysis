@@ -87,7 +87,7 @@
           <span class="faction-dot lg" [style.background]="getFactionColor(topInv.faction)"></span>
           {{ topInv.name }}
         </a>
-        <span class="hl-sub">{{ topInv.meta_share }}% of all decks</span>
+        <span class="hl-sub">{{ topInv.meta_share }}% deck rate</span>
       </div>
       <div class="hl-cell" *ngIf="dashboardStats()?.highlight?.dominant_faction as f">
         <span class="hl-label">Dominant faction</span>
@@ -97,7 +97,7 @@
           <span class="faction-dot lg" [style.background]="getFactionColor(f.faction)"></span>
           {{ f.faction | titlecase }}
         </a>
-        <span class="hl-sub">{{ f.share }}% meta share</span>
+        <span class="hl-sub">{{ f.share }}% deck rate</span>
       </div>
       <div class="hl-cell" *ngIf="dashboardStats()?.highlight?.runner_up as r">
         <span class="hl-label">Runner-up</span>
@@ -108,7 +108,7 @@
           <span class="faction-dot lg" [style.background]="getFactionColor(r.faction)"></span>
           {{ r.name }}
         </a>
-        <span class="hl-sub">{{ r.meta_share }}% meta share</span>
+        <span class="hl-sub">{{ r.meta_share }}% deck rate</span>
       </div>
       <div class="hl-cell" *ngIf="dashboardStats()?.highlight?.avg_xp_per_deck !== undefined">
         <span class="hl-label">Avg XP per deck</span>
@@ -131,7 +131,7 @@
       <!-- Faction meta donut (Chart.js) -->
       <div class="meta-card">
         <div class="meta-card-header">
-          <h3>Faction Meta Share</h3>
+          <h3>Faction Deck Rate</h3>
           <span class="meta-card-sub">By deck count · last {{ dashboardStats()?.meta?.days ?? 90 }} days</span>
         </div>
         <div class="chart-container chart-container--sm">
@@ -365,8 +365,8 @@
       <!-- Faction share over time -->
       <div class="meta-card">
         <div class="meta-card-header">
-          <h3>Faction Meta Share Over Time</h3>
-          <span class="meta-card-sub">Monthly % share · last 12 months</span>
+          <h3>Faction Deck Rate Over Time</h3>
+          <span class="meta-card-sub">% of published decks per month · last 12 months</span>
         </div>
         <div class="chart-container chart-container--trend" *ngIf="metaTrends() && !trendsLoading()">
           <canvas #factionTrendChart id="factionTrendChart"></canvas>
@@ -379,7 +379,7 @@
       <div class="meta-card">
         <div class="meta-card-header">
           <h3>Top Investigators Over Time</h3>
-          <span class="meta-card-sub">Monthly % share · last 12 months</span>
+          <span class="meta-card-sub">% of published decks per month · last 12 months</span>
         </div>
         <div class="chart-container chart-container--trend" *ngIf="metaTrends() && !trendsLoading()">
           <canvas #invTrendChart id="invTrendChart"></canvas>
@@ -401,7 +401,7 @@
       <div class="nav-list">
         <a routerLink="/investigators" class="nav-item">
           <span class="nav-icon" [innerHTML]="getIcon('investigator')"></span>
-          <div class="nav-text"><strong>Investigator Archives</strong><span>Deck trends, staple cards, meta share</span></div>
+          <div class="nav-text"><strong>Investigator Archives</strong><span>Deck trends, staple cards, deck rate</span></div>
           <span class="nav-arrow">→</span>
         </a>
         <a routerLink="/threat-assessment" class="nav-item">

@@ -1,12 +1,44 @@
-import { Component, signal, computed, inject, OnInit, HostListener } from '@angular/core';
+import { Component, signal, computed, inject, OnInit, HostListener, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { AutocompleteInputComponent } from '../../shared/components/autocomplete-input.component';
+import { CardTooltipDirective } from '../../shared/directives/card-tooltip.directive';
+import { Router, ActivatedRoute } from '@angular/router';
 import { SafeHtml, DomSanitizer } from '@angular/platform-browser';
 import { InvestigatorService, CardPoolEntry, InvestigatorMetadata } from '../../services/investigator.service';
 import { ArkhamSvgIconsService } from '../../shared/services/arkham-svg-icons.service';
 
 type InvMode = 'any' | 'in' | 'out';
+
+const CYCLES: Record<string, string[]> = {
+  'Core':              ['Core Set', 'Revised Core Set', 'Core Set 2026'],
+  'Dunwich':           ['The Dunwich Legacy', 'The Miskatonic Museum', 'The Essex County Express', 'Blood on the Altar', 'Undimensioned and Unseen', 'Where Doom Awaits', 'Lost in Time and Space'],
+  'Carcosa':           ['The Path to Carcosa', 'Echoes of the Past', 'The Unspeakable Oath', 'A Phantom of Truth', 'The Pallid Mask', 'Black Stars Rise', 'Dim Carcosa'],
+  'Forgotten Age':     ['The Forgotten Age', 'Threads of Fate', 'The Boundary Beyond', 'Heart of the Elders', 'The City of Archives', 'The Depths of Yoth', 'Shattered Aeons'],
+  'Circle Undone':     ['The Circle Undone', 'The Secret Name', 'The Wages of Sin', 'For the Greater Good', 'Union and Disillusion', 'In the Clutches of Chaos', 'Before the Black Throne'],
+  'Dream-Eaters':      ['The Dream-Eaters', 'The Search for Kadath', 'A Thousand Shapes of Horror', 'Dark Side of the Moon', 'Point of No Return', 'Where the Gods Dwell', 'Weaver of the Cosmos'],
+  'Innsmouth':         ['The Innsmouth Conspiracy', 'In Too Deep', 'Devil Reef', 'Horror in High Gear', 'A Light in the Fog', 'The Lair of Dagon', 'Into the Maelstrom'],
+  'Edge of the Earth': ['Edge of the Earth Investigator Expansion'],
+  'Scarlet Keys':      ['The Scarlet Keys Investigator Expansion'],
+  'Hemlock Vale':      ['The Feast of Hemlock Vale Investigator Expansion'],
+  'Drowned City':      ['The Drowned City Investigator Expansion'],
+  'Return To':         ['Return to the Night of the Zealot', 'Return to the Dunwich Legacy', 'Return to the Path to Carcosa', 'Return to the Forgotten Age', 'Return to the Circle Undone'],
+  'Inv. Starters':     ['Harvey Walters', 'Nathaniel Cho', 'Winifred Habbamock', 'Jacqueline Fine', 'Stella Clark'],
+};
+
+interface PoolState {
+  inv: (string | null)[];
+  modes: string[];
+  xp: string;
+  types: string[];
+  factions: string[];
+  slots: string[];
+  traits: string[];
+  packs: string[];
+  costs: string[];
+  name: string;
+  text: string;
+}
 
 interface PoolSlot {
   code: string;
@@ -31,7 +63,7 @@ interface CardGroup {
 @Component({
   selector: 'app-pool-compare',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, AutocompleteInputComponent, CardTooltipDirective],
   // RouterModule not needed — we use Router.navigate directly
   templateUrl: './pool-compare.component.html',
   styleUrl: './pool-compare.component.css',
@@ -41,6 +73,17 @@ export class PoolCompareComponent implements OnInit {
   private arkhamIconsService = inject(ArkhamSvgIconsService);
   private sanitizer = inject(DomSanitizer);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
+  private readonly SESSION_KEY = 'pool-compare-state';
+  private stateReady = false;
+
+  constructor() {
+    effect(() => {
+      const state = this.buildState();
+      if (this.stateReady) this.persistState(state);
+    });
+  }
 
   goToCard(code: string): void {
     this.router.navigate(['/analysis', code]);
@@ -99,6 +142,13 @@ export class PoolCompareComponent implements OnInit {
   // ── Derived state ──────────────────────────────────────────────────────────
 
   activeSlots = computed(() => this.slots().filter((s): s is PoolSlot => s !== null));
+
+  // Card name suggestions from the union of all loaded pools
+  cardNameSuggestions = computed(() => {
+    const names = new Set<string>();
+    this.activeSlots().forEach(slot => slot.pool.forEach(card => names.add(card.name)));
+    return Array.from(names).sort();
+  });
 
   /** Slot-array indices (0-3) for each active investigator, in order */
   activeSlotIndices = computed(() =>
@@ -350,7 +400,11 @@ export class PoolCompareComponent implements OnInit {
 
   ngOnInit() {
     this.investigatorService.getAllInvestigators().subscribe({
-      next: list => this.allInvestigators.set(list),
+      next: list => {
+        this.allInvestigators.set(list);
+        this.restoreState();
+        this.stateReady = true;
+      },
     });
   }
 
@@ -527,9 +581,164 @@ export class PoolCompareComponent implements OnInit {
 
   stopProp(e: MouseEvent) { e.stopPropagation(); }
 
+  // ── Cycle filter ───────────────────────────────────────────────────────────
+
+  readonly CYCLE_NAMES = Object.keys(CYCLES);
+
+  /** Returns cycle packs intersected with what's actually in the current pool */
+  cyclePacksInPool(cycleName: string): string[] {
+    const available = this.availablePacks();
+    return CYCLES[cycleName].filter(p => available.includes(p));
+  }
+
+  isCycleActive(cycleName: string): boolean {
+    const packs = this.cyclePacksInPool(cycleName);
+    if (!packs.length) return false;
+    return packs.every(p => this.packFilter().has(p));
+  }
+
+  isCyclePartial(cycleName: string): boolean {
+    const packs = this.cyclePacksInPool(cycleName);
+    return packs.some(p => this.packFilter().has(p)) && !this.isCycleActive(cycleName);
+  }
+
+  toggleCycle(cycleName: string) {
+    const packs = this.cyclePacksInPool(cycleName);
+    if (!packs.length) return;
+    if (this.isCycleActive(cycleName)) {
+      this.packFilter.update(s => { const n = new Set(s); packs.forEach(p => n.delete(p)); return n; });
+    } else {
+      this.packFilter.update(s => { const n = new Set(s); packs.forEach(p => n.add(p)); return n; });
+    }
+  }
+
   @HostListener('document:click')
   onDocumentClick() {
     this.slotOpen = this.slotOpen.map(() => false) as boolean[];
     this.closeAllDropdowns();
+  }
+
+  // ── State persistence ──────────────────────────────────────────────────────
+
+  private buildState(): PoolState {
+    return {
+      inv: this.slots().map(s => s?.code ?? null),
+      modes: this.invModes(),
+      xp: this.xpFilter(),
+      types: [...this.typeFilter()],
+      factions: [...this.factionFilter()],
+      slots: [...this.slotFilter()],
+      traits: [...this.traitFilter()],
+      packs: [...this.packFilter()],
+      costs: [...this.costFilter()],
+      name: this.nameSearch(),
+      text: this.textSearch(),
+    };
+  }
+
+  private persistState(state: PoolState) {
+    try {
+      sessionStorage.setItem(this.SESSION_KEY, JSON.stringify(state));
+    } catch {}
+    this.updateUrl(state);
+  }
+
+  private updateUrl(state: PoolState) {
+    const invCodes = state.inv.filter((c): c is string => !!c);
+    if (!invCodes.length) {
+      this.router.navigate([], { relativeTo: this.route, replaceUrl: true, queryParams: {} });
+      return;
+    }
+    const params: Record<string, string> = {};
+    params['inv'] = invCodes.join(',');
+
+    // modes: only encode if any slot is not 'any'
+    const activeModes = state.inv
+      .map((code, i) => code ? state.modes[i] : null)
+      .filter((m): m is string => m !== null);
+    if (activeModes.some(m => m !== 'any')) params['modes'] = activeModes.join(',');
+
+    if (state.xp !== 'all') params['xp'] = state.xp;
+    if (state.types.length) params['types'] = state.types.join(',');
+    if (state.factions.length) params['factions'] = state.factions.join(',');
+    if (state.slots.length) params['slots'] = state.slots.join(',');
+    if (state.traits.length) params['traits'] = state.traits.join(',');
+    if (state.packs.length) params['packs'] = encodeURIComponent(state.packs.join('|'));
+    if (state.costs.length) params['costs'] = state.costs.join(',');
+    if (state.name) params['name'] = state.name;
+    if (state.text) params['text'] = state.text;
+
+    this.router.navigate([], { relativeTo: this.route, replaceUrl: true, queryParams: params });
+  }
+
+  private restoreState() {
+    const urlState = this.parseUrlParams();
+    if (urlState) {
+      this.applyState(urlState);
+      return;
+    }
+    try {
+      const raw = sessionStorage.getItem(this.SESSION_KEY);
+      if (raw) this.applyState(JSON.parse(raw));
+    } catch {}
+  }
+
+  private parseUrlParams(): PoolState | null {
+    const p = this.route.snapshot.queryParams;
+    if (!p['inv']) return null;
+
+    const invCodes = p['inv'].split(',').filter(Boolean);
+    const modeList = p['modes'] ? p['modes'].split(',') : [];
+
+    // Rebuild 4-slot arrays: fill from index 0
+    const inv: (string | null)[] = [null, null, null, null];
+    const modes: string[] = ['any', 'any', 'any', 'any'];
+    invCodes.forEach((code: string, i: number) => {
+      if (i < 4) {
+        inv[i] = code;
+        modes[i] = modeList[i] ?? 'any';
+      }
+    });
+
+    return {
+      inv,
+      modes,
+      xp: p['xp'] ?? 'all',
+      types: p['types'] ? p['types'].split(',') : [],
+      factions: p['factions'] ? p['factions'].split(',') : [],
+      slots: p['slots'] ? p['slots'].split(',') : [],
+      traits: p['traits'] ? p['traits'].split(',') : [],
+      packs: p['packs'] ? decodeURIComponent(p['packs']).split('|') : [],
+      costs: p['costs'] ? p['costs'].split(',') : [],
+      name: p['name'] ?? '',
+      text: p['text'] ?? '',
+    };
+  }
+
+  private applyState(state: PoolState) {
+    if (state.xp === '0' || state.xp === '1+') this.xpFilter.set(state.xp as 'all' | '0' | '1+');
+    if (state.types.length)    this.typeFilter.set(new Set(state.types));
+    if (state.factions.length) this.factionFilter.set(new Set(state.factions));
+    if (state.slots.length)    this.slotFilter.set(new Set(state.slots));
+    if (state.traits.length)   this.traitFilter.set(new Set(state.traits));
+    if (state.packs.length)    this.packFilter.set(new Set(state.packs));
+    if (state.costs.length)    this.costFilter.set(new Set(state.costs));
+    if (state.name)            this.nameSearch.set(state.name);
+    if (state.text)            this.textSearch.set(state.text);
+
+    const modes = ['any', 'any', 'any', 'any'] as InvMode[];
+    state.modes?.forEach((m, i) => { if (i < 4) modes[i] = (m as InvMode) || 'any'; });
+    this.invModes.set(modes);
+
+    const allInvs = this.allInvestigators();
+    state.inv?.forEach((code, slotIdx) => {
+      if (!code || slotIdx >= 4) return;
+      const inv = allInvs.find(i => i.code === code);
+      if (inv) this.selectInvestigator(slotIdx, inv);
+    });
+  }
+
+  copyShareUrl() {
+    navigator.clipboard.writeText(window.location.href).catch(() => {});
   }
 }

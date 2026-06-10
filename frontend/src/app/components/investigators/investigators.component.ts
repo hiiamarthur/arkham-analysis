@@ -3,9 +3,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { DataTableComponent, TableColumn, TableConfig } from '../../shared/components/data-table.component';
+import { AutocompleteInputComponent } from '../../shared/components/autocomplete-input.component';
 import { InvestigatorService, InvestigatorStatsResponse, CardRanking, StapleCard, TrendingCard, CardSynergy, DeckArchetype, UnderusedGem, CardPoolEntry } from '../../services/investigator.service';
 import { CardService, CardResponse } from '../../services/card.service';
 import { CardCodeLinkComponent } from '../../shared/components/card-code-link.component';
+import { CardTooltipDirective } from '../../shared/directives/card-tooltip.directive';
 import { CardModalComponent } from '../../shared/components/card-modal.component';
 import { ArkhamSvgIconsService } from '../../shared/services/arkham-svg-icons.service';
 import { IconService } from '../../shared/services/icon.service';
@@ -29,12 +31,15 @@ interface Investigator {
   totalDecks?: number;
   totalDecksAnalyzed?: number;
   imageUrl?: string;
+  alternate_of_code?: string;
+  alternate_of_name?: string;
+  alternated_by?: string[];
 }
 
 @Component({
   selector: 'app-investigators',
   standalone: true,
-  imports: [CommonModule, FormsModule, DataTableComponent, CardCodeLinkComponent, CardModalComponent],
+  imports: [CommonModule, FormsModule, DataTableComponent, CardCodeLinkComponent, CardModalComponent, AutocompleteInputComponent, CardTooltipDirective],
   templateUrl: './investigators.component.html',
   styleUrl: './investigators.component.css'
 })
@@ -66,6 +71,9 @@ export class InvestigatorsComponent implements OnInit {
 
   // All investigators data
   investigators = signal<Investigator[]>([]);
+
+  // Investigator name suggestions for autocomplete
+  investigatorNameSuggestions = computed(() => this.investigators().map(inv => inv.name));
 
   // Filtered investigators
   filteredInvestigators = computed(() => {
@@ -189,7 +197,10 @@ export class InvestigatorsComponent implements OnInit {
       popularity: card.meta_share ? Math.round(card.meta_share * 100) : 0,
       totalDecks: card.total_decks,
       totalDecksAnalyzed: card.total_decks_analyzed,
-      imageUrl: card.imagesrc ? `https://arkhamdb.com${card.imagesrc}` : undefined
+      imageUrl: card.imagesrc ? `https://arkhamdb.com${card.imagesrc}` : undefined,
+      alternate_of_code: card.alternate_of_code,
+      alternate_of_name: card.alternate_of_name,
+      alternated_by: card.alternated_by,
     };
   }
 
@@ -404,6 +415,14 @@ export class InvestigatorsComponent implements OnInit {
     this.cardPool.set([]);
     this.cardPoolTotal.set(0);
     this.cardPoolRestrictions.set([]);
+  }
+
+  navigateToInvestigator(code: string): void {
+    this.router.navigate(['/investigators', code]);
+  }
+
+  getInvestigatorName(code: string): string {
+    return this.investigators().find(inv => inv.code === code)?.name || code;
   }
 
   backToList() {

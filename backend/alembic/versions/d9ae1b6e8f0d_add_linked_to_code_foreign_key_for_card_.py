@@ -21,18 +21,18 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    # Add linked_to_code column to cards table
-    op.add_column("cards", sa.Column("linked_to_code", sa.String(50), nullable=True))
-
-    # Add foreign key constraint
-    op.create_foreign_key(
-        "fk_cards_linked_to_code",
-        "cards",
-        "cards",
-        ["linked_to_code"],
-        ["code"],
-        ondelete="SET NULL",
-    )
+    op.execute("ALTER TABLE cards ADD COLUMN IF NOT EXISTS linked_to_code VARCHAR(50)")
+    op.execute("""
+        DO $$ BEGIN
+            IF NOT EXISTS (
+                SELECT 1 FROM information_schema.table_constraints
+                WHERE constraint_name = 'fk_cards_linked_to_code'
+            ) THEN
+                ALTER TABLE cards ADD CONSTRAINT fk_cards_linked_to_code
+                FOREIGN KEY (linked_to_code) REFERENCES cards(code) ON DELETE SET NULL;
+            END IF;
+        END $$;
+    """)
 
 
 def downgrade() -> None:

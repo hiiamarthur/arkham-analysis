@@ -5,7 +5,8 @@ import { Router, ActivatedRoute, RouterModule } from '@angular/router';
 import { Location } from '@angular/common';
 import { AnalysisService, CardAnalysisRequest, AnalysisResponse } from '../../services/analysis.service';
 import { DataTableComponent, TableColumn, TableConfig } from '../../shared/components/data-table.component';
-import { CardService, CardResponse, CardStatsResponse } from '../../services/card.service';
+import { AutocompleteInputComponent } from '../../shared/components/autocomplete-input.component';
+import { CardService, CardResponse, CardStatsResponse, CardTaboosResponse } from '../../services/card.service';
 import { AppStateService } from '../../services/app-state.service';
 import { ArkhamIconsPipe } from '../../shared/pipes/arkham-icons.pipe';
 import { ArkhamSvgIconsService } from '../../shared/services/arkham-svg-icons.service';
@@ -13,6 +14,7 @@ import { IconService } from '../../shared/services/icon.service';
 import { SafeHtml, DomSanitizer } from '@angular/platform-browser';
 import { BaseChartDirective } from 'ng2-charts';
 import { ChartData, ChartOptions } from 'chart.js';
+import { CardTooltipDirective } from '../../shared/directives/card-tooltip.directive';
 
 interface Card {
   code: string;
@@ -40,19 +42,6 @@ interface Card {
   slot?: string;
   health?: number;
   sanity?: number;
-  // Enhanced stats
-  usageRate?: number;
-  winRateWithCard?: number;
-  averageTimePlayed?: string;
-  topInvestigators?: { name: string; usageRate: number; winRate: number }[];
-  synergyCards?: { code: string; name: string; synergyScore: number }[];
-  deckInclusionRate?: number;
-  performanceByDifficulty?: { difficulty: string; winRate: number }[];
-  performanceByCampaign?: { campaign: string; winRate: number }[];
-  versatilityScore?: number;
-  economyRating?: number;
-  impactRating?: number;
-  consistencyRating?: number;
   illustrator?: string;
   pack_code?: string;
 }
@@ -60,7 +49,7 @@ interface Card {
 @Component({
   selector: 'app-card-analysis',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, DataTableComponent, ArkhamIconsPipe, BaseChartDirective],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, RouterModule, DataTableComponent, ArkhamIconsPipe, BaseChartDirective, AutocompleteInputComponent, CardTooltipDirective],
   templateUrl: './card-analysis.component.html',
   styleUrl: './card-analysis.component.css'
 })
@@ -80,7 +69,6 @@ export class CardAnalysisComponent implements OnInit {
   analysisType = signal<'strength' | 'synergies' | 'timing'>('strength');
 
   // Card browser
-  selectedCard = signal<Card | null>(null);
   cards = signal<Card[]>([]);
   cardsLoading = signal(false);
 
@@ -92,6 +80,11 @@ export class CardAnalysisComponent implements OnInit {
 
   // Navigation history — stores {code, name} of previously viewed cards so Back can return to them
   cardNavStack = signal<Array<{ code: string; name: string }>>([]);
+
+  // Taboo comparison
+  cardTaboos = signal<CardTaboosResponse | null>(null);
+  tabooLoading = signal(false);
+  selectedTabooId = signal<number | null>(null);
 
   // Expandable sections
   topInvestigatorsExpanded = signal(true);
@@ -113,6 +106,10 @@ export class CardAnalysisComponent implements OnInit {
   searchTrait = signal('');
   searchMinCost = signal<number | undefined>(undefined);
   searchMaxCost = signal<number | undefined>(undefined);
+
+  // Encounter filters
+  filterPlayerOnly = signal(true);
+  hideEncounterSpoilers = signal(false);
 
   // Advanced filters (collapsible)
   showAdvancedFilters = signal(false);
@@ -174,6 +171,12 @@ export class CardAnalysisComponent implements OnInit {
     this.analysisForm = this.createForm();
   }
 
+  private readonly ENCOUNTER_TYPE_CODES = new Set(['treachery', 'enemy', 'location', 'act', 'agenda', 'scenario', 'story', 'key']);
+
+  isEncounterCard(typeCode: string): boolean {
+    return this.ENCOUNTER_TYPE_CODES.has(typeCode?.toLowerCase());
+  }
+
   // Get Arkham game icon with normalized viewBox + scale/translation applied
   getArkhamIcon(iconName: string): SafeHtml {
     return this.sanitizer.bypassSecurityTrustHtml(
@@ -195,7 +198,25 @@ export class CardAnalysisComponent implements OnInit {
   // Access cached traits for dropdown
   availableTraits = computed(() => this.appState.traits());
 
+  // All card names including encounter — loaded once on first encounter-mode activation
+  private allCardNames = signal<string[]>([]);
+  private allCardNamesLoaded = false;
+
+  // Suggestions switch: player-only uses the cached player list; encounter mode uses the full list
+  cardNameSuggestions = computed(() =>
+    this.filterPlayerOnly() ? this.appState.cardNameSuggestions() : this.allCardNames()
+  );
+
   ngOnInit(): void {
+    // Pre-fetch all card names (including encounter) in the background so they're ready
+    // when the user turns off player-only mode — avoids an empty dropdown on first toggle
+    this.cardService.getAllCardNames(true).subscribe({
+      next: (names) => {
+        this.allCardNames.set(names.map(n => n.name));
+        this.allCardNamesLoaded = true;
+      },
+    });
+
     // Subscribe to route parameter changes
     this.route.paramMap.subscribe(paramMap => {
       const cardCode = paramMap.get('code');
@@ -216,6 +237,8 @@ export class CardAnalysisComponent implements OnInit {
   private loadCardDetails(cardCode: string): void {
     this.statsLoading.set(true);
     this.showStatsModal.set(true);
+    this.cardTaboos.set(null);
+    this.selectedTabooId.set(null);
 
     import('rxjs').then(({ forkJoin, of }) => {
       import('rxjs/operators').then(({ catchError }) => {
@@ -226,11 +249,15 @@ export class CardAnalysisComponent implements OnInit {
         const stats$ = this.cardService.getCardStats(cardCode).pipe(
           catchError(err => { console.error('Error fetching card stats:', err); return of(null); })
         );
+        const taboos$ = this.cardService.getCardTaboos(cardCode).pipe(
+          catchError(err => { console.error('Error fetching taboos:', err); return of(null); })
+        );
 
-        forkJoin({ details: details$, stats: stats$ }).subscribe({
+        forkJoin({ details: details$, stats: stats$, taboos: taboos$ }).subscribe({
           next: (result) => {
             this.selectedCardDetails.set(result.details as any);
             this.selectedCardStats.set(result.stats as any);
+            this.cardTaboos.set(result.taboos as any);
             this.statsLoading.set(false);
           },
           error: (err) => {
@@ -248,7 +275,8 @@ export class CardAnalysisComponent implements OnInit {
     // Build search params from current filter values
     const params: any = {
       page: this.currentPage(),
-      limit: this.pageSize()
+      limit: this.pageSize(),
+      only_player_cards: this.filterPlayerOnly(),
     };
 
     // Basic filters
@@ -322,6 +350,10 @@ export class CardAnalysisComponent implements OnInit {
 
   // Clear all search filters
   clearSearch(): void {
+    // Encounter filters
+    this.filterPlayerOnly.set(true);
+    this.hideEncounterSpoilers.set(false);
+
     // Basic filters
     this.searchQuery.set('');
     this.searchFaction.set('');
@@ -345,6 +377,34 @@ export class CardAnalysisComponent implements OnInit {
 
     this.currentPage.set(1);
     this.loadCards();
+  }
+
+  // Toggle player-only mode — clears filters that are incompatible with the new mode
+  onTogglePlayerOnly(): void {
+    const turningOn = !this.filterPlayerOnly();
+    this.filterPlayerOnly.set(turningOn);
+
+    if (turningOn) {
+      // Encounter types are excluded in player-only mode — clear if selected
+      if (this.isEncounterCard(this.searchType())) {
+        this.searchType.set('');
+      }
+    } else {
+      // Switching to encounter mode — clear faction (not meaningful for encounter cards)
+      this.searchFaction.set('');
+      this.hideEncounterSpoilers.set(false);
+
+      // Lazy-load full name list (player + encounter) for autocomplete suggestions
+      if (!this.allCardNamesLoaded) {
+        this.allCardNamesLoaded = true;
+        this.cardService.getAllCardNames(true).subscribe({
+          next: (names) => this.allCardNames.set(names.map(n => n.name)),
+          error: () => { this.allCardNamesLoaded = false; },
+        });
+      }
+    }
+
+    this.onSearch();
   }
 
   // Toggle advanced filters visibility
@@ -804,120 +864,34 @@ export class CardAnalysisComponent implements OnInit {
     return `https://arkhamdb.com${imagesrc}`;
   }
 
+  selectTaboo(id: number | null): void {
+    this.selectedTabooId.set(id);
+  }
+
+  selectedTabooEntry() {
+    const id = this.selectedTabooId();
+    if (id === null) return null;
+    return this.cardTaboos()?.taboo_versions.find(t => t.taboo_id === id) ?? null;
+  }
+
+  tabooRestrictionLabel(score: number, isForbidden: boolean): string {
+    if (isForbidden) return 'Forbidden';
+    if (score === 0) return 'No restriction';
+    if (score <= 2) return 'Minor';
+    if (score <= 5) return 'Moderate';
+    return 'Heavy';
+  }
+
+  tabooRestrictionClass(score: number, isForbidden: boolean): string {
+    if (isForbidden) return 'taboo-forbidden';
+    if (score === 0) return 'taboo-none';
+    if (score <= 2) return 'taboo-minor';
+    if (score <= 5) return 'taboo-moderate';
+    return 'taboo-heavy';
+  }
+
   get includeCampaignContext(): boolean {
     return this.analysisForm.get('includeCampaignContext')?.value || false;
-  }
-
-  private enrichCardWithStats(card: Card): Card {
-    // Generate mock enhanced stats based on card properties
-    const isPopular = ['Emergency Cache', 'Machete', 'Magnifying Glass', 'Shrivelling', 'Lucky!', 'Ward of Protection'].includes(card.name);
-
-    return {
-      ...card,
-      usageRate: isPopular ? Math.floor(Math.random() * 20) + 70 : Math.floor(Math.random() * 40) + 30,
-      winRateWithCard: Math.floor(Math.random() * 15) + 60,
-      averageTimePlayed: `Turn ${Math.floor(Math.random() * 5) + 2}`,
-      deckInclusionRate: isPopular ? Math.floor(Math.random() * 20) + 60 : Math.floor(Math.random() * 30) + 20,
-      versatilityScore: Math.floor(Math.random() * 30) + 60,
-      economyRating: this.getEconomyRating(card),
-      impactRating: this.getImpactRating(card),
-      consistencyRating: Math.floor(Math.random() * 20) + 70,
-      topInvestigators: this.getTopInvestigatorsForCard(card),
-      synergyCards: this.getSynergyCardsFor(card),
-      performanceByDifficulty: [
-        { difficulty: 'Easy', winRate: Math.floor(Math.random() * 15) + 75 },
-        { difficulty: 'Standard', winRate: Math.floor(Math.random() * 15) + 65 },
-        { difficulty: 'Hard', winRate: Math.floor(Math.random() * 15) + 55 },
-        { difficulty: 'Expert', winRate: Math.floor(Math.random() * 20) + 45 }
-      ],
-      performanceByCampaign: [
-        { campaign: 'Night of the Zealot', winRate: Math.floor(Math.random() * 20) + 60 },
-        { campaign: 'The Dunwich Legacy', winRate: Math.floor(Math.random() * 20) + 55 },
-        { campaign: 'The Path to Carcosa', winRate: Math.floor(Math.random() * 20) + 50 },
-        { campaign: 'The Forgotten Age', winRate: Math.floor(Math.random() * 20) + 45 }
-      ]
-    };
-  }
-
-  private getEconomyRating(card: Card): number {
-    // Lower cost = better economy
-    if (card.cost === 0) return 95;
-    if (card.cost === 1) return 85;
-    if (card.cost === 2) return 75;
-    if (card.cost === 3) return 65;
-    return 50;
-  }
-
-  private getImpactRating(card: Card): number {
-    // Based on card type and properties
-    if (card.type === 'Event') return Math.floor(Math.random() * 20) + 70;
-    if (card.type === 'Asset') return Math.floor(Math.random() * 20) + 75;
-    return Math.floor(Math.random() * 20) + 60;
-  }
-
-  private getTopInvestigatorsForCard(card: Card): { name: string; usageRate: number; winRate: number }[] {
-    const investigatorsByClass: Record<string, string[]> = {
-      'Guardian': ['Roland Banks', 'Zoey Samaras', 'Mark Harrigan'],
-      'Seeker': ['Daisy Walker', 'Rex Murphy', 'Minh Thi Phan'],
-      'Rogue': ['Skids O\'Toole', 'Jenny Barnes', 'Finn Edwards'],
-      'Mystic': ['Agnes Baker', 'Jim Culver', 'Akachi Onyele'],
-      'Survivor': ['Wendy Adams', 'Ashcan Pete', 'Stella Clark'],
-      'Neutral': ['Roland Banks', 'Daisy Walker', 'Skids O\'Toole']
-    };
-
-    const investigators = investigatorsByClass[card.class] || investigatorsByClass['Neutral'];
-    return investigators.slice(0, 3).map(name => ({
-      name,
-      usageRate: Math.floor(Math.random() * 30) + 50,
-      winRate: Math.floor(Math.random() * 20) + 60
-    }));
-  }
-
-  private getSynergyCardsFor(card: Card): { code: string; name: string; synergyScore: number }[] {
-    const synergyMap: Record<string, { code: string; name: string }[]> = {
-      'Machete': [
-        { code: '01016', name: 'Beat Cop' },
-        { code: '01088', name: 'Guard Dog' },
-        { code: '01017', name: 'Physical Training' }
-      ],
-      'Magnifying Glass': [
-        { code: '01039', name: 'Working a Hunch' },
-        { code: '01024', name: 'Dr. Milan Christopher' },
-        { code: '01025', name: 'Hyperawareness' }
-      ],
-      'Shrivelling': [
-        { code: '01053', name: 'Ward of Protection' },
-        { code: '01033', name: 'Scrying' },
-        { code: '01034', name: 'Arcane Studies' }
-      ],
-      'Lucky!': [
-        { code: '01037', name: 'Rabbit\'s Foot' },
-        { code: '01080', name: 'Leather Coat' },
-        { code: '01076', name: 'Baseball Bat' }
-      ]
-    };
-
-    const synergies = synergyMap[card.name] || [
-      { code: '01020', name: 'Emergency Cache' },
-      { code: '02001', name: 'Flashlight' }
-    ];
-
-    return synergies.map(s => ({
-      ...s,
-      synergyScore: Math.floor(Math.random() * 30) + 65
-    }));
-  }
-
-  closeCardDetail(): void {
-    this.selectedCard.set(null);
-  }
-
-  analyzeCardWithGPT(card: Card): void {
-    // Populate the form with the card code and switch to GPT analysis tab
-    this.analysisForm.patchValue({
-      cardCodes: card.code
-    });
-    this.activeTab.set('gpt-analysis');
   }
 
   // Table configuration for card browser
@@ -1229,6 +1203,21 @@ export class CardAnalysisComponent implements OnInit {
   // Get total number of investigators
   getTotalInvestigators(stats: CardStatsResponse): number {
     return Object.keys(this.getCombinedStats(stats).popularity.investigator_usage_rate).length;
+  }
+
+  parseCustomizationOptions(text: string): Array<{ xp: number; pips: number[]; name: string; description: string; isPreamble: boolean }> {
+    return text.split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .map(line => {
+        const isPreamble = !line.startsWith('□');
+        const xp = isPreamble ? 0 : (line.match(/^□+/) || [''])[0].length;
+        const rest = isPreamble ? line : line.replace(/^□+\s*/, '');
+        const nameMatch = !isPreamble && rest.match(/^<b>(.+?)<\/b>\s*(.*)/s);
+        const name = nameMatch ? nameMatch[1].replace(/\.$/, '') : rest;
+        const description = nameMatch ? nameMatch[2].trim() : '';
+        return { xp, pips: Array.from({ length: xp }, (_, i) => i), name, description, isPreamble };
+      });
   }
 
   // Navigate to a related card's analysis page, pushing current card onto the back-stack

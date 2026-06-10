@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, forkJoin, of } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
-import { AppStateService, EncounterSet, Investigator } from './app-state.service';
+import { AppStateService, CardName, EncounterSet, Investigator } from './app-state.service';
 
 /**
  * Service for fetching and caching application metadata
@@ -66,6 +66,21 @@ export class MetadataService {
   }
 
   /**
+   * Fetch all player card names for autocomplete
+   */
+  fetchCardNames(): Observable<CardName[]> {
+    return this.http.get<CardName[]>(`${this.apiUrl}/names`).pipe(
+      tap(cardNames => {
+        this.appState.setCardNames(cardNames);
+      }),
+      catchError(error => {
+        console.error('Error fetching card names:', error);
+        return of([]);
+      })
+    );
+  }
+
+  /**
    * Fetch all metadata at once
    * Returns an observable that completes when all requests finish
    */
@@ -73,13 +88,15 @@ export class MetadataService {
     traits: string[];
     encounterSets: EncounterSet[];
     investigators: Investigator[];
+    cardNames: CardName[];
   }> {
     this.appState.setLoading(true);
 
     return forkJoin({
       traits: this.fetchTraits(),
       encounterSets: this.fetchEncounterSets(),
-      investigators: this.fetchInvestigators()
+      investigators: this.fetchInvestigators(),
+      cardNames: this.fetchCardNames(),
     }).pipe(
       tap(() => {
         this.appState.setLoading(false);
@@ -87,7 +104,7 @@ export class MetadataService {
       catchError(error => {
         console.error('Error fetching metadata:', error);
         this.appState.setLoading(false);
-        return of({ traits: [], encounterSets: [], investigators: [] });
+        return of({ traits: [] as string[], encounterSets: [] as EncounterSet[], investigators: [] as Investigator[], cardNames: [] as CardName[] });
       })
     );
   }

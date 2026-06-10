@@ -1,5 +1,15 @@
 {
-  "dependencies": {
-    "claude": "^0.1.2"
+  "name": "arkham-analysis",
+  "version": "2.1.0",
+  "private": true,
+  "scripts": {
+    "release": "release-it",
+    "release:patch": "release-it patch --ci",
+    "release:minor": "release-it minor --ci",
+    "release:major": "release-it major --ci"
+  },
+  "devDependencies": {
+    "release-it": "^17.0.0",
+    "@release-it/conventional-changelog": "^8.0.0"
   }
 }

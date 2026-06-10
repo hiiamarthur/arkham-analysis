@@ -2,7 +2,8 @@ import json
 from fastapi import HTTPException
 from sqlalchemy import select, insert, update
 from app.services.arkhamdb_service import ArkhamDBService
-from app.models.arkham_model import CardModel, TabooModel, TraitModel, EncounterSetModel
+from app.models.arkham_model import CardModel, TabooModel, TabooListModel, TraitModel, EncounterSetModel
+from datetime import date as date_type
 from typing import List, Dict, Any, Optional, Union
 import asyncio
 from itertools import islice
@@ -475,6 +476,37 @@ class AppService:
             taboos = []
 
             async with self.db as db:
+                # Upsert taboo list metadata (dates) first
+                for taboo_data in raw_taboos:
+                    tl_code = taboo_data.get("code")
+                    existing_tl = await db.execute(
+                        select(TabooListModel).where(TabooListModel.code == tl_code)
+                    )
+                    existing_tl = existing_tl.scalar_one_or_none()
+
+                    def _parse_date(v):
+                        if not v:
+                            return None
+                        try:
+                            return date_type.fromisoformat(v)
+                        except (ValueError, TypeError):
+                            return None
+
+                    if existing_tl:
+                        existing_tl.date_start = _parse_date(taboo_data.get("date_start"))
+                        existing_tl.date_update = _parse_date(taboo_data.get("date_update"))
+                        existing_tl.name = taboo_data.get("name")
+                        existing_tl.active = bool(taboo_data.get("active", 1))
+                    else:
+                        tl = TabooListModel(
+                            code=tl_code,
+                            name=taboo_data.get("name"),
+                            date_start=_parse_date(taboo_data.get("date_start")),
+                            date_update=_parse_date(taboo_data.get("date_update")),
+                            active=bool(taboo_data.get("active", 1)),
+                        )
+                        db.add(tl)
+
                 for taboo_data in raw_taboos:
                     cards = json.loads(taboo_data.get("cards", "[]"))
                     for card in cards:

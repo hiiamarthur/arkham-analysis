@@ -270,6 +270,17 @@ export interface DashboardTrendingInvestigator {
   change_pct: number;
 }
 
+export interface MetaTrends {
+  months: string[];
+  factions: Record<string, number[]>;
+  investigators: {
+    code: string;
+    name: string;
+    faction: string;
+    monthly_share: number[];
+  }[];
+}
+
 export interface DashboardStats {
   meta: { decks_analyzed: number; days: number; generated_at: string; };
   top_investigators: DashboardInvestigator[];
@@ -341,6 +352,10 @@ export class ScenarioService {
 
   getDashboardStats(days = 90): Observable<DashboardStats> {
     return this.http.get<DashboardStats>(`${this.dashboardUrl}?days=${days}`);
+  }
+
+  getMetaTrends(months = 12): Observable<MetaTrends> {
+    return this.http.get<MetaTrends>(`${this.dashboardUrl}/trends?months=${months}`);
   }
 
   analyzeInvestigatorsVsScenario(

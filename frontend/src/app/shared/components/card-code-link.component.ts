@@ -2,14 +2,16 @@ import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { CardModalService } from '../../services/card-modal.service';
+import { CardTooltipDirective } from '../directives/card-tooltip.directive';
 
 @Component({
   selector: 'app-card-code-link',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CardTooltipDirective],
   template: `
     <span
       class="card-code-link"
+      [cardTooltip]="cardCode"
       (click)="onClick()"
       [title]="'Click to view ' + cardCode + ' details'">
       <ng-content>{{cardCode}}</ng-content>

@@ -342,6 +342,140 @@ def _highlight(top_inv, top_investigators, faction_meta, total_decks, avg_xp):
     }
 
 
+TRENDS_CACHE_KEY = "dashboard:trends:v1"
+
+FACTIONS = ["guardian", "seeker", "rogue", "mystic", "survivor", "neutral"]
+
+
+@router.get("/trends")
+async def get_meta_trends(
+    response: Response,
+    months: int = 12,
+    top_investigators: int = 5,
+    card_service: CardService = Depends(get_card_service),
+    deck_service: DeckService = Depends(get_deck_service),
+) -> Dict[str, Any]:
+    """
+    Monthly meta trend data for the past N months.
+    Returns faction meta share and top investigator popularity per month.
+    Cached until next Sunday midnight.
+    """
+    redis_client = await get_redis_client()
+    cache_key = f"{TRENDS_CACHE_KEY}:{months}:{top_investigators}"
+
+    if redis_client.is_connected:
+        cached = await redis_client.get(cache_key)
+        if cached:
+            response.headers.update(ARKHAM_HEADERS)
+            response.headers["X-Cache"] = "HIT"
+            return cached
+
+    days = months * 31  # overfetch slightly to cover full months
+    try:
+        decks, investigators, reprint_map = await asyncio.wait_for(
+            asyncio.gather(
+                deck_service.get_decks_last_n_days(days),
+                card_service.get_all_investigators(),
+                _build_reprint_map(card_service),
+            ),
+            timeout=300.0,
+        )
+    except asyncio.TimeoutError:
+        raise HTTPException(status_code=504, detail="Trend data fetch timed out.")
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to load trend data: {e}")
+
+    if not decks:
+        return {"months": [], "factions": {}, "investigators": []}
+
+    def _crunch_trends(decks, investigators, reprint_map, months, top_n):
+        from collections import defaultdict, Counter
+
+        inv_lookup: Dict[str, Dict] = {
+            i["code"]: {"name": i["name"], "faction_code": i.get("faction_code", "neutral")}
+            for i in investigators
+        }
+
+        now = datetime.utcnow()
+        # Build ordered month labels (oldest first)
+        month_keys = []
+        for m in range(months - 1, -1, -1):
+            dt = now - timedelta(days=m * 30)
+            month_keys.append(f"{dt.year}-{dt.month:02d}")
+
+        month_set = set(month_keys)
+
+        # Counters: month_key → {faction: count}, {inv_code: count}
+        faction_by_month: Dict[str, Counter] = defaultdict(Counter)
+        inv_by_month: Dict[str, Counter] = defaultdict(Counter)
+        total_by_month: Dict[str, int] = defaultdict(int)
+
+        # Overall investigator counter to pick top N
+        all_inv_counter: Counter = Counter()
+
+        for deck in decks:
+            try:
+                created = datetime.fromisoformat(deck.date_creation.replace("Z", "+00:00")).replace(tzinfo=None)
+            except Exception:
+                continue
+            mk = f"{created.year}-{created.month:02d}"
+            if mk not in month_set:
+                continue
+            inv_code = reprint_map.get(deck.investigator_code, deck.investigator_code)
+            faction = inv_lookup.get(inv_code, {}).get("faction_code", "neutral")
+            faction_by_month[mk][faction] += 1
+            inv_by_month[mk][inv_code] += 1
+            total_by_month[mk] += 1
+            all_inv_counter[inv_code] += 1
+
+        # Pick top N investigators overall
+        top_inv_codes = [code for code, _ in all_inv_counter.most_common(top_n)]
+
+        # Build faction series (% share per month)
+        faction_series: Dict[str, list] = {f: [] for f in FACTIONS}
+        for mk in month_keys:
+            total = total_by_month[mk]
+            for f in FACTIONS:
+                pct = round(faction_by_month[mk][f] / total * 100, 1) if total else 0
+                faction_series[f].append(pct)
+
+        # Build investigator series (% share per month)
+        inv_series = []
+        for code in top_inv_codes:
+            info = inv_lookup.get(code, {})
+            monthly = []
+            for mk in month_keys:
+                total = total_by_month[mk]
+                pct = round(inv_by_month[mk][code] / total * 100, 1) if total else 0
+                monthly.append(pct)
+            inv_series.append({
+                "code": code,
+                "name": info.get("name", code),
+                "faction": info.get("faction_code", "neutral"),
+                "monthly_share": monthly,
+            })
+
+        return month_keys, faction_series, inv_series
+
+    month_keys, faction_series, inv_series = await asyncio.to_thread(
+        _crunch_trends, decks, investigators, reprint_map, months, top_investigators
+    )
+
+    result = {
+        "months": month_keys,
+        "factions": faction_series,
+        "investigators": inv_series,
+    }
+
+    if redis_client.is_connected:
+        ttl = seconds_until_next_sunday_midnight()
+        await redis_client.set(cache_key, result, expire=ttl)
+
+    response.headers.update(ARKHAM_HEADERS)
+    response.headers["Cache-Control"] = f"public, max-age={min(3600, seconds_until_next_sunday_midnight())}"
+    return result
+
+
 def _empty_response(days):
     return {
         "meta": {"decks_analyzed": 0, "days": days, "generated_at": datetime.utcnow().isoformat()},

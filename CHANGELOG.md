@@ -4,6 +4,41 @@ All notable changes to Arkham Analysis are documented here.
 
 ---
 
+## [2.1.0] - 2026-06-10
+
+### Overview
+Feature release focused on data accuracy (removing mocked stats), improved discoverability via shareable URLs and cycle filters, and UI polish across the dashboard and card analysis pages.
+
+### New Features
+
+#### Pool Playground
+- **Shareable URLs** — investigator selection and all active filters are encoded into query params; sharing the URL restores the exact view for anyone who opens it
+- **Session persistence** — state is saved to `sessionStorage` and restored on page refresh until the browser is closed
+- **Cycle filter** — replaced the 55-item pack dropdown with compact cycle chips (Core, Dunwich, Carcosa, Forgotten Age, Circle Undone, Dream-Eaters, Innsmouth, and more); chips auto-dim when a cycle has no cards in the current pool
+- **Copy link button** — one-click copy of the shareable URL, shown when 2+ investigators are loaded
+
+#### Card Analysis
+- **Customizable cards** — cards with upgrade options (Hunter's Armor, Runic Axe, Raven Quill, etc.) now show a formatted customization section with XP pip indicators per upgrade
+- **Alternate versions bar** — investigator cards with parallel versions now show a linked bar to navigate between them
+- **Encounter filter** — toggle to show/hide encounter cards; spoiler blur mode hides encounter card details except the name
+
+#### Dashboard
+- Investigator trend chart lines now use **faction colors** (Guardian blue, Seeker orange, Survivor red, etc.)
+- **"Meta Share" renamed to "Deck Rate"** throughout — clearer label for the metric (% of published decks using this investigator/faction)
+
+#### Investigators Page
+- Deck Rate stat label updated to match dashboard
+
+### Fixes
+- Removed dead card-detail modal containing all mocked/random stats (usage rate, win rate, economy/impact/consistency/versatility scores, fake synergy cards, fake campaign performance) — none of it was visible to users but it has been cleaned up
+- Card tooltip added to card listings
+- Field suggestions on search
+- Investigator image resize logic
+- Timeout increased for ArkhamDB sync requests
+- Responsive layout fixes
+
+---
+
 ## [2.0.1] - 2026-03-21
 
 ### Bug Fixes
@@ -89,6 +124,7 @@ Initial public release of Arkham Analysis — an open analytics platform for Ark
 
 ---
 
+[2.1.0]: https://github.com/arthurlau/arkham-analysis/compare/v2.0.1...v2.1.0
 [2.0.1]: https://github.com/arthurlau/arkham-analysis/compare/v2.0.0...v2.0.1
 [2.0.0]: https://github.com/arthurlau/arkham-analysis/compare/v1.0.0...v2.0.0
 [1.0.0]: https://github.com/arthurlau/arkham-analysis/releases/tag/v1.0.0

@@ -20,13 +20,12 @@
       <div class="filter-row">
         <div class="filter-group">
           <label>Search</label>
-          <input
-            type="text"
+          <app-autocomplete-input
+            [suggestions]="investigatorNameSuggestions()"
             [ngModel]="nameSearch()"
             (ngModelChange)="nameSearch.set($event)"
             placeholder="Search investigators..."
-            class="filter-input"
-          />
+          ></app-autocomplete-input>
         </div>
         <div class="filter-group">
           <label>Class</label>
@@ -143,9 +142,34 @@
             {{ (stats.meta_position.meta_share * 100) | number:'1.1-1' }}%
           </div>
           <div class="stat-value" *ngIf="statsLoading()">-</div>
-          <div class="stat-label">Meta Share</div>
+          <div class="stat-label">Deck Rate</div>
         </div>
       </div>
+    </div>
+
+    <!-- Alternate version links -->
+    <div class="alternate-versions-bar" *ngIf="investigator.alternate_of_code || (investigator.alternated_by && investigator.alternated_by.length)">
+      <!-- This is a parallel version → link back to original -->
+      <div *ngIf="investigator.alternate_of_code" class="alt-entry alt-entry--original"
+           [cardTooltip]="investigator.alternate_of_code"
+           (click)="navigateToInvestigator(investigator.alternate_of_code!)">
+        <span class="alt-icon">◈</span>
+        <span class="alt-label">Parallel of</span>
+        <span class="alt-name">{{investigator.alternate_of_name || investigator.alternate_of_code}}</span>
+        <span class="alt-tag">Original</span>
+      </div>
+      <!-- This investigator has parallel versions → list them -->
+      <ng-container *ngIf="investigator.alternated_by && investigator.alternated_by.length">
+        <span class="alt-divider" *ngIf="investigator.alternate_of_code">·</span>
+        <span class="alt-label">Parallel versions:</span>
+        <div *ngFor="let altCode of investigator.alternated_by" class="alt-entry alt-entry--parallel"
+             [cardTooltip]="altCode"
+             (click)="navigateToInvestigator(altCode)">
+          <span class="alt-icon">◈</span>
+          <span class="alt-name">{{getInvestigatorName(altCode)}}</span>
+          <span class="alt-tag">Parallel</span>
+        </div>
+      </ng-container>
     </div>
 
     <!-- No deck data notice (parallel / new investigators) -->
@@ -606,7 +630,7 @@
     </div>
 
     <div class="help-section">
-      <h4>Meta Share</h4>
+      <h4>Deck Rate</h4>
       <dl>
         <dt>Formula</dt>
         <dd>

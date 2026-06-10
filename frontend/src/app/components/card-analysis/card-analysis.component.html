@@ -37,17 +37,18 @@
         <div class="filter-row">
           <div class="filter-group">
             <label for="search-query">Search</label>
-            <input
+            <app-autocomplete-input
               id="search-query"
-              type="text"
-              [(ngModel)]="searchQuery"
+              [suggestions]="cardNameSuggestions()"
+              [ngModel]="searchQuery()"
+              (ngModelChange)="searchQuery.set($event)"
               placeholder="Search card names..."
-              class="filter-input"
-              (keyup.enter)="onSearch()"
-            />
+              (suggestionSelected)="onSearch()"
+            ></app-autocomplete-input>
           </div>
 
-          <div class="filter-group">
+          <!-- Faction filter: only relevant for player cards -->
+          <div class="filter-group" *ngIf="filterPlayerOnly()">
             <label for="search-faction">Faction</label>
             <select id="search-faction" [(ngModel)]="searchFaction" class="filter-select">
               <option value="">All Factions</option>
@@ -64,12 +65,25 @@
             <label for="search-type">Type</label>
             <select id="search-type" [(ngModel)]="searchType" class="filter-select">
               <option value="">All Types</option>
-              <option value="asset">Asset</option>
-              <option value="event">Event</option>
-              <option value="skill">Skill</option>
-              <option value="investigator">Investigator</option>
-              <option value="treachery">Treachery</option>
-              <option value="enemy">Enemy</option>
+              <ng-container *ngIf="filterPlayerOnly()">
+                <!-- treachery/enemy are ENCOUNTER_TYPE_CODES on backend — excluded in player-only mode -->
+                <option value="asset">Asset</option>
+                <option value="event">Event</option>
+                <option value="skill">Skill</option>
+              </ng-container>
+              <ng-container *ngIf="!filterPlayerOnly()">
+                <option disabled style="color: #64748b; font-size: 0.7rem;">─── Player ───</option>
+                <option value="asset">Asset</option>
+                <option value="event">Event</option>
+                <option value="skill">Skill</option>
+                <option disabled style="color: #64748b; font-size: 0.7rem;">─── Encounter ───</option>
+                <option value="treachery">Treachery</option>
+                <option value="enemy">Enemy</option>
+                <option value="location">Location</option>
+                <option value="act">Act</option>
+                <option value="agenda">Agenda</option>
+                <option value="story">Story</option>
+              </ng-container>
             </select>
           </div>
 
@@ -118,6 +132,20 @@
           <button class="search-button advanced" (click)="toggleAdvancedFilters()">
             {{ showAdvancedFilters() ? '▼ Hide Advanced' : '▶ Show Advanced' }}
           </button>
+
+          <!-- Encounter filter controls -->
+          <div class="encounter-filter-controls">
+            <label class="toggle-switch-label" title="When off, encounter cards (enemies, treacheries, locations…) are included in results">
+              <span class="toggle-switch-text">Player cards only</span>
+              <div class="toggle-switch" [class.active]="filterPlayerOnly()" (click)="onTogglePlayerOnly()">
+                <div class="toggle-knob"></div>
+              </div>
+            </label>
+            <label *ngIf="!filterPlayerOnly()" class="spoiler-checkbox-label" title="Blur encounter card details to avoid spoilers">
+              <input type="checkbox" [checked]="hideEncounterSpoilers()" (change)="hideEncounterSpoilers.set(!hideEncounterSpoilers())">
+              <span>Hide encounter spoilers</span>
+            </label>
+          </div>
         </div>
 
         <!-- Advanced Filters Section -->
@@ -318,266 +346,6 @@
       </div>
     </div>
 
-    <!-- Card Detail Modal -->
-    <div class="card-detail-overlay" *ngIf="selectedCard()" (click)="closeCardDetail()">
-      <div class="card-detail-modal-large" (click)="$event.stopPropagation()">
-        <button
-          class="close-button"
-          type="button"
-          aria-label="Close card details"
-          (click)="closeCardDetail()"
-        ><span [innerHTML]="getIcon('close')"></span></button>
-
-        <div class="card-detail-content" *ngIf="selectedCard() as card">
-          <!-- Card Header Section -->
-          <div class="card-header-section">
-            <div class="card-main-info">
-              <div class="card-title-row">
-                <h2>{{card.name}}</h2>
-                <div class="faction-badge" [style.background-color]="getFactionColor(card.faction)">
-                  <span [innerHTML]="getArkhamIcon(card.faction.toLowerCase())"></span>
-                  {{card.faction}}
-                </div>
-              </div>
-              <div class="card-meta-row">
-                <span class="card-code">{{card.code}}</span>
-                <span class="card-type">{{card.type}}</span>
-                <span class="card-class">{{card.class}}</span>
-              </div>
-            </div>
-
-            <!-- Key Stats Overview -->
-            <div class="key-stats-overview">
-              <div class="key-stat">
-                <div class="stat-icon" [innerHTML]="getIcon('popularity')"></div>
-                <div class="stat-info">
-                  <div class="stat-value">{{card.usageRate}}%</div>
-                  <div class="stat-label">Usage Rate</div>
-                </div>
-              </div>
-              <div class="key-stat">
-                <div class="stat-icon" [innerHTML]="getIcon('trophy')"></div>
-                <div class="stat-info">
-                  <div class="stat-value">{{card.winRateWithCard}}%</div>
-                  <div class="stat-label">Win Rate</div>
-                </div>
-              </div>
-              <div class="key-stat">
-                <div class="stat-icon" [innerHTML]="getIcon('trend')"></div>
-                <div class="stat-info">
-                  <div class="stat-value">{{card.deckInclusionRate}}%</div>
-                  <div class="stat-label">Deck Inclusion</div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Two Column Layout -->
-          <div class="modal-two-column">
-            <!-- Left Column: Card Info -->
-            <div class="left-column">
-              <!-- Traits as Tags -->
-              <div class="traits-container" *ngIf="card.traits">
-                <span *ngFor="let trait of getTraitsArray(card.traits)" class="trait-tag">
-                  {{trait}}
-                </span>
-              </div>
-
-              <!-- Game Stats Ribbon -->
-              <div class="game-stats-ribbon" [style.--faction-color]="getFactionColor(card.faction)">
-                <div class="stat-pill" title="Resource Cost">
-                  <span class="value" [innerHTML]="getArkhamIcon(card.faction.toLowerCase())" *ngIf="card.faction" style="margin-right: 4px;"></span>
-                  <span class="value cost">{{card.cost !== null ? card.cost : '–'}}</span>
-                  <span class="label">Cost</span>
-                </div>
-                <div class="stat-pill" title="Experience" *ngIf="card.xp !== undefined">
-                  <span class="value xp">{{card.xp || 0}}</span>
-                  <span class="label">XP</span>
-                </div>
-                <div class="stat-pill" *ngIf="card.slot">
-                  <span class="slot-icon" [innerHTML]="getSlotIconSvg(card.slot)"></span>
-  
-                  <span class="label">Slot</span>
-                </div>
-                <div class="stat-pill" *ngIf="card.pack">
-                  <span class="value">{{card.pack.substring(0, 10)}}...</span>
-                  <span class="label">Pack</span>
-                </div>
-
-                <!-- Skill Icons -->
-                <div class="skill-symbols-row" *ngIf="card.skillWillpower || card.skillIntellect || card.skillCombat || card.skillAgility || card.skillWild" style="margin-left: auto; border-left: 1px solid rgba(100, 116, 139, 0.3); padding-left: 1rem;">
-                  <div style="display: flex; gap: 0.75rem; align-items: center;">
-                    <div class="skill-icon-item" *ngIf="card.skillWillpower" [title]="'Willpower: ' + card.skillWillpower">
-                      <span [innerHTML]="getArkhamIcon('willpower')"></span>
-                      <span class="skill-count">{{card.skillWillpower}}</span>
-                    </div>
-                    <div class="skill-icon-item" *ngIf="card.skillIntellect" [title]="'Intellect: ' + card.skillIntellect">
-                      <span [innerHTML]="getArkhamIcon('intellect')"></span>
-                      <span class="skill-count">{{card.skillIntellect}}</span>
-                    </div>
-                    <div class="skill-icon-item" *ngIf="card.skillCombat" [title]="'Combat: ' + card.skillCombat">
-                      <span [innerHTML]="getArkhamIcon('combat')"></span>
-                      <span class="skill-count">{{card.skillCombat}}</span>
-                    </div>
-                    <div class="skill-icon-item" *ngIf="card.skillAgility" [title]="'Agility: ' + card.skillAgility">
-                      <span [innerHTML]="getArkhamIcon('agility')"></span>
-                      <span class="skill-count">{{card.skillAgility}}</span>
-                    </div>
-                    <div class="skill-icon-item" *ngIf="card.skillWild" [title]="'Wild: ' + card.skillWild">
-                      <span [innerHTML]="getArkhamIcon('wild')"></span>
-                      <span class="skill-count">{{card.skillWild}}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Card Text Box -->
-              <div *ngIf="card.text" style="margin-top: 1.5rem;">
-                <div class="card-text-box" [style.--faction-color]="getFactionColor(card.faction)" [innerHTML]="card.text | arkhamIcons"></div>
-              </div>
-
-              <!-- Flavor Text -->
-              <div *ngIf="card.flavor" style="margin-top: 1rem; padding: 0 0.25rem;">
-                <div style="color: #94a3b8; font-style: italic; font-size: 0.875rem; line-height: 1.6;">
-                  {{card.flavor}}
-                </div>
-              </div>
-
-              <!-- Card Analysis - Mini Cards Grid -->
-              <div style="margin-top: 2rem;">
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem;">
-                  <div class="rating-mini-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                      <span class="label"><span [innerHTML]="getIcon('economy')"></span> Economy</span>
-                      <span style="font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #e2e8f0;">{{card.economyRating}}</span>
-                    </div>
-                    <div class="mini-bar-bg">
-                      <div class="fill" [style.width.%]="card.economyRating || 0"></div>
-                    </div>
-                  </div>
-                  <div class="rating-mini-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                      <span class="label"><span [innerHTML]="getIcon('impact')"></span> Impact</span>
-                      <span style="font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #e2e8f0;">{{card.impactRating}}</span>
-                    </div>
-                    <div class="mini-bar-bg">
-                      <div class="fill" [style.width.%]="card.impactRating || 0"></div>
-                    </div>
-                  </div>
-                  <div class="rating-mini-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                      <span class="label"><span [innerHTML]="getIcon('consistency')"></span> Consistency</span>
-                      <span style="font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #e2e8f0;">{{card.consistencyRating}}</span>
-                    </div>
-                    <div class="mini-bar-bg">
-                      <div class="fill" [style.width.%]="card.consistencyRating || 0"></div>
-                    </div>
-                  </div>
-                  <div class="rating-mini-card">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                      <span class="label"><span [innerHTML]="getIcon('versatility')"></span> Versatility</span>
-                      <span style="font-family: 'JetBrains Mono', monospace; font-weight: 600; color: #e2e8f0;">{{card.versatilityScore}}</span>
-                    </div>
-                    <div class="mini-bar-bg">
-                      <div class="fill" [style.width.%]="card.versatilityScore || 0"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- Right Column: Stats & Analysis -->
-            <div class="right-column">
-              <!-- Top Investigators -->
-              <div class="compact-section">
-                <div class="section-mini-header"><span [innerHTML]="getIcon('investigator')"></span> Top Investigators</div>
-                <div class="investigator-list-clean">
-                  <div class="investigator-item-clean" *ngFor="let inv of card.topInvestigators">
-                    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.25rem;">
-                      <span style="font-weight: 600; color: #e2e8f0; font-size: 0.875rem;">{{inv.name}}</span>
-                      <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #60a5fa;">{{inv.usageRate}}%</span>
-                    </div>
-                    <div class="mini-bar-bg">
-                      <div class="fill" [style.width.%]="inv.usageRate"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Synergy Cards -->
-              <div class="compact-section">
-                <div class="section-mini-header"><span [innerHTML]="getIcon('synergy')"></span> Synergies</div>
-                <div class="synergy-list-clean">
-                  <div class="synergy-item-clean" *ngFor="let syn of card.synergyCards">
-                    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.25rem;">
-                      <span style="font-weight: 600; color: #e2e8f0; font-size: 0.875rem;">{{syn.name}}</span>
-                      <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #10b981;">{{syn.synergyScore}}%</span>
-                    </div>
-                    <div class="mini-bar-bg">
-                      <div class="fill" [style.width.%]="syn.synergyScore" style="background: linear-gradient(90deg, #10b981, #059669);"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Performance by Difficulty -->
-              <div class="compact-section">
-                <div class="section-mini-header"><span [innerHTML]="getArkhamIcon('combat')"></span> By Difficulty</div>
-                <div class="performance-list-clean">
-                  <div class="performance-item-clean" *ngFor="let perf of card.performanceByDifficulty">
-                    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.25rem;">
-                      <span style="font-size: 0.875rem; color: #94a3b8;">{{perf.difficulty}}</span>
-                      <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 600;"
-                            [style.color]="perf.winRate > 70 ? '#10b981' : perf.winRate > 55 ? '#fbbf24' : '#ef4444'">
-                        {{perf.winRate}}%
-                      </span>
-                    </div>
-                    <div class="mini-bar-bg">
-                      <div class="fill" [style.width.%]="perf.winRate"
-                           [style.background]="perf.winRate > 70 ? 'linear-gradient(90deg, #10b981, #059669)' : perf.winRate > 55 ? 'linear-gradient(90deg, #fbbf24, #f59e0b)' : 'linear-gradient(90deg, #ef4444, #dc2626)'">
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Performance by Campaign -->
-              <div class="compact-section">
-                <div class="section-mini-header"><span [innerHTML]="getIcon('campaign')"></span> By Campaign</div>
-                <div class="performance-list-clean">
-                  <div class="performance-item-clean" *ngFor="let camp of card.performanceByCampaign">
-                    <div style="display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 0.25rem;">
-                      <span style="font-size: 0.875rem; color: #94a3b8;">{{camp.campaign}}</span>
-                      <span style="font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; font-weight: 600;"
-                            [style.color]="camp.winRate > 65 ? '#10b981' : camp.winRate > 50 ? '#fbbf24' : '#ef4444'">
-                        {{camp.winRate}}%
-                      </span>
-                    </div>
-                    <div class="mini-bar-bg">
-                      <div class="fill" [style.width.%]="camp.winRate"
-                           [style.background]="camp.winRate > 65 ? 'linear-gradient(90deg, #10b981, #059669)' : camp.winRate > 50 ? 'linear-gradient(90deg, #fbbf24, #f59e0b)' : 'linear-gradient(90deg, #ef4444, #dc2626)'">
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Actions Footer -->
-          <div class="modal-footer">
-            <button class="action-button secondary" disabled title="Coming soon">
-              AI Analysis — Coming Soon
-            </button>
-            <button class="action-button secondary" (click)="closeCardDetail()">
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- Card Stats Modal -->
   <div class="stats-modal-overlay" *ngIf="showStatsModal()" (click)="closeStatsModal()">
     <div class="stats-modal" (click)="$event.stopPropagation()">
@@ -625,8 +393,102 @@
           <h2>{{details.name}}</h2>
           <span class="card-type-badge">{{details.type_name}}</span>
         </div>
-        <div class="stats-footer-compact" style="text-align:left; padding: 1rem;">
-          No statistics available for this card yet.
+
+        <!-- Card Details Section (image + bonded/linked) — shown even without deck stats -->
+        <div class="card-details-section-top">
+          <div class="card-details-layout-horizontal">
+            <div class="card-image-container">
+              <img *ngIf="details.imagesrc"
+                   [src]="getCardImageUrl(details.imagesrc)"
+                   [alt]="details.name"
+                   class="card-image"
+                   (error)="$any($event.target).src=''; $any($event.target).style.display='none'">
+              <div *ngIf="!details.imagesrc" class="no-image-placeholder">
+                <span class="no-image-icon" [innerHTML]="getIcon('card')"></span>
+                <p>No image available</p>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; gap: 0.5rem; padding-top: 0.25rem;">
+              <div class="stats-footer-compact" style="text-align:left; padding: 0;">
+                No statistics available for this card yet.
+              </div>
+
+              <!-- Bonded Cards -->
+              <div *ngIf="details.bonded_cards && details.bonded_cards.length > 0" style="margin-top: 0.75rem;">
+                <div style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #64748b; margin-bottom: 0.4rem;">Bonded Cards</div>
+                <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                  <div *ngFor="let bonded of details.bonded_cards"
+                       [cardTooltip]="bonded.code"
+                       (click)="navigateToRelatedCard(bonded.code)"
+                       style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; border-left: 2px solid #d6ad60; background: rgba(214,173,96,0.07); border-radius: 0 4px 4px 0;">
+                    <span style="font-size: 0.75rem; color: #d6ad60; opacity: 0.8;">⬡</span>
+                    <span style="font-size: 0.875rem; color: #d6ad60;">{{bonded.name}}</span>
+                    <span *ngIf="bonded.count > 1" style="font-size: 0.75rem; color: #64748b; margin-left: auto;">×{{bonded.count}}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Linked Card -->
+              <div *ngIf="details.linked_card" style="margin-top: 0.75rem;">
+                <div style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #64748b; margin-bottom: 0.4rem;">Linked Card</div>
+                <div [cardTooltip]="details.linked_card.code"
+                     (click)="navigateToRelatedCard(details.linked_card.code)"
+                     style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; border-left: 2px solid #94a3b8; background: rgba(148,163,184,0.07); border-radius: 0 4px 4px 0;">
+                  <span style="font-size: 0.75rem; color: #94a3b8; opacity: 0.8;">⇌</span>
+                  <span style="font-size: 0.875rem; color: #cbd5e1;">{{details.linked_card.name}}</span>
+                  <span *ngIf="details.linked_card.type_name" style="font-size: 0.75rem; color: #64748b; margin-left: auto;">{{details.linked_card.type_name}}</span>
+                </div>
+              </div>
+
+              <!-- Alternate of (this card is a parallel/alternate version) -->
+              <div *ngIf="details.alternate_of_code" style="margin-top: 0.75rem;">
+                <div style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #64748b; margin-bottom: 0.4rem;">Alternate Of</div>
+                <div [cardTooltip]="details.alternate_of_code"
+                     (click)="navigateToRelatedCard(details.alternate_of_code)"
+                     style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; border-left: 2px solid #818cf8; background: rgba(129,140,248,0.07); border-radius: 0 4px 4px 0;">
+                  <span style="font-size: 0.75rem; color: #818cf8; opacity: 0.8;">◈</span>
+                  <span style="font-size: 0.875rem; color: #c7d2fe;">{{details.alternate_of_name || details.alternate_of_code}}</span>
+                  <span style="font-size: 0.7rem; color: #64748b; margin-left: auto;">Original</span>
+                </div>
+              </div>
+
+              <!-- Alternated by (this card has parallel/alternate versions) -->
+              <div *ngIf="details.alternated_by && details.alternated_by.length > 0" style="margin-top: 0.75rem;">
+                <div style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #64748b; margin-bottom: 0.4rem;">Alternate Versions</div>
+                <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                  <div *ngFor="let altCode of details.alternated_by"
+                       [cardTooltip]="altCode"
+                       (click)="navigateToRelatedCard(altCode)"
+                       style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; border-left: 2px solid #818cf8; background: rgba(129,140,248,0.07); border-radius: 0 4px 4px 0;">
+                    <span style="font-size: 0.75rem; color: #818cf8; opacity: 0.8;">◈</span>
+                    <span style="font-size: 0.875rem; color: #c7d2fe;">{{altCode}}</span>
+                    <span style="font-size: 0.7rem; color: #64748b; margin-left: auto;">Parallel</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Customization Options (no-stats block) -->
+        <div *ngIf="details.customization_text" class="customization-section" style="margin-top: 1rem;">
+          <div class="customization-header">
+            <span class="customization-label">Customizable</span>
+          </div>
+          <div class="customization-list">
+            <ng-container *ngFor="let opt of parseCustomizationOptions(details.customization_text)">
+              <div *ngIf="opt.isPreamble" class="customization-preamble" [innerHTML]="opt.name | arkhamIcons"></div>
+              <div *ngIf="!opt.isPreamble" class="customization-row">
+                <div class="customization-xp">
+                  <span *ngFor="let pip of opt.pips" class="xp-pip"></span>
+                </div>
+                <div class="customization-content">
+                  <span class="customization-name" [innerHTML]="opt.name | arkhamIcons"></span>
+                  <span *ngIf="opt.description" class="customization-desc" [innerHTML]="opt.description | arkhamIcons"></span>
+                </div>
+              </div>
+            </ng-container>
+          </div>
         </div>
       </div>
 
@@ -675,6 +537,99 @@
         <!-- Last Updated Info -->
         <div class="stats-footer-compact" *ngIf="getLastUpdatedText(stats)">
           {{getLastUpdatedText(stats)}}
+        </div>
+
+        <!-- Taboo Versions -->
+        <div *ngIf="cardTaboos() as taboos" class="taboo-section">
+          <div class="taboo-section-header">
+            <span class="taboo-section-title">Taboo History</span>
+            <ng-container *ngIf="taboos.has_taboos">
+              <span class="taboo-meta-badge">
+                Since {{taboos.introduced_date || ('v' + taboos.introduced_version)}} &nbsp;·&nbsp; {{taboos.versions_active}} lists
+              </span>
+              <span class="taboo-trend-badge taboo-trend--{{taboos.restriction_trend}}">
+                {{ taboos.restriction_trend === 'escalating' ? '↑ Escalating' :
+                   taboos.restriction_trend === 'easing'     ? '↓ Easing' : '→ Stable' }}
+              </span>
+            </ng-container>
+            <span *ngIf="!taboos.has_taboos" class="taboo-clean-badge">Not Tabooed</span>
+          </div>
+
+          <div *ngIf="taboos.has_taboos" class="taboo-versions-row">
+            <!-- Original baseline pill -->
+            <button
+              class="taboo-pill taboo-none"
+              [class.taboo-pill--active]="selectedTabooId() === null"
+              (click)="selectTaboo(null)">
+              <span class="taboo-pill-label">Original</span>
+              <span class="taboo-pill-meta">
+                Base&nbsp;
+                <span *ngIf="taboos.base_cost !== null && taboos.base_cost !== undefined">{{taboos.base_cost}} res</span>
+                <span *ngIf="taboos.base_xp !== null && taboos.base_xp !== undefined">&nbsp;·&nbsp;{{taboos.base_xp}} XP</span>
+              </span>
+            </button>
+
+            <!-- One pill per change point (deduplicated) -->
+            <button
+              *ngFor="let t of taboos.taboo_versions"
+              class="taboo-pill"
+              [class]="'taboo-pill ' + tabooRestrictionClass(t.restriction_score, t.is_forbidden)"
+              [class.taboo-pill--active]="selectedTabooId() === t.taboo_id"
+              [title]="t.text || ''"
+              (click)="selectTaboo(t.taboo_id)">
+              <span class="taboo-pill-label">
+                <ng-container *ngIf="t.date_start; else codeLabel">
+                  {{t.date_start}}
+                  <ng-container *ngIf="t.date_end"> – {{t.date_end}}</ng-container>
+                  <ng-container *ngIf="!t.date_end && t.is_current"> – present</ng-container>
+                </ng-container>
+                <ng-template #codeLabel>
+                  <ng-container *ngIf="t.effective_from === t.effective_to">v{{t.effective_from}}</ng-container>
+                  <ng-container *ngIf="t.effective_from !== t.effective_to">v{{t.effective_from}}–{{t.effective_to}}</ng-container>
+                </ng-template>
+                <span *ngIf="t.is_strongest && !t.is_current" class="taboo-crown" title="Least restrictive version">★</span>
+              </span>
+              <span class="taboo-pill-meta">{{tabooRestrictionLabel(t.restriction_score, t.is_forbidden)}}</span>
+            </button>
+          </div>
+
+          <!-- Selected taboo detail panel -->
+          <div *ngIf="selectedTabooEntry() as entry" class="taboo-detail-panel">
+            <div class="taboo-detail-header">
+              <span class="taboo-version-label">
+                <ng-container *ngIf="entry.is_introduced">Introduced</ng-container>
+                <ng-container *ngIf="!entry.is_introduced">Changed</ng-container>
+                &nbsp;
+                <ng-container *ngIf="entry.date_start; else detailCodeLabel">
+                  {{entry.date_start}}
+                  <ng-container *ngIf="entry.date_end"> – {{entry.date_end}}</ng-container>
+                  <ng-container *ngIf="!entry.date_end && entry.is_current"> – present</ng-container>
+                </ng-container>
+                <ng-template #detailCodeLabel>
+                  v{{entry.effective_from}}<ng-container *ngIf="entry.effective_from !== entry.effective_to">–{{entry.effective_to}}</ng-container>
+                </ng-template>
+                <span *ngIf="entry.is_current" class="taboo-current-label">Current</span>
+              </span>
+              <span class="taboo-restriction-badge" [class]="tabooRestrictionClass(entry.restriction_score, entry.is_forbidden)">
+                {{tabooRestrictionLabel(entry.restriction_score, entry.is_forbidden)}}
+              </span>
+            </div>
+            <div class="taboo-deltas">
+              <span *ngIf="entry.cost_delta && entry.cost_delta > 0" class="taboo-delta taboo-delta--cost">
+                Cost +{{entry.cost_delta}}
+                <span *ngIf="taboos.base_cost !== null && taboos.base_cost !== undefined">
+                  ({{taboos.base_cost}} → {{taboos.base_cost + entry.cost_delta}})
+                </span>
+              </span>
+              <span *ngIf="entry.xp_delta && entry.xp_delta > 0" class="taboo-delta taboo-delta--xp">
+                XP +{{entry.xp_delta}}
+                <span *ngIf="taboos.base_xp !== null && taboos.base_xp !== undefined">
+                  ({{taboos.base_xp}} → {{taboos.base_xp + entry.xp_delta}})
+                </span>
+              </span>
+            </div>
+            <div *ngIf="entry.text" class="taboo-text" [innerHTML]="entry.text | arkhamIcons"></div>
+          </div>
         </div>
 
         <!-- Card Details Section - Full Width Below Overview -->
@@ -776,6 +731,27 @@
               </div>
             </div>
 
+            <!-- Customization Options -->
+            <div *ngIf="details.customization_text" class="customization-section">
+              <div class="customization-header">
+                <span class="customization-label">Customizable</span>
+              </div>
+              <div class="customization-list">
+                <ng-container *ngFor="let opt of parseCustomizationOptions(details.customization_text)">
+                  <div *ngIf="opt.isPreamble" class="customization-preamble" [innerHTML]="opt.name | arkhamIcons"></div>
+                  <div *ngIf="!opt.isPreamble" class="customization-row">
+                    <div class="customization-xp">
+                      <span *ngFor="let pip of opt.pips" class="xp-pip"></span>
+                    </div>
+                    <div class="customization-content">
+                      <span class="customization-name" [innerHTML]="opt.name | arkhamIcons"></span>
+                      <span *ngIf="opt.description" class="customization-desc" [innerHTML]="opt.description | arkhamIcons"></span>
+                    </div>
+                  </div>
+                </ng-container>
+              </div>
+            </div>
+
             <!-- Metadata Info -->
             <div style="margin-top: 0.75rem; display: flex; flex-direction: column; gap: 0.35rem;">
               <!-- Pack Info with Code and Quantity -->
@@ -804,16 +780,56 @@
               </div>
 
               <!-- Bonded Cards -->
-              <div *ngIf="details.bonded_cards && details.bonded_cards.length > 0" style="margin-top: 0.5rem;">
-                <div style="font-size: 0.75rem; color: #64748b; margin-bottom: 0.25rem;">Bonded</div>
-                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
-                  <a *ngFor="let bonded of details.bonded_cards"
-                     [routerLink]="['/analysis', bonded.code]"
-                     style="font-size: 0.875rem; color: #d6ad60; text-decoration: none; display: flex; align-items: center; gap: 0.35rem;">
-                    <span style="font-size: 0.7em; opacity: 0.7;">⬡</span>
-                    {{bonded.name}}
-                    <span *ngIf="bonded.count > 1" style="font-size: 0.75em; color: #64748b;">×{{bonded.count}}</span>
-                  </a>
+              <div *ngIf="details.bonded_cards && details.bonded_cards.length > 0" style="margin-top: 0.75rem;">
+                <div style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #64748b; margin-bottom: 0.4rem;">Bonded Cards</div>
+                <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                  <div *ngFor="let bonded of details.bonded_cards"
+                     [cardTooltip]="bonded.code"
+                     (click)="navigateToRelatedCard(bonded.code)"
+                     style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; border-left: 2px solid #d6ad60; background: rgba(214,173,96,0.07); border-radius: 0 4px 4px 0;">
+                    <span style="font-size: 0.75rem; color: #d6ad60; opacity: 0.8;">⬡</span>
+                    <span style="font-size: 0.875rem; color: #d6ad60;">{{bonded.name}}</span>
+                    <span *ngIf="bonded.count > 1" style="font-size: 0.75rem; color: #64748b; margin-left: auto;">×{{bonded.count}}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Linked Card (double-sided front/back pairs) -->
+              <div *ngIf="details.linked_card" style="margin-top: 0.75rem;">
+                <div style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #64748b; margin-bottom: 0.4rem;">Linked Card</div>
+                <div [cardTooltip]="details.linked_card.code"
+                     (click)="navigateToRelatedCard(details.linked_card.code)"
+                     style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; border-left: 2px solid #94a3b8; background: rgba(148,163,184,0.07); border-radius: 0 4px 4px 0;">
+                  <span style="font-size: 0.75rem; color: #94a3b8; opacity: 0.8;">⇌</span>
+                  <span style="font-size: 0.875rem; color: #cbd5e1;">{{details.linked_card.name}}</span>
+                  <span *ngIf="details.linked_card.type_name" style="font-size: 0.75rem; color: #64748b; margin-left: auto;">{{details.linked_card.type_name}}</span>
+                </div>
+              </div>
+
+              <!-- Alternate of (this card is a parallel/alternate version) -->
+              <div *ngIf="details.alternate_of_code" style="margin-top: 0.75rem;">
+                <div style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #64748b; margin-bottom: 0.4rem;">Alternate Of</div>
+                <div [cardTooltip]="details.alternate_of_code"
+                     (click)="navigateToRelatedCard(details.alternate_of_code)"
+                     style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; border-left: 2px solid #818cf8; background: rgba(129,140,248,0.07); border-radius: 0 4px 4px 0;">
+                  <span style="font-size: 0.75rem; color: #818cf8; opacity: 0.8;">◈</span>
+                  <span style="font-size: 0.875rem; color: #c7d2fe;">{{details.alternate_of_name || details.alternate_of_code}}</span>
+                  <span style="font-size: 0.7rem; color: #64748b; margin-left: auto;">Original</span>
+                </div>
+              </div>
+
+              <!-- Alternated by (this card has parallel/alternate versions) -->
+              <div *ngIf="details.alternated_by && details.alternated_by.length > 0" style="margin-top: 0.75rem;">
+                <div style="font-size: 0.7rem; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: #64748b; margin-bottom: 0.4rem;">Alternate Versions</div>
+                <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+                  <div *ngFor="let altCode of details.alternated_by"
+                       [cardTooltip]="altCode"
+                       (click)="navigateToRelatedCard(altCode)"
+                       style="cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0.3rem 0.5rem; border-left: 2px solid #818cf8; background: rgba(129,140,248,0.07); border-radius: 0 4px 4px 0;">
+                    <span style="font-size: 0.75rem; color: #818cf8; opacity: 0.8;">◈</span>
+                    <span style="font-size: 0.875rem; color: #c7d2fe;">{{altCode}}</span>
+                    <span style="font-size: 0.7rem; color: #64748b; margin-left: auto;">Parallel</span>
+                  </div>
                 </div>
               </div>
 
@@ -837,7 +853,7 @@
               <div *ngFor="let inv of getTopInvestigators(getCombinedStats(stats).popularity.investigator_usage_rate); let i = index"
                    class="investigator-item-compact">
                 <span class="inv-rank">{{i + 1}}</span>
-                <span class="inv-name">{{getInvestigatorName(inv.code)}}</span>
+                <span class="inv-name" [cardTooltip]="inv.code">{{getInvestigatorName(inv.code)}}</span>
                 <div class="inv-bar-mini">
                   <div class="inv-bar-fill" [style.width.%]="getBarPercent(inv.rate)"></div>
                 </div>
@@ -868,7 +884,7 @@
               <span class="stat-label-compact">this card also appears in other sets</span>
             </div>
             <div class="related-cards-list">
-              <div *ngFor="let related of stats.related_cards" class="related-card-chip" (click)="navigateToRelatedCard(related.code)">
+              <div *ngFor="let related of stats.related_cards" class="related-card-chip" [cardTooltip]="related.code" (click)="navigateToRelatedCard(related.code)">
                 <span class="related-card-name">{{related.name}}</span>
                 <span class="related-card-pack">{{related.pack_name}}</span>
                 <span class="related-card-decks" *ngIf="related.deck_stats">

@@ -194,8 +194,12 @@
 
           <div class="filter-group filter-group--grow">
             <label class="filter-label">Name</label>
-            <input class="filter-input" type="text" placeholder="Card name…"
-              [value]="nameSearch()" (input)="nameSearch.set($any($event.target).value)">
+            <app-autocomplete-input
+              [suggestions]="cardNameSuggestions()"
+              [ngModel]="nameSearch()"
+              (ngModelChange)="nameSearch.set($event)"
+              placeholder="Card name…"
+            ></app-autocomplete-input>
           </div>
 
           <div class="filter-group filter-group--grow">
@@ -207,6 +211,13 @@
           <div class="filter-group" *ngIf="hasActiveFilters()">
             <label class="filter-label">&nbsp;</label>
             <button class="btn-clear" (click)="clearFilters()">Clear all</button>
+          </div>
+
+          <div class="filter-group" *ngIf="activeSlots().length >= 2">
+            <label class="filter-label">&nbsp;</label>
+            <button class="btn-share" (click)="copyShareUrl()" title="Copy shareable link to clipboard">
+              ⎘ Copy link
+            </button>
           </div>
 
         </div>
@@ -307,21 +318,21 @@
             </div>
           </div>
 
-          <!-- Pack / Set -->
-          <div class="filter-group filter-group--multi filter-group--wide">
-            <label class="filter-label">Set</label>
-            <div class="multi-select" (click)="toggleDropdown('pack', $event)">
-              <span class="multi-placeholder" *ngIf="!packFilter().size">All sets</span>
-              <span class="chip" *ngFor="let p of packFilter()" (click)="toggleFilter(packFilter, p); $event.stopPropagation()">
-                {{ p }} ×
-              </span>
-              <span class="multi-caret">▾</span>
-            </div>
-            <div class="multi-dropdown multi-dropdown--tall" *ngIf="packOpen" (click)="stopProp($event)">
-              <label class="multi-option" *ngFor="let p of availablePacks()">
-                <input type="checkbox" [checked]="packFilter().has(p)" (change)="toggleFilter(packFilter, p)">
-                {{ p }}
-              </label>
+          <!-- Cycle / Pack filter -->
+          <div class="filter-group filter-group--cycle">
+            <label class="filter-label">Cycle</label>
+            <div class="cycle-chips">
+              <button
+                *ngFor="let cycle of CYCLE_NAMES"
+                class="cycle-chip"
+                [class.cycle-chip--active]="isCycleActive(cycle)"
+                [class.cycle-chip--partial]="isCyclePartial(cycle)"
+                [class.cycle-chip--unavailable]="!cyclePacksInPool(cycle).length"
+                (click)="toggleCycle(cycle); $event.stopPropagation()"
+                [disabled]="!cyclePacksInPool(cycle).length"
+                [title]="cyclePacksInPool(cycle).join(', ') || 'Not in current pool'">
+                {{ cycle }}
+              </button>
             </div>
           </div>
 
@@ -378,7 +389,7 @@
                   </td>
 
                   <td class="td-name">
-                    <span class="card-name card-name--link" (click)="goToCard(card.code)">{{ card.name }}</span>
+                    <span class="card-name card-name--link" [cardTooltip]="card.code" (click)="goToCard(card.code)">{{ card.name }}</span>
                     <span class="card-subname" *ngIf="card.subname"> · {{ card.subname }}</span>
                   </td>
 

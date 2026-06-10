@@ -236,7 +236,8 @@
 .filter-actions {
   display: flex;
   gap: 0.75rem;
-  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
 }
 
 .search-button {
@@ -2147,3 +2148,402 @@
     margin-bottom: 0.6rem;
   }
 }
+
+/* ── Taboo Section ─────────────────────────────────────────────── */
+
+.taboo-section {
+  margin: 1rem 0;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+}
+
+.taboo-section-header {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.taboo-section-title {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #94a3b8;
+}
+
+.taboo-clean-badge {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border-radius: 4px;
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.taboo-versions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.taboo-pill {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.4rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.05);
+  transition: all 0.15s ease;
+  font-family: inherit;
+  text-align: center;
+  min-width: 80px;
+}
+
+.taboo-pill:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.taboo-pill--active {
+  box-shadow: 0 0 0 2px currentColor;
+}
+
+.taboo-pill-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #e2e8f0;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.taboo-pill-meta {
+  font-size: 0.7rem;
+  margin-top: 0.1rem;
+}
+
+.taboo-crown {
+  color: #fbbf24;
+  font-size: 0.75rem;
+}
+
+.taboo-current-dot {
+  color: #10b981;
+  font-size: 0.6rem;
+  vertical-align: middle;
+}
+
+.taboo-current-label {
+  display: inline-block;
+  margin-left: 0.4rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+
+.taboo-meta-badge {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.taboo-trend-badge {
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+}
+
+.taboo-trend--escalating {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.taboo-trend--easing {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.taboo-trend--stable {
+  color: #94a3b8;
+  background: rgba(148, 163, 184, 0.1);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+/* Severity colour tokens */
+.taboo-none   { color: #10b981; border-color: rgba(16,185,129,0.4);  background: rgba(16,185,129,0.08);  }
+.taboo-minor  { color: #fbbf24; border-color: rgba(251,191,36,0.4);  background: rgba(251,191,36,0.08);  }
+.taboo-moderate { color: #f97316; border-color: rgba(249,115,22,0.4); background: rgba(249,115,22,0.08); }
+.taboo-heavy  { color: #ef4444; border-color: rgba(239,68,68,0.4);   background: rgba(239,68,68,0.08);   }
+.taboo-forbidden { color: #7c3aed; border-color: rgba(124,58,237,0.5); background: rgba(124,58,237,0.1); }
+
+/* Detail panel */
+.taboo-detail-panel {
+  margin-top: 0.5rem;
+  padding: 0.75rem;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.taboo-detail-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.taboo-version-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #cbd5e1;
+}
+
+.taboo-restriction-badge {
+  font-size: 0.7rem;
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.taboo-deltas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.taboo-delta {
+  font-size: 0.8125rem;
+  font-family: 'JetBrains Mono', monospace;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.taboo-delta--cost {
+  background: rgba(251, 191, 36, 0.12);
+  color: #fbbf24;
+  border: 1px solid rgba(251, 191, 36, 0.3);
+}
+
+.taboo-delta--xp {
+  background: rgba(99, 102, 241, 0.12);
+  color: #818cf8;
+  border: 1px solid rgba(99, 102, 241, 0.3);
+}
+
+.taboo-text {
+  font-size: 0.8125rem;
+  color: #94a3b8;
+  line-height: 1.6;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  padding-top: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+/* ── Encounter filter controls ──────────────────────────────── */
+.encounter-filter-controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-left: auto;
+}
+
+.toggle-switch-label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-switch-text {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  white-space: nowrap;
+}
+
+.toggle-switch {
+  position: relative;
+  width: 38px;
+  height: 20px;
+  background: rgba(100, 116, 139, 0.3);
+  border-radius: 10px;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.toggle-switch.active {
+  background: #d6ad60;
+}
+
+.toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 14px;
+  height: 14px;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.toggle-switch.active .toggle-knob {
+  transform: translateX(18px);
+}
+
+.spoiler-checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+
+.spoiler-checkbox-label input[type="checkbox"] {
+  accent-color: #94a3b8;
+  width: 14px;
+  height: 14px;
+  cursor: pointer;
+}
+
+/* ── Encounter spoiler blur ─────────────────────────────────── */
+.encounter-spoiler-blur {
+  filter: blur(7px);
+  pointer-events: none;
+  user-select: none;
+  transition: filter 0.2s;
+}
+
+.encounter-spoiler-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 6px;
+  font-size: 0.8rem;
+  color: #64748b;
+}
+/* ── Customization Options ──────────────────────────────────── */
+.customization-section {
+  margin-top: 1rem;
+  border: 1px solid rgba(251, 191, 36, 0.25);
+  border-left: 3px solid #f59e0b;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(251, 191, 36, 0.06), rgba(245, 158, 11, 0.03));
+  overflow: hidden;
+}
+
+.customization-header {
+  padding: 0.4rem 0.75rem;
+  background: rgba(251, 191, 36, 0.1);
+  border-bottom: 1px solid rgba(251, 191, 36, 0.15);
+}
+
+.customization-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #f59e0b;
+}
+
+.customization-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.customization-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  padding: 0.3rem 0.75rem;
+  border-bottom: 1px solid rgba(251, 191, 36, 0.08);
+  transition: background 0.1s;
+}
+
+.customization-row:last-child {
+  border-bottom: none;
+}
+
+.customization-row:hover {
+  background: rgba(251, 191, 36, 0.06);
+}
+
+.customization-xp {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  padding-top: 3px;
+  min-width: fit-content;
+}
+
+.xp-pip {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f59e0b;
+  display: inline-block;
+  box-shadow: 0 0 4px rgba(245, 158, 11, 0.5);
+}
+
+.customization-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.05rem;
+  flex: 1;
+}
+
+.customization-name {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #fde68a;
+  line-height: 1.3;
+}
+
+.customization-desc {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  line-height: 1.3;
+}
+
+.customization-desc strong {
+  color: #e2e8f0;
+  font-weight: 800;
+}
+
+.customization-preamble {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.72rem;
+  color: #78716c;
+  font-style: italic;
+  border-bottom: 1px solid rgba(251, 191, 36, 0.08);
+}
+
+.customization-preamble strong {
+  color: #a8a29e;
+  font-style: normal;
+  font-weight: 700;
+}
+

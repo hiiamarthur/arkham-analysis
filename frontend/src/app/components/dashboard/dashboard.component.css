@@ -187,8 +187,9 @@
 
 .chart-sub { font-size: 0.72rem; color: var(--ark-fog); }
 
-.chart-container       { position: relative; height: 240px; }
-.chart-container--sm   { position: relative; height: 200px; }
+.chart-container         { position: relative; height: 240px; }
+.chart-container--sm     { position: relative; height: 200px; }
+.chart-container--trend  { position: relative; height: 260px; }
 
 /* ================================================
    META INSIGHTS SECTION
@@ -321,6 +322,17 @@
   background: rgba(255, 255, 255, 0.02);
   border-radius: 0.4rem;
   animation: pulse 1.5s ease-in-out infinite;
+}
+.skel-chart--trend { height: 260px; }
+
+.trend-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 120px;
+  font-size: 0.78rem;
+  color: var(--ark-fog);
+  font-style: italic;
 }
 
 /* ── Skeleton helpers ──────────────────────────── */

@@ -47,7 +47,13 @@ export interface CardResponse {
   total_decks?: number;  // Total decks for this investigator
   total_decks_analyzed?: number;  // Total decks in meta
   bonded_cards?: Array<{ code: string; name: string; count: number }>;
+  linked_card?: { code: string; name: string; type_name?: string; imagesrc?: string };
   related_card?: string;
+  alternate_of_code?: string;
+  alternate_of_name?: string;
+  alternated_by?: string[];
+  customization_text?: string;
+  customization_options?: any[];
 }
 
 export interface CardSearchParams {
@@ -87,6 +93,9 @@ export interface CardSearchParams {
   max_health?: number;
   min_sanity?: number;
   max_sanity?: number;
+
+  // Encounter filter
+  only_player_cards?: boolean;
 
   // Pagination
   page?: number;
@@ -182,6 +191,36 @@ export interface CardStatsResponse {
   };
 }
 
+export interface TabooEntry {
+  taboo_id: number;
+  taboo_code: string;
+  effective_from: string;
+  effective_to: string;
+  date_start: string | null;
+  date_end: string | null;
+  cost_delta: number | null;
+  xp_delta: number | null;
+  text: string | null;
+  is_forbidden: boolean;
+  restriction_score: number;
+  is_strongest: boolean;
+  is_current: boolean;
+  is_introduced: boolean;
+}
+
+export interface CardTaboosResponse {
+  card_code: string;
+  card_name: string | null;
+  base_cost: number | null;
+  base_xp: number | null;
+  taboo_versions: TabooEntry[];
+  has_taboos: boolean;
+  introduced_version: string | null;
+  introduced_date: string | null;
+  versions_active: number;
+  restriction_trend: 'escalating' | 'easing' | 'stable' | 'none';
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -238,6 +277,9 @@ export class CardService {
     if (params.min_sanity !== undefined) httpParams = httpParams.set('min_sanity', params.min_sanity.toString());
     if (params.max_sanity !== undefined) httpParams = httpParams.set('max_sanity', params.max_sanity.toString());
 
+    // Encounter filter
+    if (params.only_player_cards !== undefined) httpParams = httpParams.set('only_player_cards', params.only_player_cards.toString());
+
     // Pagination parameters
     if (params.page !== undefined) httpParams = httpParams.set('page', params.page.toString());
     if (params.limit !== undefined) httpParams = httpParams.set('limit', params.limit.toString());
@@ -264,5 +306,14 @@ export class CardService {
    */
   getCardStats(cardCode: string): Observable<CardStatsResponse> {
     return this.http.get<CardStatsResponse>(`${this.apiUrl}/${cardCode}/stats`);
+  }
+
+  getCardTaboos(cardCode: string): Observable<CardTaboosResponse> {
+    return this.http.get<CardTaboosResponse>(`${this.apiUrl}/${cardCode}/taboos`);
+  }
+
+  getAllCardNames(includeEncounter = false): Observable<Array<{ code: string; name: string }>> {
+    const params = includeEncounter ? '?include_encounter=true' : '';
+    return this.http.get<Array<{ code: string; name: string }>>(`${this.apiUrl}/metadata/names${params}`);
   }
 }

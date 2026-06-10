@@ -120,6 +120,9 @@ class CardSchema(BaseSchema):
     linked_card: CardSchema | None = None
     bonded_cards: List[BondedCardSchema] = []
     related_card: str | None = None
+    alternated_by: List[str] | None = None
+    customization_text: str | None = None
+    customization_options: List[Any] | None = None
 
     def apply_taboo(self, taboo_version: TabooVersion) -> "CardSchema":
         if taboo_version.cost:
@@ -262,6 +265,12 @@ class CardSchema(BaseSchema):
                 )
                 for bonded in (card_model.bonded_cards or [])
             ],
+            alternated_by=[
+                code for code in (card_model.alternated_by or [])
+                if code not in set(card_model.duplicated_by or [])
+            ] or None,
+            customization_text=card_model.customization_text,
+            customization_options=card_model.customization_options,
         )
 
 
@@ -329,6 +338,36 @@ class ScenarioContext(BaseSchema):
     # tempo: str
 
     model_config = {"arbitrary_types_allowed": True}
+
+
+class TabooEntrySchema(BaseSchema):
+    taboo_id: int
+    taboo_code: str
+    effective_from: str
+    effective_to: str
+    date_start: Optional[str] = None
+    date_end: Optional[str] = None
+    cost_delta: Optional[int] = None
+    xp_delta: Optional[int] = None
+    text: Optional[str] = None
+    is_forbidden: bool
+    restriction_score: int
+    is_strongest: bool
+    is_current: bool
+    is_introduced: bool
+
+
+class CardTaboosResponse(BaseSchema):
+    card_code: str
+    card_name: Optional[str] = None
+    base_cost: Optional[int] = None
+    base_xp: Optional[int] = None
+    taboo_versions: List[TabooEntrySchema]
+    has_taboos: bool
+    introduced_version: Optional[str] = None
+    introduced_date: Optional[str] = None
+    versions_active: int = 0
+    restriction_trend: str = "none"
 
 
 class CardGPTResponse(BaseSchema):

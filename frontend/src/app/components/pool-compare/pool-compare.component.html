@@ -213,6 +213,13 @@
             <button class="btn-clear" (click)="clearFilters()">Clear all</button>
           </div>
 
+          <div class="filter-group" *ngIf="activeSlots().length >= 2">
+            <label class="filter-label">&nbsp;</label>
+            <button class="btn-share" (click)="copyShareUrl()" title="Copy shareable link to clipboard">
+              ⎘ Copy link
+            </button>
+          </div>
+
         </div>
 
         <!-- Row 2: Multi-selects -->

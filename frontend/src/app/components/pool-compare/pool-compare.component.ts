@@ -1,14 +1,28 @@
-import { Component, signal, computed, inject, OnInit, HostListener } from '@angular/core';
+import { Component, signal, computed, inject, OnInit, HostListener, effect } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { AutocompleteInputComponent } from '../../shared/components/autocomplete-input.component';
 import { CardTooltipDirective } from '../../shared/directives/card-tooltip.directive';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { SafeHtml, DomSanitizer } from '@angular/platform-browser';
 import { InvestigatorService, CardPoolEntry, InvestigatorMetadata } from '../../services/investigator.service';
 import { ArkhamSvgIconsService } from '../../shared/services/arkham-svg-icons.service';
 
 type InvMode = 'any' | 'in' | 'out';
+
+interface PoolState {
+  inv: (string | null)[];
+  modes: string[];
+  xp: string;
+  types: string[];
+  factions: string[];
+  slots: string[];
+  traits: string[];
+  packs: string[];
+  costs: string[];
+  name: string;
+  text: string;
+}
 
 interface PoolSlot {
   code: string;
@@ -43,6 +57,17 @@ export class PoolCompareComponent implements OnInit {
   private arkhamIconsService = inject(ArkhamSvgIconsService);
   private sanitizer = inject(DomSanitizer);
   private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
+  private readonly SESSION_KEY = 'pool-compare-state';
+  private stateReady = false;
+
+  constructor() {
+    effect(() => {
+      const state = this.buildState();
+      if (this.stateReady) this.persistState(state);
+    });
+  }
 
   goToCard(code: string): void {
     this.router.navigate(['/analysis', code]);
@@ -359,7 +384,11 @@ export class PoolCompareComponent implements OnInit {
 
   ngOnInit() {
     this.investigatorService.getAllInvestigators().subscribe({
-      next: list => this.allInvestigators.set(list),
+      next: list => {
+        this.allInvestigators.set(list);
+        this.restoreState();
+        this.stateReady = true;
+      },
     });
   }
 
@@ -540,5 +569,129 @@ export class PoolCompareComponent implements OnInit {
   onDocumentClick() {
     this.slotOpen = this.slotOpen.map(() => false) as boolean[];
     this.closeAllDropdowns();
+  }
+
+  // ── State persistence ──────────────────────────────────────────────────────
+
+  private buildState(): PoolState {
+    return {
+      inv: this.slots().map(s => s?.code ?? null),
+      modes: this.invModes(),
+      xp: this.xpFilter(),
+      types: [...this.typeFilter()],
+      factions: [...this.factionFilter()],
+      slots: [...this.slotFilter()],
+      traits: [...this.traitFilter()],
+      packs: [...this.packFilter()],
+      costs: [...this.costFilter()],
+      name: this.nameSearch(),
+      text: this.textSearch(),
+    };
+  }
+
+  private persistState(state: PoolState) {
+    try {
+      sessionStorage.setItem(this.SESSION_KEY, JSON.stringify(state));
+    } catch {}
+    this.updateUrl(state);
+  }
+
+  private updateUrl(state: PoolState) {
+    const invCodes = state.inv.filter((c): c is string => !!c);
+    if (!invCodes.length) {
+      this.router.navigate([], { relativeTo: this.route, replaceUrl: true, queryParams: {} });
+      return;
+    }
+    const params: Record<string, string> = {};
+    params['inv'] = invCodes.join(',');
+
+    // modes: only encode if any slot is not 'any'
+    const activeModes = state.inv
+      .map((code, i) => code ? state.modes[i] : null)
+      .filter((m): m is string => m !== null);
+    if (activeModes.some(m => m !== 'any')) params['modes'] = activeModes.join(',');
+
+    if (state.xp !== 'all') params['xp'] = state.xp;
+    if (state.types.length) params['types'] = state.types.join(',');
+    if (state.factions.length) params['factions'] = state.factions.join(',');
+    if (state.slots.length) params['slots'] = state.slots.join(',');
+    if (state.traits.length) params['traits'] = state.traits.join(',');
+    if (state.packs.length) params['packs'] = encodeURIComponent(state.packs.join('|'));
+    if (state.costs.length) params['costs'] = state.costs.join(',');
+    if (state.name) params['name'] = state.name;
+    if (state.text) params['text'] = state.text;
+
+    this.router.navigate([], { relativeTo: this.route, replaceUrl: true, queryParams: params });
+  }
+
+  private restoreState() {
+    const urlState = this.parseUrlParams();
+    if (urlState) {
+      this.applyState(urlState);
+      return;
+    }
+    try {
+      const raw = sessionStorage.getItem(this.SESSION_KEY);
+      if (raw) this.applyState(JSON.parse(raw));
+    } catch {}
+  }
+
+  private parseUrlParams(): PoolState | null {
+    const p = this.route.snapshot.queryParams;
+    if (!p['inv']) return null;
+
+    const invCodes = p['inv'].split(',').filter(Boolean);
+    const modeList = p['modes'] ? p['modes'].split(',') : [];
+
+    // Rebuild 4-slot arrays: fill from index 0
+    const inv: (string | null)[] = [null, null, null, null];
+    const modes: string[] = ['any', 'any', 'any', 'any'];
+    invCodes.forEach((code: string, i: number) => {
+      if (i < 4) {
+        inv[i] = code;
+        modes[i] = modeList[i] ?? 'any';
+      }
+    });
+
+    return {
+      inv,
+      modes,
+      xp: p['xp'] ?? 'all',
+      types: p['types'] ? p['types'].split(',') : [],
+      factions: p['factions'] ? p['factions'].split(',') : [],
+      slots: p['slots'] ? p['slots'].split(',') : [],
+      traits: p['traits'] ? p['traits'].split(',') : [],
+      packs: p['packs'] ? decodeURIComponent(p['packs']).split('|') : [],
+      costs: p['costs'] ? p['costs'].split(',') : [],
+      name: p['name'] ?? '',
+      text: p['text'] ?? '',
+    };
+  }
+
+  private applyState(state: PoolState) {
+    if (state.xp === '0' || state.xp === '1+') this.xpFilter.set(state.xp as 'all' | '0' | '1+');
+    if (state.types.length)    this.typeFilter.set(new Set(state.types));
+    if (state.factions.length) this.factionFilter.set(new Set(state.factions));
+    if (state.slots.length)    this.slotFilter.set(new Set(state.slots));
+    if (state.traits.length)   this.traitFilter.set(new Set(state.traits));
+    if (state.packs.length)    this.packFilter.set(new Set(state.packs));
+    if (state.costs.length)    this.costFilter.set(new Set(state.costs));
+    if (state.name)            this.nameSearch.set(state.name);
+    if (state.text)            this.textSearch.set(state.text);
+
+    const modes = ['any', 'any', 'any', 'any'] as InvMode[];
+    state.modes?.forEach((m, i) => { if (i < 4) modes[i] = (m as InvMode) || 'any'; });
+    this.invModes.set(modes);
+
+    const allInvs = this.allInvestigators();
+    state.inv?.forEach((code, slotIdx) => {
+      if (!code || slotIdx >= 4) return;
+      const inv = allInvs.find(i => i.code === code);
+      if (inv) this.selectInvestigator(slotIdx, inv);
+    });
+  }
+
+  copyShareUrl() {
+    navigator.clipboard.writeText(window.location.href).catch(() => {});
   }
 }

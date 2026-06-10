@@ -42,19 +42,6 @@ interface Card {
   slot?: string;
   health?: number;
   sanity?: number;
-  // Enhanced stats
-  usageRate?: number;
-  winRateWithCard?: number;
-  averageTimePlayed?: string;
-  topInvestigators?: { name: string; usageRate: number; winRate: number }[];
-  synergyCards?: { code: string; name: string; synergyScore: number }[];
-  deckInclusionRate?: number;
-  performanceByDifficulty?: { difficulty: string; winRate: number }[];
-  performanceByCampaign?: { campaign: string; winRate: number }[];
-  versatilityScore?: number;
-  economyRating?: number;
-  impactRating?: number;
-  consistencyRating?: number;
   illustrator?: string;
   pack_code?: string;
 }
@@ -82,7 +69,6 @@ export class CardAnalysisComponent implements OnInit {
   analysisType = signal<'strength' | 'synergies' | 'timing'>('strength');
 
   // Card browser
-  selectedCard = signal<Card | null>(null);
   cards = signal<Card[]>([]);
   cardsLoading = signal(false);
 
@@ -906,118 +892,6 @@ export class CardAnalysisComponent implements OnInit {
 
   get includeCampaignContext(): boolean {
     return this.analysisForm.get('includeCampaignContext')?.value || false;
-  }
-
-  private enrichCardWithStats(card: Card): Card {
-    // Generate mock enhanced stats based on card properties
-    const isPopular = ['Emergency Cache', 'Machete', 'Magnifying Glass', 'Shrivelling', 'Lucky!', 'Ward of Protection'].includes(card.name);
-
-    return {
-      ...card,
-      usageRate: isPopular ? Math.floor(Math.random() * 20) + 70 : Math.floor(Math.random() * 40) + 30,
-      winRateWithCard: Math.floor(Math.random() * 15) + 60,
-      averageTimePlayed: `Turn ${Math.floor(Math.random() * 5) + 2}`,
-      deckInclusionRate: isPopular ? Math.floor(Math.random() * 20) + 60 : Math.floor(Math.random() * 30) + 20,
-      versatilityScore: Math.floor(Math.random() * 30) + 60,
-      economyRating: this.getEconomyRating(card),
-      impactRating: this.getImpactRating(card),
-      consistencyRating: Math.floor(Math.random() * 20) + 70,
-      topInvestigators: this.getTopInvestigatorsForCard(card),
-      synergyCards: this.getSynergyCardsFor(card),
-      performanceByDifficulty: [
-        { difficulty: 'Easy', winRate: Math.floor(Math.random() * 15) + 75 },
-        { difficulty: 'Standard', winRate: Math.floor(Math.random() * 15) + 65 },
-        { difficulty: 'Hard', winRate: Math.floor(Math.random() * 15) + 55 },
-        { difficulty: 'Expert', winRate: Math.floor(Math.random() * 20) + 45 }
-      ],
-      performanceByCampaign: [
-        { campaign: 'Night of the Zealot', winRate: Math.floor(Math.random() * 20) + 60 },
-        { campaign: 'The Dunwich Legacy', winRate: Math.floor(Math.random() * 20) + 55 },
-        { campaign: 'The Path to Carcosa', winRate: Math.floor(Math.random() * 20) + 50 },
-        { campaign: 'The Forgotten Age', winRate: Math.floor(Math.random() * 20) + 45 }
-      ]
-    };
-  }
-
-  private getEconomyRating(card: Card): number {
-    // Lower cost = better economy
-    if (card.cost === 0) return 95;
-    if (card.cost === 1) return 85;
-    if (card.cost === 2) return 75;
-    if (card.cost === 3) return 65;
-    return 50;
-  }
-
-  private getImpactRating(card: Card): number {
-    // Based on card type and properties
-    if (card.type === 'Event') return Math.floor(Math.random() * 20) + 70;
-    if (card.type === 'Asset') return Math.floor(Math.random() * 20) + 75;
-    return Math.floor(Math.random() * 20) + 60;
-  }
-
-  private getTopInvestigatorsForCard(card: Card): { name: string; usageRate: number; winRate: number }[] {
-    const investigatorsByClass: Record<string, string[]> = {
-      'Guardian': ['Roland Banks', 'Zoey Samaras', 'Mark Harrigan'],
-      'Seeker': ['Daisy Walker', 'Rex Murphy', 'Minh Thi Phan'],
-      'Rogue': ['Skids O\'Toole', 'Jenny Barnes', 'Finn Edwards'],
-      'Mystic': ['Agnes Baker', 'Jim Culver', 'Akachi Onyele'],
-      'Survivor': ['Wendy Adams', 'Ashcan Pete', 'Stella Clark'],
-      'Neutral': ['Roland Banks', 'Daisy Walker', 'Skids O\'Toole']
-    };
-
-    const investigators = investigatorsByClass[card.class] || investigatorsByClass['Neutral'];
-    return investigators.slice(0, 3).map(name => ({
-      name,
-      usageRate: Math.floor(Math.random() * 30) + 50,
-      winRate: Math.floor(Math.random() * 20) + 60
-    }));
-  }
-
-  private getSynergyCardsFor(card: Card): { code: string; name: string; synergyScore: number }[] {
-    const synergyMap: Record<string, { code: string; name: string }[]> = {
-      'Machete': [
-        { code: '01016', name: 'Beat Cop' },
-        { code: '01088', name: 'Guard Dog' },
-        { code: '01017', name: 'Physical Training' }
-      ],
-      'Magnifying Glass': [
-        { code: '01039', name: 'Working a Hunch' },
-        { code: '01024', name: 'Dr. Milan Christopher' },
-        { code: '01025', name: 'Hyperawareness' }
-      ],
-      'Shrivelling': [
-        { code: '01053', name: 'Ward of Protection' },
-        { code: '01033', name: 'Scrying' },
-        { code: '01034', name: 'Arcane Studies' }
-      ],
-      'Lucky!': [
-        { code: '01037', name: 'Rabbit\'s Foot' },
-        { code: '01080', name: 'Leather Coat' },
-        { code: '01076', name: 'Baseball Bat' }
-      ]
-    };
-
-    const synergies = synergyMap[card.name] || [
-      { code: '01020', name: 'Emergency Cache' },
-      { code: '02001', name: 'Flashlight' }
-    ];
-
-    return synergies.map(s => ({
-      ...s,
-      synergyScore: Math.floor(Math.random() * 30) + 65
-    }));
-  }
-
-  closeCardDetail(): void {
-    this.selectedCard.set(null);
-  }
-
-  analyzeCardWithGPT(card: Card): void {
-    // Populate the form with the card code and switch to GPT analysis tab
-    this.analysisForm.patchValue({
-      cardCodes: card.code
-    });
-    this.activeTab.set('gpt-analysis');
   }
 
   // Table configuration for card browser

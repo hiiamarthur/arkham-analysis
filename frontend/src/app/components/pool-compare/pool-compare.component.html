@@ -318,21 +318,21 @@
             </div>
           </div>
 
-          <!-- Pack / Set -->
-          <div class="filter-group filter-group--multi filter-group--wide">
-            <label class="filter-label">Set</label>
-            <div class="multi-select" (click)="toggleDropdown('pack', $event)">
-              <span class="multi-placeholder" *ngIf="!packFilter().size">All sets</span>
-              <span class="chip" *ngFor="let p of packFilter()" (click)="toggleFilter(packFilter, p); $event.stopPropagation()">
-                {{ p }} ×
-              </span>
-              <span class="multi-caret">▾</span>
-            </div>
-            <div class="multi-dropdown multi-dropdown--tall" *ngIf="packOpen" (click)="stopProp($event)">
-              <label class="multi-option" *ngFor="let p of availablePacks()">
-                <input type="checkbox" [checked]="packFilter().has(p)" (change)="toggleFilter(packFilter, p)">
-                {{ p }}
-              </label>
+          <!-- Cycle / Pack filter -->
+          <div class="filter-group filter-group--cycle">
+            <label class="filter-label">Cycle</label>
+            <div class="cycle-chips">
+              <button
+                *ngFor="let cycle of CYCLE_NAMES"
+                class="cycle-chip"
+                [class.cycle-chip--active]="isCycleActive(cycle)"
+                [class.cycle-chip--partial]="isCyclePartial(cycle)"
+                [class.cycle-chip--unavailable]="!cyclePacksInPool(cycle).length"
+                (click)="toggleCycle(cycle); $event.stopPropagation()"
+                [disabled]="!cyclePacksInPool(cycle).length"
+                [title]="cyclePacksInPool(cycle).join(', ') || 'Not in current pool'">
+                {{ cycle }}
+              </button>
             </div>
           </div>
 

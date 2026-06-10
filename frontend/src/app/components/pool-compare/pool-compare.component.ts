@@ -10,6 +10,22 @@ import { ArkhamSvgIconsService } from '../../shared/services/arkham-svg-icons.se
 
 type InvMode = 'any' | 'in' | 'out';
 
+const CYCLES: Record<string, string[]> = {
+  'Core':              ['Core Set', 'Revised Core Set', 'Core Set 2026'],
+  'Dunwich':           ['The Dunwich Legacy', 'The Miskatonic Museum', 'The Essex County Express', 'Blood on the Altar', 'Undimensioned and Unseen', 'Where Doom Awaits', 'Lost in Time and Space'],
+  'Carcosa':           ['The Path to Carcosa', 'Echoes of the Past', 'The Unspeakable Oath', 'A Phantom of Truth', 'The Pallid Mask', 'Black Stars Rise', 'Dim Carcosa'],
+  'Forgotten Age':     ['The Forgotten Age', 'Threads of Fate', 'The Boundary Beyond', 'Heart of the Elders', 'The City of Archives', 'The Depths of Yoth', 'Shattered Aeons'],
+  'Circle Undone':     ['The Circle Undone', 'The Secret Name', 'The Wages of Sin', 'For the Greater Good', 'Union and Disillusion', 'In the Clutches of Chaos', 'Before the Black Throne'],
+  'Dream-Eaters':      ['The Dream-Eaters', 'The Search for Kadath', 'A Thousand Shapes of Horror', 'Dark Side of the Moon', 'Point of No Return', 'Where the Gods Dwell', 'Weaver of the Cosmos'],
+  'Innsmouth':         ['The Innsmouth Conspiracy', 'In Too Deep', 'Devil Reef', 'Horror in High Gear', 'A Light in the Fog', 'The Lair of Dagon', 'Into the Maelstrom'],
+  'Edge of the Earth': ['Edge of the Earth Investigator Expansion'],
+  'Scarlet Keys':      ['The Scarlet Keys Investigator Expansion'],
+  'Hemlock Vale':      ['The Feast of Hemlock Vale Investigator Expansion'],
+  'Drowned City':      ['The Drowned City Investigator Expansion'],
+  'Return To':         ['Return to the Night of the Zealot', 'Return to the Dunwich Legacy', 'Return to the Path to Carcosa', 'Return to the Forgotten Age', 'Return to the Circle Undone'],
+  'Inv. Starters':     ['Harvey Walters', 'Nathaniel Cho', 'Winifred Habbamock', 'Jacqueline Fine', 'Stella Clark'],
+};
+
 interface PoolState {
   inv: (string | null)[];
   modes: string[];
@@ -564,6 +580,37 @@ export class PoolCompareComponent implements OnInit {
   }
 
   stopProp(e: MouseEvent) { e.stopPropagation(); }
+
+  // ── Cycle filter ───────────────────────────────────────────────────────────
+
+  readonly CYCLE_NAMES = Object.keys(CYCLES);
+
+  /** Returns cycle packs intersected with what's actually in the current pool */
+  cyclePacksInPool(cycleName: string): string[] {
+    const available = this.availablePacks();
+    return CYCLES[cycleName].filter(p => available.includes(p));
+  }
+
+  isCycleActive(cycleName: string): boolean {
+    const packs = this.cyclePacksInPool(cycleName);
+    if (!packs.length) return false;
+    return packs.every(p => this.packFilter().has(p));
+  }
+
+  isCyclePartial(cycleName: string): boolean {
+    const packs = this.cyclePacksInPool(cycleName);
+    return packs.some(p => this.packFilter().has(p)) && !this.isCycleActive(cycleName);
+  }
+
+  toggleCycle(cycleName: string) {
+    const packs = this.cyclePacksInPool(cycleName);
+    if (!packs.length) return;
+    if (this.isCycleActive(cycleName)) {
+      this.packFilter.update(s => { const n = new Set(s); packs.forEach(p => n.delete(p)); return n; });
+    } else {
+      this.packFilter.update(s => { const n = new Set(s); packs.forEach(p => n.add(p)); return n; });
+    }
+  }
 
   @HostListener('document:click')
   onDocumentClick() {

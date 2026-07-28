@@ -1,0 +1,221 @@
+<div class="upgrade-builder-container">
+
+  <!-- Header -->
+  <div class="header">
+    <h1>
+      <span class="header-icon" [innerHTML]="getIcon('archetype')"></span>
+      Upgrade Suggestions
+    </h1>
+    <p class="subtitle">Choose an investigator to see every card available to them by XP tier — filter by archetype, type, or slot to find your next upgrade</p>
+  </div>
+
+  <!-- Input Row: Investigator + Card -->
+  <div class="input-row">
+
+    <!-- Investigator Picker -->
+    <div class="picker-wrap" [class.has-value]="selectedInvestigator()">
+      <label class="picker-label">Investigator</label>
+      <div class="picker-field" (click)="showInvestigatorDropdown.set(true)">
+        <div class="picker-value" *ngIf="selectedInvestigator() as inv">
+          <span class="faction-pip" [style.background]="getFactionColor(inv.faction_code)"></span>
+          <span>{{ inv.name }}</span>
+          <button class="clear-btn" (click)="$event.stopPropagation(); clearInvestigator()">×</button>
+        </div>
+        <input
+          *ngIf="!selectedInvestigator()"
+          class="picker-input"
+          placeholder="Search investigator…"
+          [ngModel]="investigatorSearch()"
+          (ngModelChange)="investigatorSearch.set($event); showInvestigatorDropdown.set(true)"
+          (focus)="showInvestigatorDropdown.set(true)"
+        />
+        <span class="picker-icon" [innerHTML]="getIcon('investigator')"></span>
+      </div>
+      <div class="dropdown" *ngIf="showInvestigatorDropdown() && filteredInvestigators().length > 0">
+        <div
+          class="dropdown-item"
+          *ngFor="let inv of filteredInvestigators(); trackBy: trackInv"
+          (click)="selectInvestigator(inv)"
+        >
+          <span class="faction-pip" [style.background]="getFactionColor(inv.faction_code)"></span>
+          {{ inv.name }}
+        </div>
+      </div>
+      <!-- Click-away overlay -->
+      <div class="dropdown-backdrop" *ngIf="showInvestigatorDropdown()" (click)="showInvestigatorDropdown.set(false)"></div>
+    </div>
+
+    <!-- Base Card Picker (only when investigator selected) -->
+    <div class="picker-wrap card-picker" [class.has-value]="selectedCard()" [class.disabled]="!selectedInvestigator()">
+      <label class="picker-label">
+        Card
+        <span class="picker-hint">optional — highlights it in the tree</span>
+      </label>
+      <div class="picker-field" (click)="selectedInvestigator() && showCardDropdown.set(true)">
+        <div class="picker-value" *ngIf="selectedCard() as card">
+          <span class="faction-pip" [style.background]="getFactionColor(card.faction_code)"></span>
+          <span>{{ card.name }}</span>
+          <span class="xp-pill">{{ card.xp }}XP</span>
+          <button class="clear-btn" (click)="$event.stopPropagation(); clearCard()">×</button>
+        </div>
+        <input
+          *ngIf="!selectedCard()"
+          class="picker-input"
+          placeholder="{{ selectedInvestigator() ? 'Search card in pool…' : 'Select investigator first' }}"
+          [disabled]="!selectedInvestigator()"
+          [ngModel]="cardSearch()"
+          (ngModelChange)="cardSearch.set($event); showCardDropdown.set(true)"
+          (focus)="selectedInvestigator() && showCardDropdown.set(true)"
+        />
+        <div class="loading-dots" *ngIf="loadingPool()">•••</div>
+        <span class="picker-icon" *ngIf="!loadingPool()" [innerHTML]="getIcon('card')"></span>
+      </div>
+      <div class="dropdown" *ngIf="showCardDropdown() && filteredPoolCards().length > 0">
+        <div
+          class="dropdown-item"
+          *ngFor="let card of filteredPoolCards(); trackBy: trackCard"
+          (click)="selectCard(card)"
+        >
+          <span class="faction-pip" [style.background]="getFactionColor(card.faction_code)"></span>
+          <span class="card-item-name">{{ card.name }}</span>
+          <span class="card-item-meta">{{ card.type_code }} · {{ card.xp }}XP</span>
+        </div>
+      </div>
+      <div class="dropdown-backdrop" *ngIf="showCardDropdown()" (click)="showCardDropdown.set(false)"></div>
+    </div>
+
+  </div>
+
+  <!-- Filters (only when investigator selected) -->
+  <div class="filter-panel" *ngIf="selectedInvestigator()">
+
+    <div class="filter-row">
+      <span class="filter-label">Type</span>
+      <div class="toggle-group">
+        <button
+          *ngFor="let t of types"
+          class="toggle-btn"
+          [class.active]="selectedType() === t.code"
+          (click)="setType(t.code)"
+        >{{ t.label }}</button>
+      </div>
+    </div>
+
+    <div class="filter-row">
+      <span class="filter-label">Archetype</span>
+      <div class="toggle-group">
+        <button
+          *ngFor="let a of archetypes"
+          class="toggle-btn archetype-btn"
+          [class.active]="selectedArchetype() === a.code"
+          [style.--ac]="archetypeColors[a.code]"
+          (click)="setArchetype(a.code)"
+        >{{ a.label }}</button>
+      </div>
+    </div>
+
+    <div class="filter-row" *ngIf="selectedType() === 'asset'">
+      <span class="filter-label">Slot</span>
+      <div class="toggle-group">
+        <button
+          *ngFor="let s of slots"
+          class="toggle-btn slot-btn"
+          [class.active]="selectedSlot() === s.code"
+          (click)="setSlot(s.code)"
+        >{{ s.label }}</button>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- XP Tier Tree (always shown when investigator selected) -->
+  <div class="archetype-pool-section" *ngIf="selectedInvestigator()">
+    <div class="pool-header">
+      <span
+        class="pool-archetype-badge"
+        *ngIf="selectedArchetype()"
+        [style.background]="archetypeColors[selectedArchetype()] + '22'"
+        [style.border-color]="archetypeColors[selectedArchetype()] + '66'"
+        [style.color]="archetypeColors[selectedArchetype()]"
+      >{{ archetypeLabels[selectedArchetype()] }}</span>
+      <span class="pool-title">Card Pool by XP</span>
+      <span class="pool-total" *ngIf="!loadingArchetypePool()">
+        {{ archetypePoolTotal() }} card{{ archetypePoolTotal() !== 1 ? 's' : '' }}
+      </span>
+      <span class="pool-loading" *ngIf="loadingArchetypePool()">loading…</span>
+    </div>
+
+    <div class="xp-timeline" *ngIf="!loadingArchetypePool() && archetypePool().length > 0">
+
+      <!-- Connecting rail behind the columns -->
+      <div class="timeline-rail"></div>
+
+      <div class="xp-column" *ngFor="let tier of archetypePool(); let last = last; trackBy: trackTier">
+        <!-- Tier header node -->
+        <div class="xp-tier-header">
+          <div class="xp-tier-orb" [class]="getXpBadgeClass(tier.xp)">
+            <span class="xp-tier-num">{{ tier.xp }}</span>
+            <span class="xp-tier-label">XP</span>
+          </div>
+          <div class="xp-tier-count">{{ tier.cards.length }} card{{ tier.cards.length !== 1 ? 's' : '' }}</div>
+        </div>
+
+        <!-- Rail connector to next column -->
+        <div class="tier-connector" *ngIf="!last">
+          <div class="connector-track"></div>
+          <div class="connector-arrow-head">▶</div>
+        </div>
+
+        <!-- Portrait card tiles grid -->
+        <div class="xp-card-grid">
+          <div
+            class="tile-card"
+            *ngFor="let card of tier.cards; trackBy: trackPoolCard"
+            [class.tile-selected]="selectedCard()?.code === card.code || selectedCard()?.name === card.name"
+            [class.tile-has-upgrade]="card.has_upgrade"
+            [class.tile-unique]="card.is_unique"
+            [style.--fc]="getFactionColor(card.faction_code)"
+            [title]="card.archetype_reason || card.name"
+            (click)="openCard(card.code)"
+          >
+            <!-- Card art -->
+            <div class="tile-art">
+              <img
+                *ngIf="card.imagesrc"
+                [src]="'https://arkhamdb.com' + card.imagesrc"
+                [alt]="card.name"
+                class="tile-img"
+                (error)="$any($event.target).style.display='none'"
+                loading="lazy"
+              />
+              <div *ngIf="!card.imagesrc" class="tile-no-art">{{ card.name[0] }}</div>
+
+              <!-- Overlays -->
+              <div class="tile-cost" *ngIf="card.cost !== null && card.cost !== undefined">{{ card.cost }}<span>$</span></div>
+              <div class="tile-unique-star" *ngIf="card.is_unique">★</div>
+              <div class="tile-upgrade-pip" *ngIf="card.has_upgrade" title="Has a named upgrade at higher XP">↑</div>
+            </div>
+
+            <!-- Name footer -->
+            <div class="tile-name">{{ card.name }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Empty / prompt state -->
+  <div class="prompt-state" *ngIf="!selectedInvestigator()">
+    <div class="prompt-icon" [innerHTML]="getIcon('investigator')"></div>
+    <p>Select an investigator to see upgrade suggestions</p>
+  </div>
+
+  <!-- Empty results after filter -->
+  <div class="empty-state" *ngIf="selectedInvestigator() && !loadingArchetypePool() && archetypePoolTotal() === 0">
+    <p>No cards found with the current filters.</p>
+  </div>
+
+</div>
+
+<app-card-modal></app-card-modal>

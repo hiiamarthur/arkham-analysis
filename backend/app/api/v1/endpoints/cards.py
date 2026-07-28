@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Response, status, Body, Query
 from typing import List, Optional
 import asyncio
-from app.schemas.card_schema import CardSchema
+from app.schemas.card_schema import CardSchema, UpgradeChainsResponse, ArchetypePoolResponse
 from app.services.app_service import AppService
 from app.api.deps import get_card_service
 from app.services.card_service import CardService
@@ -325,6 +325,99 @@ async def search_cards(
         logger = logging.getLogger(__name__)
         logger.error(f"Error searching cards: {e}")
         raise HTTPException(status_code=500, detail=f"Error searching cards: {str(e)}")
+
+
+@router.get("/investigator/{inv_code}/archetype-pool", response_model=ArchetypePoolResponse)
+async def get_investigator_archetype_pool(
+    response: Response,
+    inv_code: str,
+    archetype: Optional[str] = None,
+    card_type: Optional[str] = None,
+    slot: Optional[str] = None,
+    q: Optional[str] = None,
+    card_service: CardService = Depends(get_card_service),
+):
+    """
+    Return all cards of a given archetype available to the investigator, grouped by XP tier.
+    """
+    try:
+        result = await card_service.get_investigator_archetype_pool(
+            investigator_code=inv_code,
+            archetype=archetype,
+            card_type=card_type,
+            slot=slot,
+            q=q,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error building archetype pool: {e}")
+
+    response.headers.update(ARKHAM_HEADERS)
+    response.headers["Cache-Control"] = "public, max-age=300"
+    return result
+
+
+@router.get("/investigator/{inv_code}/upgrade-chains", response_model=UpgradeChainsResponse)
+async def get_investigator_upgrade_chains(
+    response: Response,
+    inv_code: str,
+    card_type: Optional[str] = None,
+    archetype: Optional[str] = None,
+    slot: Optional[str] = None,
+    q: Optional[str] = None,
+    card_code: Optional[str] = None,
+    card_service: CardService = Depends(get_card_service),
+):
+    """
+    Return upgrade chains for all cards legally usable by the given investigator.
+    Optionally filter by card_type, archetype, slot, name search, or focus on a single card_code.
+    """
+    try:
+        result = await card_service.get_investigator_upgrade_chains(
+            investigator_code=inv_code,
+            card_type=card_type,
+            archetype=archetype,
+            slot=slot,
+            q=q,
+            card_code=card_code,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error building upgrade chains: {e}")
+
+    response.headers.update(ARKHAM_HEADERS)
+    response.headers["Cache-Control"] = "public, max-age=300"
+    return result
+
+
+@router.get("/upgrade-chains", response_model=UpgradeChainsResponse)
+async def get_upgrade_chains(
+    response: Response,
+    faction: Optional[str] = None,
+    card_type: Optional[str] = None,
+    archetype: Optional[str] = None,
+    q: Optional[str] = None,
+    card_service: CardService = Depends(get_card_service),
+):
+    """
+    Return all upgrade chains (same card name, same faction, multiple XP levels).
+    Optionally filter by faction, card_type, archetype label, or name search.
+    """
+    try:
+        result = await card_service.get_upgrade_chains(
+            faction=faction,
+            card_type=card_type,
+            archetype=archetype,
+            q=q,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error building upgrade chains: {e}")
+
+    response.headers.update(ARKHAM_HEADERS)
+    response.headers["Cache-Control"] = "public, max-age=3600"
+    return result
 
 
 @router.get("/{card_code}", response_model=CardSchema)

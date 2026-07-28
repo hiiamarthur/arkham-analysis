@@ -1,4 +1,5 @@
-from typing import Any, Dict, List
+import time
+from typing import Any, Dict, List, Optional
 import httpx
 import logging
 from app.core.config import settings
@@ -9,6 +10,46 @@ logger = logging.getLogger(__name__)
 ARKHAMDB_CARDS_URL = settings.ARKHAMDB_URL + "/public/cards/"
 ARKHAMDB_TABOOS_URL = settings.ARKHAMDB_URL + "/public/taboos/"
 ARKHAMDB_DECKS_URL = settings.ARKHAMDB_URL + "/public/decklists/"
+
+
+class ArkhamDBUnavailableError(Exception):
+    """Raised when the decks-by-date circuit breaker is open."""
+
+
+class _CircuitBreaker:
+    """After `threshold` consecutive failures, short-circuits calls for
+    `cooldown` seconds instead of continuing to hammer a broken endpoint."""
+
+    def __init__(self, threshold: int = 3, cooldown: float = 60.0):
+        self.threshold = threshold
+        self.cooldown = cooldown
+        self._failures = 0
+        self._opened_at: Optional[float] = None
+
+    def is_open(self) -> bool:
+        if self._opened_at is None:
+            return False
+        if time.monotonic() - self._opened_at >= self.cooldown:
+            # Cooldown elapsed — let a trial request through (half-open).
+            self._opened_at = None
+            self._failures = 0
+            return False
+        return True
+
+    def record_success(self) -> None:
+        self._failures = 0
+        self._opened_at = None
+
+    def record_failure(self) -> None:
+        self._failures += 1
+        if self._failures >= self.threshold and self._opened_at is None:
+            self._opened_at = time.monotonic()
+
+
+# Shared across all ArkhamDBService instances in this process. decks/by_date
+# fails independently of cards/taboos, so it gets its own breaker rather than
+# tripping on unrelated endpoint issues.
+_decks_by_date_circuit = _CircuitBreaker(threshold=3, cooldown=60.0)
 
 
 class ArkhamDBService:
@@ -146,11 +187,25 @@ class ArkhamDBService:
         if not re.match(r"^\d{4}-\d{2}-\d{2}$", date):
             raise ValueError("Date must be in YYYY-MM-DD format")
 
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
-            response = await client.get(ARKHAMDB_DECKS_URL + "by_date/" + date)
-            response.raise_for_status()
-            data = response.json()
-            return data
+        if _decks_by_date_circuit.is_open():
+            raise ArkhamDBUnavailableError(
+                "ArkhamDB decks-by-date endpoint is failing repeatedly; skipping until cooldown elapses"
+            )
+
+        try:
+            async with httpx.AsyncClient(timeout=self.timeout) as client:
+                response = await client.get(ARKHAMDB_DECKS_URL + "by_date/" + date)
+                response.raise_for_status()
+                data = response.json()
+        except httpx.HTTPError:
+            # Covers both non-2xx responses and connection/timeout failures —
+            # either way the endpoint isn't usable right now, so it counts
+            # towards tripping the circuit breaker.
+            _decks_by_date_circuit.record_failure()
+            raise
+
+        _decks_by_date_circuit.record_success()
+        return data
 
     async def invalidate_cache(self) -> None:
         """Invalidate all ArkhamDB cache entries"""

@@ -3,7 +3,9 @@ from typing import List, Dict, Any, Optional, cast
 import asyncio
 from collections import defaultdict
 
-from app.services.arkhamdb_service import ArkhamDBService
+import httpx
+
+from app.services.arkhamdb_service import ArkhamDBService, ArkhamDBUnavailableError
 from app.services.cache_service import cache_service
 from app.schemas.card_schema import DeckListSchema
 
@@ -212,6 +214,10 @@ class DeckService:
             for attempt in range(max_retries):
                 try:
                     return await self.arkhamdb_service.fetch_decks_by_date(date)
+                except (httpx.HTTPStatusError, ArkhamDBUnavailableError):
+                    # Deterministic failure (bad response, or the circuit is
+                    # already open) — retrying the same request won't help.
+                    raise
                 except Exception:
                     if attempt == max_retries - 1:
                         raise

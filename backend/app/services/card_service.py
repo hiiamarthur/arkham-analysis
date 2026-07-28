@@ -1152,6 +1152,255 @@ class CardService:
 
         return total_count, card_schemas
 
+    def _build_upgrade_chains_from_cards(self, player_cards, archetype, q, card_code, slot=None):
+        """Shared logic: group a list of CardModel into UpgradeChain objects."""
+        from collections import defaultdict
+        from app.schemas.card_schema import UpgradeChain, UpgradeNode, UpgradeChainsResponse
+
+        if q:
+            q_lower = q.lower()
+            player_cards = [c for c in player_cards if q_lower in (c.name or "").lower()]
+
+        if slot:
+            player_cards = [c for c in player_cards if c.real_slot and slot in c.real_slot]
+
+        if archetype:
+            player_cards = [
+                c for c in player_cards
+                if c.archetypes and archetype in c.archetypes
+            ]
+
+        groups: Dict[str, List] = defaultdict(list)
+        for card in player_cards:
+            key = f"{(card.name or '').lower()}|{card.faction_code}|{card.type_code}"
+            groups[key].append(card)
+
+        chains: List[UpgradeChain] = []
+        for key, group in groups.items():
+            xp_map: Dict[int, Any] = {}
+            for card in group:
+                xp = card.xp
+                if xp is None:
+                    continue
+                existing = xp_map.get(xp)
+                if existing is None or _card_code_sort_key(card.code) < _card_code_sort_key(existing.code):
+                    xp_map[xp] = card
+
+            if len(xp_map) < 2:
+                continue
+
+            # If filtering to a specific card, only include chains that contain it
+            if card_code:
+                chain_names = {c.name for c in xp_map.values()}
+                target_card = next((c for c in xp_map.values() if c.code == card_code), None)
+                if target_card is None:
+                    continue
+
+            sorted_cards = sorted(xp_map.values(), key=lambda c: c.xp)
+            base = sorted_cards[0]
+
+            nodes = []
+            for card in sorted_cards:
+                trait_names = []
+                if card.traits:
+                    for t in card.traits:
+                        if hasattr(t, "name"):
+                            trait_names.append(t.name)
+                        elif isinstance(t, str):
+                            trait_names.append(t)
+
+                nodes.append(UpgradeNode(
+                    code=card.code,
+                    name=card.name or "",
+                    xp=card.xp,
+                    cost=card.cost,
+                    faction_code=card.faction_code or "",
+                    type_code=card.type_code,
+                    type_name=card.type_name,
+                    imagesrc=card.imagesrc,
+                    archetypes=card.archetypes,
+                    archetype_reason=card.archetype_reason,
+                    traits=trait_names,
+                    skill_willpower=card.skill_willpower,
+                    skill_intellect=card.skill_intellect,
+                    skill_combat=card.skill_combat,
+                    skill_agility=card.skill_agility,
+                    skill_wild=card.skill_wild,
+                    text=card.text,
+                    pack_name=card.pack_name,
+                    is_unique=card.is_unique,
+                    exceptional=card.exceptional,
+                ))
+
+            chains.append(UpgradeChain(
+                chain_key=key,
+                name=base.name or "",
+                faction_code=base.faction_code or "",
+                type_code=base.type_code,
+                archetypes=base.archetypes,
+                nodes=nodes,
+            ))
+
+        chains.sort(key=lambda c: (c.faction_code, c.name.lower()))
+        return UpgradeChainsResponse(chains=chains, total=len(chains))
+
+    async def get_upgrade_chains(
+        self,
+        faction: Optional[str] = None,
+        card_type: Optional[str] = None,
+        archetype: Optional[str] = None,
+        q: Optional[str] = None,
+    ):
+        from app.schemas.card_schema import UpgradeChainsResponse
+
+        PLAYER_FACTIONS = {"guardian", "seeker", "rogue", "mystic", "survivor", "neutral"}
+
+        filters: Dict[str, Any] = {}
+        if faction:
+            filters["filter_by[faction_code][equals]"] = faction
+        if card_type:
+            filters["filter_by[type_code][equals]"] = card_type
+
+        all_cards = await self.card_repo.get_all(filter_by=filters, items_per_page=10000)
+        all_cards = apply_player_card_policy(all_cards)
+
+        player_cards = [
+            c for c in all_cards
+            if c.faction_code in PLAYER_FACTIONS
+            and c.xp is not None
+            and c.type_code not in ("investigator",)
+        ]
+
+        return self._build_upgrade_chains_from_cards(player_cards, archetype, q, None)
+
+    async def get_investigator_upgrade_chains(
+        self,
+        investigator_code: str,
+        card_type: Optional[str] = None,
+        archetype: Optional[str] = None,
+        q: Optional[str] = None,
+        card_code: Optional[str] = None,
+        slot: Optional[str] = None,
+    ):
+        """
+        Return upgrade chains for cards legally accessible to a specific investigator.
+        Enriches the card pool with archetype data from the DB.
+        """
+        from sqlalchemy import select, text as sqla_text
+        from app.models.arkham_model import CardModel
+
+        # Get the investigator's legal card pool codes
+        pool_data = await self.get_investigator_card_pool(investigator_code)
+        pool_codes = {c["code"] for c in pool_data.get("cards", [])}
+
+        if not pool_codes:
+            from app.schemas.card_schema import UpgradeChainsResponse
+            return UpgradeChainsResponse(chains=[], total=0)
+
+        # Fetch full card models for pool cards (with archetypes)
+        filters: Dict[str, Any] = {}
+        if card_type:
+            filters["filter_by[type_code][equals]"] = card_type
+
+        all_cards = await self.card_repo.get_all(filter_by=filters, items_per_page=10000)
+        all_cards = apply_player_card_policy(all_cards)
+
+        # Keep only cards in the investigator's pool that have XP
+        player_cards = [
+            c for c in all_cards
+            if c.code in pool_codes
+            and c.xp is not None
+            and c.type_code not in ("investigator",)
+        ]
+
+        result = self._build_upgrade_chains_from_cards(player_cards, archetype, q, card_code, slot=slot)
+        result.investigator_code = investigator_code
+        result.investigator_name = pool_data.get("investigator_name")
+        return result
+
+    async def get_investigator_archetype_pool(
+        self,
+        investigator_code: str,
+        archetype: Optional[str] = None,
+        card_type: Optional[str] = None,
+        q: Optional[str] = None,
+        slot: Optional[str] = None,
+    ):
+        """
+        Return all cards of a given archetype available to the investigator,
+        grouped into XP tiers (0-5). Used for the talent-tree pool view.
+        """
+        from app.schemas.card_schema import ArchetypePoolCard, ArchetypeTier, ArchetypePoolResponse
+
+        pool_data = await self.get_investigator_card_pool(investigator_code)
+        pool_codes = {c["code"] for c in pool_data.get("cards", [])}
+
+        filters: Dict[str, Any] = {}
+        if card_type:
+            filters["filter_by[type_code][equals]"] = card_type
+
+        all_cards = await self.card_repo.get_all(filter_by=filters, items_per_page=10000)
+        all_cards = apply_player_card_policy(all_cards)
+
+        player_cards = [
+            c for c in all_cards
+            if c.code in pool_codes
+            and c.xp is not None
+            and c.type_code not in ("investigator",)
+            and (not archetype or (c.archetypes and archetype in c.archetypes))
+        ]
+
+        if q:
+            q_lower = q.lower()
+            player_cards = [c for c in player_cards if q_lower in (c.name or "").lower()]
+
+        if slot:
+            player_cards = [c for c in player_cards if c.real_slot and slot in c.real_slot]
+
+        # Track which card names appear at multiple XP levels (has a named upgrade)
+        names_xps: Dict[str, List[int]] = {}
+        for c in player_cards:
+            k = (c.name or "").lower()
+            if k not in names_xps:
+                names_xps[k] = []
+            names_xps[k].append(c.xp)
+
+        tiers_map: Dict[int, List] = {}
+        for c in player_cards:
+            xp = c.xp if c.xp is not None else 0
+            if xp not in tiers_map:
+                tiers_map[xp] = []
+            name_key = (c.name or "").lower()
+            has_upgrade = any(other_xp > xp for other_xp in names_xps.get(name_key, []))
+            tiers_map[xp].append(ArchetypePoolCard(
+                code=c.code,
+                name=c.name or "",
+                xp=xp,
+                cost=c.cost,
+                faction_code=c.faction_code or "",
+                type_code=c.type_code,
+                imagesrc=c.imagesrc,
+                archetypes=c.archetypes,
+                archetype_reason=c.archetype_reason,
+                is_unique=c.is_unique,
+                has_upgrade=has_upgrade,
+            ))
+
+        tiers = []
+        for xp_level in sorted(tiers_map.keys()):
+            cards_at_level = sorted(tiers_map[xp_level], key=lambda c: (c.name or "").lower())
+            tiers.append(ArchetypeTier(xp=xp_level, cards=cards_at_level))
+
+        total = sum(len(t.cards) for t in tiers)
+        return ArchetypePoolResponse(
+            archetype=archetype,
+            investigator_code=investigator_code,
+            investigator_name=pool_data.get("investigator_name"),
+            card_type=card_type,
+            tiers=tiers,
+            total=total,
+        )
+
     async def get_all_traits(self) -> List[str]:
         """
         Get all unique traits from all cards.

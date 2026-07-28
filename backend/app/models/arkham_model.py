@@ -11,6 +11,7 @@ from sqlalchemy import (
     ForeignKey,
     text,
 )
+from sqlalchemy.dialects.postgresql import ARRAY as PG_ARRAY
 from sqlalchemy.orm import relationship, Mapped, mapped_column
 from typing import List, Optional, Dict, Any
 from datetime import datetime, date
@@ -193,6 +194,8 @@ class CardModel(BaseModel):
     subtype_code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     subtype_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
     tags: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    archetypes: Mapped[Optional[List[str]]] = mapped_column(PG_ARRAY(String(50)), nullable=True)
+    archetype_reason: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
     alternate_of_code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
     alternate_of_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
     pack_code: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)

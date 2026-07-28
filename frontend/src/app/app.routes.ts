@@ -55,6 +55,14 @@ export const routes: Routes = [
     }
   },
   {
+    path: 'upgrade-builder',
+    loadComponent: () => import('./components/upgrade-builder/upgrade-builder.component').then(m => m.UpgradeBuilderComponent),
+    data: {
+      title: 'Upgrade Suggestions',
+      description: 'Plan your XP spending for Arkham Horror LCG — browse every card available to your investigator by XP tier, filtered by archetype, type, or slot.'
+    }
+  },
+  {
     path: 'pool-playground',
     loadComponent: () => import('./components/pool-compare/pool-compare.component').then(m => m.PoolCompareComponent),
     data: {

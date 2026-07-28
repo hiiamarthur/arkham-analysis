@@ -123,6 +123,8 @@ class CardSchema(BaseSchema):
     alternated_by: List[str] | None = None
     customization_text: str | None = None
     customization_options: List[Any] | None = None
+    archetypes: List[str] | None = None
+    archetype_reason: str | None = None
 
     def apply_taboo(self, taboo_version: TabooVersion) -> "CardSchema":
         if taboo_version.cost:
@@ -271,12 +273,81 @@ class CardSchema(BaseSchema):
             ] or None,
             customization_text=card_model.customization_text,
             customization_options=card_model.customization_options,
+            archetypes=card_model.archetypes,
+            archetype_reason=card_model.archetype_reason,
         )
 
 
 class TraitSchema(BaseSchema):
     name: str
     cards: List[CardSchema] = []
+
+
+class UpgradeNode(BaseSchema):
+    code: str
+    name: str
+    xp: int
+    cost: Optional[int]
+    faction_code: str
+    type_code: Optional[str]
+    type_name: Optional[str]
+    imagesrc: Optional[str]
+    archetypes: Optional[List[str]]
+    archetype_reason: Optional[str]
+    traits: List[str]
+    skill_willpower: Optional[int]
+    skill_intellect: Optional[int]
+    skill_combat: Optional[int]
+    skill_agility: Optional[int]
+    skill_wild: Optional[int]
+    text: Optional[str]
+    pack_name: Optional[str]
+    is_unique: Optional[bool]
+    exceptional: Optional[bool]
+
+
+class UpgradeChain(BaseSchema):
+    chain_key: str
+    name: str
+    faction_code: str
+    type_code: Optional[str]
+    archetypes: Optional[List[str]]
+    nodes: List[UpgradeNode]
+
+
+class UpgradeChainsResponse(BaseSchema):
+    chains: List[UpgradeChain]
+    total: int
+    investigator_code: Optional[str] = None
+    investigator_name: Optional[str] = None
+
+
+class ArchetypePoolCard(BaseSchema):
+    code: str
+    name: str
+    xp: int
+    cost: Optional[int] = None
+    faction_code: str
+    type_code: Optional[str] = None
+    imagesrc: Optional[str] = None
+    archetypes: Optional[List[str]] = None
+    archetype_reason: Optional[str] = None
+    is_unique: Optional[bool] = None
+    has_upgrade: bool = False
+
+
+class ArchetypeTier(BaseSchema):
+    xp: int
+    cards: List[ArchetypePoolCard]
+
+
+class ArchetypePoolResponse(BaseSchema):
+    archetype: Optional[str] = None
+    investigator_code: str
+    investigator_name: Optional[str] = None
+    card_type: Optional[str] = None
+    tiers: List[ArchetypeTier]
+    total: int
 
 
 class EffectQuantities(BaseSchema):

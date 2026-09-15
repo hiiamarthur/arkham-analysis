@@ -23,14 +23,19 @@ class DeckService:
         batch_size: int = 30,
         max_concurrent: int = 20,
         use_cache: bool = True,
+        force_refresh: bool = False,
     ) -> List[DeckListSchema]:
         """
         Get all decks from the last N days with caching and batching
         Returns List[DeckListSchema] objects for service consumption
+
+        force_refresh=True skips the cache *read* (used by the background
+        cache warmer to repopulate ahead of TTL expiry) but still writes
+        the fresh result back to cache.
         """
         # Try cache first for any significant request (cache raw data, not schema objects)
         raw_decks = None
-        if use_cache and days >= 30:
+        if use_cache and not force_refresh and days >= 30:
             try:
                 cache_key = f"decks_raw:last_{days}_days"
                 cached_result = await self.cache_service.get_with_key(

@@ -28,6 +28,13 @@ from . import (
 INV_STATS_CACHE_KEY = "investigator:stats:v5"
 CARD_STATS_CACHE_KEY = "card:stats:v3"
 
+# Kept well under typical reverse-proxy/gateway timeouts (e.g. Railway's edge)
+# so a cache-miss fails fast with a real 504 from this app instead of the
+# platform silently killing the connection and returning a bare 502. The
+# background cache warmer (app/core/cache_warmer.py) is what should keep
+# requests from ever hitting this path in steady state.
+STATS_FETCH_TIMEOUT_SECONDS = 25.0
+
 router = APIRouter()
 
 
@@ -557,7 +564,7 @@ async def get_card_stats(
     try:
         result = await asyncio.wait_for(
             card_service.get_card_stats(card_code),
-            timeout=300.0,
+            timeout=STATS_FETCH_TIMEOUT_SECONDS,
         )
     except asyncio.TimeoutError:
         raise HTTPException(
@@ -593,7 +600,7 @@ async def get_investigator_stats(
     try:
         result = await asyncio.wait_for(
             card_service.get_investigator_stats(card_code, days=365),
-            timeout=300.0,
+            timeout=STATS_FETCH_TIMEOUT_SECONDS,
         )
     except asyncio.TimeoutError:
         raise HTTPException(
@@ -624,7 +631,7 @@ async def get_investigator_card_pool(
     try:
         result = await asyncio.wait_for(
             card_service.get_investigator_card_pool(card_code),
-            timeout=300.0,
+            timeout=STATS_FETCH_TIMEOUT_SECONDS,
         )
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Request timed out.")
@@ -659,7 +666,7 @@ async def get_investigator_top_cards(
                 query=q,
                 limit=limit,
             ),
-            timeout=300.0,
+            timeout=STATS_FETCH_TIMEOUT_SECONDS,
         )
     except asyncio.TimeoutError:
         raise HTTPException(status_code=504, detail="Request timed out — try again.")

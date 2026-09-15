@@ -4,7 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.routes import router
 from app.core.config import settings
 from app.core.redis_client import redis_client
+from app.core.cache_warmer import warm_bulk_decks_cache_loop
 from app.adapters import initialize_card_adapters
+import asyncio
 import uvicorn
 import logging
 
@@ -16,12 +18,13 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan context manager"""
+    cache_warmer_task = None
     # Startup
     try:
         # Initialize card adapters (registers adapters with domain registry)
         initialize_card_adapters()
         logger.info("Card adapters initialized")
-        
+
         await redis_client.connect()
         if redis_client.is_connected:
 
@@ -30,6 +33,12 @@ async def lifespan(app: FastAPI):
             logger.info("Redis connected but FastAPICache not available")
         else:
             logger.info("FastAPI Cache not initialized - Redis not available")
+
+        # Keep the shared 365-day deck cache warm in the background so
+        # `/cards/{code}/stats` (and friends) never block a request on a
+        # cold ArkhamDB fetch that outlives the platform's gateway timeout.
+        cache_warmer_task = asyncio.create_task(warm_bulk_decks_cache_loop())
+
         logger.info("Application startup completed successfully")
     except Exception as e:
         logger.error(f"Error during startup: {e}")
@@ -39,6 +48,8 @@ async def lifespan(app: FastAPI):
 
     # Shutdown
     try:
+        if cache_warmer_task:
+            cache_warmer_task.cancel()
         await redis_client.disconnect()
         logger.info("Application shutdown completed successfully")
     except Exception as e:

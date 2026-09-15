@@ -365,11 +365,17 @@
 
 .result-name {
   flex: 1;
+  min-width: 0;
   font-size: 0.875rem;
   color: #c8d3d5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .result-faction {
+  flex-shrink: 0;
+  white-space: nowrap;
   font-size: 0.75rem;
   color: #64748b;
 }

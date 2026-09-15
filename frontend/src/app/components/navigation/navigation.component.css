@@ -199,8 +199,11 @@
 
 /* Responsive Design */
 
-/* Tablet + mobile: hamburger replaces horizontal menu */
-@media (max-width: 1024px) {
+/* Tablet + mobile (and narrower laptops that can't fit the full menu):
+   hamburger replaces horizontal menu. The horizontal menu needs ~1440px
+   minimum to avoid overlapping the brand, so this threshold is set well
+   above typical iPad widths (768-1024 portrait, up to 1366 landscape). */
+@media (max-width: 1550px) {
   .nav-menu {
     display: none;
   }

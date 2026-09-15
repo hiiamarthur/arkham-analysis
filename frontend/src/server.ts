@@ -68,6 +68,16 @@ app.get('/robots.txt', (_req, res) => {
 });
 
 /**
+ * Dedicated health endpoint for platform healthchecks (e.g. Railway).
+ * "/" redirects to "/dashboard" via the Angular router, and SSR turns that
+ * into a real HTTP 302 — which most healthcheck probes treat as a failure.
+ * This route returns a plain 200 without going through the SSR/router path.
+ */
+app.get('/healthz', (_req, res) => {
+  res.status(200).send('ok');
+});
+
+/**
  * Serve static files from /browser
  */
 app.use(
